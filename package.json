@@ -175,6 +175,8 @@
         "watch": "tsc -watch -p ./",
         "pretest": "npm run build",
         "test": "node ./out/test/runTest.js",
+        "pretest:unit": "npm run compile",
+        "test:unit": "mocha --ui tdd \"./out/test/**/*.unit.test.js\"",
         "publish": "node ./publish.js"
     },
     "icon": "icon.png",

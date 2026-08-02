@@ -1351,59 +1351,6 @@ ${ CUSTOM_STYLE_FILE ? `<link rel="stylesheet" href="${ CUSTOM_STYLE_FILE }">`
 
         loadedBoard = vscode_helpers.cloneObject( loadedBoard );
         {
-            const SET_CARD_CONTENT = (card: BoardCard, property: PropertyKey) => {
-                let cardContentValue: BoardCardContentValue = card[ property ];
-
-                let cardContent: BoardCardContent;
-                if (!_.isNil(cardContentValue)) {
-                    if (_.isObject(cardContentValue)) {
-                        cardContent = <BoardCardContent>cardContentValue;
-                    } else {
-                        cardContent = {
-                            content: vscode_helpers.toStringSafe(cardContentValue),
-                            mime: 'text/plain',
-                        };
-                    }
-
-                    if (vscode_helpers.isEmptyString(cardContent.content)) {
-                        cardContent = undefined;
-                    }
-                }
-
-                if (!_.isNil(cardContent)) {
-                    const MIME = vscode_helpers.normalizeString(cardContent.mime);
-                    switch (MIME) {
-                        case 'text/markdown':
-                            cardContent.mime = MIME;
-                            break;
-
-                        default:
-                            cardContent.mime = 'text/plain';
-                            break;
-                    }
-                }
-
-                card[ property ] = cardContent;
-            };
-
-            const FIND_NEXT_SIMPLE_CARD_ID = () => {
-                let lastID = 0;
-                for (const BC of BOARD_COLMNS) {
-                    const CARDS: BoardCard[] = vscode_helpers.asArray( loadedBoard[ BC ] );
-
-                    for (const C of CARDS) {
-                        if (!vscode_helpers.isEmptyString(C.id)) {
-                            const CARD_ID_NUM = parseInt(vscode_helpers.toStringSafe(C.id).trim());
-                            if (!isNaN(CARD_ID_NUM)) {
-                                lastID = Math.max(lastID, CARD_ID_NUM);
-                            }
-                        }
-                    }
-                }
-
-                return lastID + 1;
-            };
-
             for (const BC of BOARD_COLMNS) {
                 const CARDS: BoardCard[] = loadedBoard[ BC ]
                                          = vscode_helpers.asArray( loadedBoard[ BC ] );
@@ -1430,14 +1377,14 @@ ${ CUSTOM_STYLE_FILE ? `<link rel="stylesheet" href="${ CUSTOM_STYLE_FILE }">`
                         }
 
                         if (vscode_helpers.toBooleanSafe(simpleIDs, true)) {
-                            C.id = '' + FIND_NEXT_SIMPLE_CARD_ID();
+                            C.id = '' + findNextSimpleCardId(loadedBoard);
                         } else {
                             C.id = `${ prefix }${ vscode_helpers.uuid().split('-').join('') }`;
                         }
                     }
 
-                    SET_CARD_CONTENT(C, 'description');
-                    SET_CARD_CONTENT(C, 'details');
+                    normalizeCardContent(C, 'description');
+                    normalizeCardContent(C, 'details');
                 }
             }
         }
@@ -1467,6 +1414,80 @@ ${ CUSTOM_STYLE_FILE ? `<link rel="stylesheet" href="${ CUSTOM_STYLE_FILE }">`
     public get view(): vscode.Webview {
         return this.panel.webview;
     }
+}
+
+/**
+ * Returns the identifier, that the next card of a board should get, when
+ * simple (numeric) identifiers are in use.
+ *
+ * It is the highest number, that is already used as an identifier, plus one:
+ * an identifier, that is not a number, does not take part.
+ *
+ * @param {Board} board The board to look at.
+ *
+ * @return {number} The identifier for the next card.
+ */
+export function findNextSimpleCardId(board: Board): number {
+    let lastID = 0;
+    for (const BC of BOARD_COLMNS) {
+        const CARDS: BoardCard[] = vscode_helpers.asArray( board[ BC ] );
+
+        for (const C of CARDS) {
+            if (!vscode_helpers.isEmptyString(C.id)) {
+                const CARD_ID_NUM = parseInt(vscode_helpers.toStringSafe(C.id).trim());
+                if (!isNaN(CARD_ID_NUM)) {
+                    lastID = Math.max(lastID, CARD_ID_NUM);
+                }
+            }
+        }
+    }
+
+    return lastID + 1;
+}
+
+/**
+ * Brings a text property of a card ('description' or 'details') into the
+ * shape the board works with: an object with content and MIME type.
+ *
+ * A plain text becomes such an object, an empty content is dropped and any
+ * MIME type other than Markdown becomes plain text.
+ *
+ * @param {BoardCard} card The card to update.
+ * @param {PropertyKey} property The property to bring into shape.
+ */
+export function normalizeCardContent(card: BoardCard, property: PropertyKey) {
+    let cardContentValue: BoardCardContentValue = card[ property ];
+
+    let cardContent: BoardCardContent;
+    if (!_.isNil(cardContentValue)) {
+        if (_.isObject(cardContentValue)) {
+            cardContent = <BoardCardContent>cardContentValue;
+        } else {
+            cardContent = {
+                content: vscode_helpers.toStringSafe(cardContentValue),
+                mime: 'text/plain',
+            };
+        }
+
+        if (vscode_helpers.isEmptyString(cardContent.content)) {
+            cardContent = undefined;
+        }
+    }
+
+    if (!_.isNil(cardContent)) {
+        const MIME = vscode_helpers.normalizeString(cardContent.mime);
+        switch (MIME) {
+            case 'text/markdown':
+                cardContent.mime = MIME;
+                break;
+
+            default:
+                cardContent.mime = 'text/plain';
+                break;
+        }
+    }
+
+    card[ property ] = cardContent;
 }
 
 /**
