@@ -1,0 +1,311 @@
+{
+    "capturedFrom": {
+        "version": "1.33.1",
+        "scripts": [
+            {
+                "dir": "/Users/iagoleal/dev/vscode-kanban/src/res/js",
+                "file": "filtrex.js"
+            },
+            {
+                "dir": "/Users/iagoleal/dev/vscode-kanban/src/res/js",
+                "file": "moment-with-locales.min.js"
+            },
+            {
+                "dir": "/Users/iagoleal/dev/vscode-kanban/src/res/js",
+                "file": "showdown.min.js"
+            },
+            {
+                "dir": "/Users/iagoleal/dev/vscode-kanban/_reversa_forward/001-interface-react-tema-e-done/reference/legacy",
+                "file": "script.js"
+            },
+            {
+                "dir": "/Users/iagoleal/dev/vscode-kanban/_reversa_forward/001-interface-react-tema-e-done/reference/legacy",
+                "file": "board.js"
+            }
+        ]
+    },
+    "fixture": {
+        "todo": [
+            {
+                "id": 1,
+                "title": "Escrever o roadmap",
+                "type": "",
+                "prio": 3
+            },
+            {
+                "id": 2,
+                "title": "Corrigir a exportação",
+                "type": "bug",
+                "prio": 3
+            },
+            {
+                "id": 3,
+                "title": "Servidor fora do ar",
+                "type": "emergency",
+                "prio": 3
+            },
+            {
+                "id": 4,
+                "title": "Anotar a ideia",
+                "type": ""
+            },
+            {
+                "id": 5,
+                "title": "  aparar as arestas  ",
+                "type": "note",
+                "prio": "5xyz"
+            },
+            {
+                "id": 6,
+                "title": "Zelar pelo backlog",
+                "type": "task",
+                "prio": "abc"
+            }
+        ],
+        "in-progress": [
+            {
+                "id": 7,
+                "title": "Migrar o toolchain",
+                "type": "issue",
+                "prio": 9
+            },
+            {
+                "id": 8,
+                "title": "Ajustar o filtro",
+                "type": "BUG",
+                "prio": 9
+            }
+        ],
+        "testing": [
+            {
+                "id": 9,
+                "title": "Rever o contraste",
+                "type": "  EMERGENCY  ",
+                "prio": 1
+            }
+        ],
+        "done": [
+            {
+                "id": 10,
+                "title": "Destravar o build",
+                "type": "",
+                "prio": 7
+            },
+            {
+                "id": 11,
+                "title": "Criar a rede de testes",
+                "type": "",
+                "prio": 7
+            }
+        ]
+    },
+    "sorting": {
+        "todo": {
+            "displayed": [
+                5,
+                3,
+                2,
+                1,
+                4,
+                6
+            ],
+            "persisted": "[5,3,2,1,4,6]"
+        },
+        "in-progress": {
+            "displayed": [
+                8,
+                7
+            ],
+            "persisted": "[8,7]"
+        },
+        "testing": {
+            "displayed": [
+                9
+            ],
+            "persisted": "[9]"
+        },
+        "done": {
+            "displayed": [
+                11,
+                10
+            ],
+            "persisted": "[11,10]"
+        }
+    },
+    "sortValues": {
+        "priority": [
+            {
+                "input": 5,
+                "value": 5
+            },
+            {
+                "input": "7",
+                "value": 7
+            },
+            {
+                "input": "5xyz",
+                "value": 5
+            },
+            {
+                "input": "abc",
+                "value": 0
+            },
+            {
+                "input": null,
+                "value": 0
+            },
+            {
+                "input": 0,
+                "value": 0
+            },
+            {
+                "input": -1,
+                "value": -1
+            },
+            {
+                "input": 3.9,
+                "value": 3.9
+            }
+        ],
+        "type": [
+            {
+                "input": "emergency",
+                "value": -2
+            },
+            {
+                "input": "bug",
+                "value": -1
+            },
+            {
+                "input": "note",
+                "value": 0
+            },
+            {
+                "input": "task",
+                "value": 0
+            },
+            {
+                "input": "issue",
+                "value": 0
+            },
+            {
+                "input": "",
+                "value": 0
+            },
+            {
+                "input": "  EMERGENCY  ",
+                "value": -2
+            },
+            {
+                "input": null,
+                "value": 0
+            }
+        ]
+    },
+    "filter": [
+        {
+            "expression": "1 == 1",
+            "result": 1,
+            "type": "number",
+            "threw": false
+        },
+        {
+            "expression": "1 == 2",
+            "result": 0,
+            "type": "number",
+            "threw": false
+        },
+        {
+            "expression": "is_bug",
+            "result": true,
+            "type": "boolean",
+            "threw": false
+        },
+        {
+            "expression": "is_note",
+            "result": false,
+            "type": "boolean",
+            "threw": false
+        },
+        {
+            "expression": "is_emergency",
+            "result": false,
+            "type": "boolean",
+            "threw": false
+        },
+        {
+            "expression": "is_issue",
+            "result": false,
+            "type": "boolean",
+            "threw": false
+        },
+        {
+            "expression": "is_task",
+            "result": false,
+            "type": "boolean",
+            "threw": false
+        },
+        {
+            "expression": "prio > 5",
+            "result": 1,
+            "type": "number",
+            "threw": false
+        },
+        {
+            "expression": "contains(title, \"quadro\")",
+            "result": true,
+            "type": "boolean",
+            "threw": false
+        },
+        {
+            "expression": "is_bug and prio > 5",
+            "result": 1,
+            "type": "number",
+            "threw": false
+        },
+        {
+            "expression": "is_bug ((",
+            "result": true,
+            "type": "boolean",
+            "threw": false
+        },
+        {
+            "expression": "nao_existe(1)",
+            "result": true,
+            "type": "boolean",
+            "threw": false
+        }
+    ],
+    "markdown": [
+        {
+            "input": "Texto simples.",
+            "convertedBeforeSanitising": "<p>Texto simples.</p>",
+            "threw": false
+        },
+        {
+            "input": "# Título\n\nParágrafo com **negrito** e `código`.",
+            "convertedBeforeSanitising": "<h1 id=\"ttulo\">Título</h1>\n<p>Parágrafo com <strong>negrito</strong> e <code>código</code>.</p>",
+            "threw": false
+        },
+        {
+            "input": "<script>vsckb_log(\"nao deveria rodar\")</script>Depois do script.",
+            "convertedBeforeSanitising": "<script>vsckb_log(\"nao deveria rodar\")</script>\n<p>Depois do script.</p>",
+            "threw": false
+        },
+        {
+            "input": "<img src=x onerror=\"vsckb_log('nem isto')\">Depois da imagem.",
+            "convertedBeforeSanitising": "<p><img src=x onerror=\"vsckb_log('nem isto')\">Depois da imagem.</p>",
+            "threw": false
+        },
+        {
+            "input": "<iframe src=\"https://example.org\"></iframe>Depois do quadro.",
+            "convertedBeforeSanitising": "<iframe src=\"https://example.org\"></iframe>\n<p>Depois do quadro.</p>",
+            "threw": false
+        },
+        {
+            "input": "[link](https://example.org)",
+            "convertedBeforeSanitising": "<p><a href=\"https://example.org\">link</a></p>",
+            "threw": false
+        }
+    ]
+}

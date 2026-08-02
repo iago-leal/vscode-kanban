@@ -1,0 +1,15 @@
+{
+  "schema-version": 1,
+  "feature-dir": "_reversa_forward/001-interface-react-tema-e-done",
+  "feature-id": "001",
+  "short-name": "interface-react-tema-e-done",
+  "started-at": "2026-08-02T19:33:31Z",
+  "current-stage": "coding",
+  "stages-completed": [
+    "requirements",
+    "clarify",
+    "plan",
+    "to-do"
+  ],
+  "paused-features": []
+}
