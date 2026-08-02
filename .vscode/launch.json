@@ -19,6 +19,23 @@
             "preLaunchTask": "npm: watch"
         },
         {
+            // Abre direto o sandbox de verificacao manual, cujo quadro e
+            // fixture: o roteiro de doze passos exclui cartao e limpa coluna,
+            // e nao pode rodar sobre o quadro real do projeto.
+            "name": "Extension (sandbox)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "${workspaceFolder}/_reversa_forward/001-interface-react-tema-e-done/reference/sandbox"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "npm: build"
+        },
+        {
             "name": "Extension Tests",
             "type": "extensionHost",
             "request": "launch",

@@ -4,6 +4,15 @@
     "version": "2.0.0",
     "tasks": [
         {
+            // Compilacao completa: extensao, recursos e o pacote do Webview.
+            // 'watch' sozinho nao copia 'out/res' nem empacota 'src/webview',
+            // e o quadro abre em branco.
+            "type": "npm",
+            "script": "build",
+            "problemMatcher": "$tsc",
+            "group": "build"
+        },
+        {
             "type": "npm",
             "script": "watch",
             "problemMatcher": "$tsc-watch",
