@@ -433,9 +433,12 @@ export class KanbanBoard extends vscode_helpers.DisposableBase {
         }
     }
 
-    private generateHTML() {
+    // The Webview comes as an argument because the document is built before
+    // 'this._panel' is set, and only the Webview can mint the address of a
+    // local file.
+    private generateHTML(webview: vscode.Webview) {
         const GET_RES_URI = (p: string) => {
-            return this.getResourceUri(p);
+            return this.getResourceUri(p, webview);
         };
 
         //
@@ -483,7 +486,7 @@ export class KanbanBoard extends vscode_helpers.DisposableBase {
      *
      * @return {vscode.Uri} The URI.
      */
-    public getResourceUri(p: string): vscode.Uri {
+    public getResourceUri(p: string, webview?: vscode.Webview): vscode.Uri {
         p = vscode_helpers.toStringSafe(p);
 
         let u: vscode.Uri;
@@ -493,9 +496,7 @@ export class KanbanBoard extends vscode_helpers.DisposableBase {
                 Path.join(R.fsPath, p)
             );
 
-            u = vscode.Uri.file( PATH_TO_CHECK ).with({
-                scheme: 'vscode-resource'
-            });
+            u = vscode.Uri.file( PATH_TO_CHECK );
 
             try {
                 if (vscode_helpers.isFileSync(PATH_TO_CHECK, false)) {
@@ -504,7 +505,21 @@ export class KanbanBoard extends vscode_helpers.DisposableBase {
             } catch { }
         }
 
-        return u;
+        if (!u) {
+            return u;
+        }
+
+        // The address a Webview may load a local file from is minted by the
+        // Webview itself, and only it knows the host of the session.
+        //
+        // What stood here was 'vscode-resource:', the scheme of 2018. Editors
+        // stopped serving it: measured against 1.131, a document built with it
+        // loads NEITHER stylesheet NOR script, which is a panel that opens
+        // blank -- the old interface as much as this one.
+        const WEBVIEW = webview
+            || (this._panel ? this._panel.webview : undefined);
+
+        return WEBVIEW ? WEBVIEW.asWebviewUri(u) : u;
     }
 
     /**
@@ -854,7 +869,7 @@ export class KanbanBoard extends vscode_helpers.DisposableBase {
                 } catch { }
             });
 
-            newPanel.webview.html = this.generateHTML();
+            newPanel.webview.html = this.generateHTML(newPanel.webview);
 
             this._panel = newPanel;
 
