@@ -28,6 +28,10 @@
     },
     "exclude": [
         "node_modules",
-        ".vscode-test"
+        ".vscode-test",
+        /* The Webview has its own compilation unit: 'tsconfig.webview.json'.
+           It targets a browser and is type checked strictly, which this
+           project cannot be yet. */
+        "src/webview"
     ]
 }

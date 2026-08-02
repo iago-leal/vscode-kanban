@@ -1,0 +1,555 @@
+/*
+ * The layout of the board.
+ *
+ * It replaces Bootstrap 4.1.1 and 'board.css'. Every colour here names a token
+ * of 'tokens.css' and none is written literally, which is what makes the two
+ * themes one change of attribute apart.
+ *
+ * Two widths matter. Below 800 px four columns stop being readable, so the
+ * columns layout falls back to a single scrolling row the user pans through;
+ * the list layout stays usable down to 320 px, which is why it exists.
+ */
+
+.vsckb-board {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    background: var(--vsckb-surface);
+    color: var(--vsckb-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.vsckb-board *,
+.vsckb-board *::before,
+.vsckb-board *::after {
+    box-sizing: border-box;
+}
+
+/* every interactive element says where the keyboard is */
+.vsckb-board :focus-visible {
+    outline: 2px solid var(--vsckb-focus-ring);
+    outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ top bar */
+
+.vsckb-topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--vsckb-border);
+    background: var(--vsckb-surface-raised);
+}
+
+.vsckb-topbar-title {
+    flex: 0 1 auto;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vsckb-topbar-filter {
+    flex: 1 1 200px;
+    min-width: 120px;
+    padding: 4px 8px;
+    border: 1px solid var(--vsckb-border);
+    border-radius: var(--vsckb-radius);
+    background: var(--vsckb-control);
+    color: var(--vsckb-text);
+    font: inherit;
+}
+
+.vsckb-topbar-controls {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+}
+
+.vsckb-control {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 4px 8px;
+    border: 1px solid var(--vsckb-border);
+    border-radius: var(--vsckb-radius);
+    background: var(--vsckb-control);
+    color: var(--vsckb-text);
+    font: inherit;
+    cursor: pointer;
+}
+
+.vsckb-control:hover {
+    background: var(--vsckb-control-hover);
+}
+
+.vsckb-control[aria-pressed="true"] {
+    background: var(--vsckb-control-active);
+    border-color: var(--vsckb-border-strong);
+}
+
+/* the words of a control disappear before the control itself does */
+@media (max-width: 720px) {
+    .vsckb-control-text {
+        display: none;
+    }
+}
+
+/* ------------------------------------------------------------------ columns */
+
+.vsckb-columns {
+    display: flex;
+    flex: 1 1 auto;
+    gap: 8px;
+    padding: 8px;
+    overflow: auto;
+}
+
+.vsckb-column {
+    display: flex;
+    flex-direction: column;
+    /* the space a collapsed column gives up goes to the open ones */
+    flex: 1 1 0;
+    min-width: 180px;
+    border: 1px solid var(--vsckb-border);
+    border-radius: var(--vsckb-radius);
+    background: var(--vsckb-surface-sunken);
+}
+
+.vsckb-column-collapsed {
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.vsckb-column-header {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--vsckb-border);
+}
+
+.vsckb-column-name {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vsckb-column-count {
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--vsckb-control-active);
+    color: var(--vsckb-text-muted);
+    font-size: 11px;
+}
+
+.vsckb-column-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    overflow-y: auto;
+}
+
+/*
+ * A collapsed column is a strip that still says its name and how many cards
+ * it is holding: never a column that simply vanished.
+ */
+.vsckb-column-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    height: 100%;
+    padding: 10px 6px;
+    border: 0;
+    border-radius: var(--vsckb-radius);
+    background: transparent;
+    color: var(--vsckb-text);
+    font: inherit;
+    cursor: pointer;
+}
+
+.vsckb-column-strip:hover {
+    background: var(--vsckb-control-hover);
+}
+
+.vsckb-column-strip-name {
+    writing-mode: vertical-rl;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.vsckb-column-strip-count {
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--vsckb-control-active);
+    font-size: 11px;
+}
+
+/* --------------------------------------------------------------------- list */
+
+.vsckb-list {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    overflow-y: auto;
+}
+
+.vsckb-list-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.vsckb-list-add {
+    padding: 3px 8px;
+    border: 1px solid var(--vsckb-border);
+    border-radius: var(--vsckb-radius);
+    background: var(--vsckb-control);
+    color: var(--vsckb-text);
+    font: inherit;
+    cursor: pointer;
+}
+
+.vsckb-list-hidden,
+.vsckb-list-empty {
+    margin: 0;
+    color: var(--vsckb-text-muted);
+}
+
+/* --------------------------------------------------------------------- card */
+
+.vsckb-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--vsckb-border);
+    border-radius: var(--vsckb-radius);
+    background: var(--vsckb-surface-raised);
+    box-shadow: var(--vsckb-shadow);
+    overflow: hidden;
+}
+
+.vsckb-card-stripe {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    min-height: 22px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.vsckb-card[data-vsckb-group="emergency"] .vsckb-card-stripe {
+    background: var(--vsckb-card-emergency);
+    color: var(--vsckb-card-emergency-text);
+}
+
+.vsckb-card[data-vsckb-group="bug"] .vsckb-card-stripe {
+    background: var(--vsckb-card-bug);
+    color: var(--vsckb-card-bug-text);
+}
+
+.vsckb-card[data-vsckb-group="default"] .vsckb-card-stripe {
+    background: var(--vsckb-card-default);
+    color: var(--vsckb-card-default-text);
+}
+
+.vsckb-card-type {
+    flex: 1 1 auto;
+}
+
+.vsckb-card-info {
+    padding: 8px;
+}
+
+.vsckb-card-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.vsckb-card-column,
+.vsckb-card-category {
+    margin: 2px 0 0;
+    color: var(--vsckb-text-muted);
+    font-size: 11px;
+}
+
+.vsckb-card-progress {
+    height: 4px;
+    margin: 6px 0;
+    border-radius: 2px;
+    background: var(--vsckb-control-active);
+    overflow: hidden;
+}
+
+.vsckb-card-progress-bar {
+    height: 100%;
+}
+
+.vsckb-card-progress-bar[data-vsckb-level="low"] {
+    background: var(--vsckb-danger);
+}
+
+.vsckb-card-progress-bar[data-vsckb-level="middle"] {
+    background: var(--vsckb-warning);
+}
+
+.vsckb-card-progress-bar[data-vsckb-level="full"] {
+    background: var(--vsckb-success);
+}
+
+.vsckb-card-body {
+    margin-top: 6px;
+    overflow-wrap: anywhere;
+}
+
+.vsckb-card-footer {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border-top: 1px solid var(--vsckb-border);
+}
+
+.vsckb-card-time {
+    color: var(--vsckb-text-muted);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.vsckb-card-actions {
+    display: flex;
+    gap: 2px;
+}
+
+.vsckb-icon-button {
+    display: inline-flex;
+    padding: 3px;
+    border: 0;
+    border-radius: var(--vsckb-radius);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.vsckb-icon-button:hover {
+    background: var(--vsckb-control-hover);
+}
+
+/* ----------------------------------------------------------------- markdown */
+
+.vsckb-markdown-body > :first-child {
+    margin-top: 0;
+}
+
+.vsckb-markdown-body > :last-child {
+    margin-bottom: 0;
+}
+
+.vsckb-markdown-body a {
+    color: var(--vsckb-accent);
+}
+
+.vsckb-markdown-body pre {
+    padding: 6px 8px;
+    border-radius: var(--vsckb-radius);
+    background: var(--vsckb-surface-sunken);
+    overflow-x: auto;
+}
+
+.vsckb-markdown-body code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+}
+
+.vsckb-img-fluid {
+    max-width: 100%;
+    height: auto;
+}
+
+.vsckb-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.vsckb-table th,
+.vsckb-table td {
+    padding: 3px 6px;
+    border: 1px solid var(--vsckb-border);
+}
+
+.vsckb-task-list {
+    padding-left: 0;
+    list-style: none;
+}
+
+.vsckb-task {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+}
+
+/* ------------------------------------------------------------------ dialogs */
+
+.vsckb-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: var(--vsckb-surface-overlay);
+    z-index: 10;
+}
+
+.vsckb-dialog {
+    display: flex;
+    flex-direction: column;
+    width: min(640px, 100%);
+    max-height: 100%;
+    border: 1px solid var(--vsckb-border);
+    border-radius: var(--vsckb-radius);
+    background: var(--vsckb-surface-raised);
+    box-shadow: var(--vsckb-shadow);
+}
+
+.vsckb-dialog-header,
+.vsckb-dialog-footer {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+}
+
+.vsckb-dialog-header {
+    justify-content: space-between;
+    border-bottom: 1px solid var(--vsckb-border);
+}
+
+.vsckb-dialog-footer {
+    justify-content: flex-end;
+    border-top: 1px solid var(--vsckb-border);
+}
+
+.vsckb-dialog-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.vsckb-dialog-body {
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.vsckb-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vsckb-field-row {
+    display: flex;
+    gap: 10px;
+}
+
+.vsckb-field {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.vsckb-field-label {
+    color: var(--vsckb-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.vsckb-field-input {
+    padding: 4px 8px;
+    border: 1px solid var(--vsckb-border);
+    border-radius: var(--vsckb-radius);
+    background: var(--vsckb-control);
+    color: var(--vsckb-text);
+    font: inherit;
+}
+
+.vsckb-form-error {
+    margin: 0 0 10px;
+    color: var(--vsckb-danger);
+}
+
+.vsckb-button {
+    padding: 4px 12px;
+    border: 1px solid var(--vsckb-border);
+    border-radius: var(--vsckb-radius);
+    background: var(--vsckb-control);
+    color: var(--vsckb-text);
+    font: inherit;
+    cursor: pointer;
+}
+
+.vsckb-button-primary {
+    border-color: var(--vsckb-accent);
+    background: var(--vsckb-accent);
+    color: var(--vsckb-text-on-accent);
+}
+
+.vsckb-button-danger {
+    border-color: var(--vsckb-danger);
+    background: var(--vsckb-danger);
+    color: var(--vsckb-text-on-accent);
+}
+
+.vsckb-details-facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    margin: 0 0 12px;
+}
+
+.vsckb-details-facts dt {
+    color: var(--vsckb-text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.vsckb-details-facts dd {
+    margin: 0;
+}
+
+.vsckb-details-section h3 {
+    margin: 12px 0 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--vsckb-text-muted);
+}
+
+/* the four columns need room; below it, one column at a time is panned to */
+@media (max-width: 800px) {
+    .vsckb-column {
+        flex: 0 0 260px;
+    }
+}

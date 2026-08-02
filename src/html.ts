@@ -15,9 +15,72 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+//
+// The document the board is served in.
+//
+// It is deliberately almost empty: a mount point, the libraries the bundle
+// still leans on, and the bundle itself. Everything the user sees is rendered
+// by 'src/webview/'.
+//
+// What left the document with this feature: jQuery, Bootstrap, Font Awesome,
+// 'board.css', 'style.css', 'script.js' and 'board.js'. What stayed: Filtrex,
+// Moment, highlight.js, CodeMirror, Mermaid and Showdown, each of them behind
+// an adapter in 'src/webview/adapters/'.
+//
+// Every script tag carries a nonce. The Content-Security-Policy that would
+// USE it is not declared here yet: Filtrex compiles with 'new Function' and
+// Mermaid evaluates dynamically, so a policy strict enough to be worth having
+// depends on replacing the filter evaluator first. Leaving the nonce in place
+// is what makes that a small change later instead of a large one.
+//
+
+import * as Crypto from 'crypto';
 import * as HtmlEntities from 'html-entities';
 import * as vscode from 'vscode';
 import * as vscode_helpers from 'vscode-helpers';
+
+/**
+ * The identifier of the element the Webview bundle renders into.
+ */
+export const WEBVIEW_ROOT_ELEMENT_ID = 'vsckb-root';
+
+/**
+ * The stylesheets the surviving libraries need.
+ */
+const VENDOR_STYLES = [
+    'css/hljs-atom-one-dark.css',
+    'css/codemirror.css',
+    'css/mermaid/mermaid.css',
+    'css/mermaid/mermaid.dark.css',
+];
+
+/**
+ * The libraries the bundle reaches through its adapters.
+ *
+ * They are globals, not packages: esbuild cannot bundle them, so the document
+ * loads them before the bundle runs.
+ */
+const VENDOR_SCRIPTS = [
+    'js/filtrex.js',
+    'js/moment-with-locales.min.js',
+    'js/highlight.pack.js',
+    'js/codemirror/codemirror.js',
+    'js/codemirror/addon/display/autorefresh.js',
+    'js/codemirror/mode/markdown/markdown.js',
+    'js/mermaid/mermaid.js',
+    'js/mermaid/mermaidAPI.js',
+    'js/showdown.min.js',
+];
+
+/**
+ * Creates the nonce of a document.
+ *
+ * @return {string} The nonce.
+ */
+export function createNonce(): string {
+    return Crypto.randomBytes(16)
+                 .toString('base64');
+}
 
 /**
  * Function to generate (additional) footer content.
@@ -29,31 +92,38 @@ export type GetFooterFunction = () => string;
 /**
  * Options for 'generateFooter()' function.
  */
-export interface GenerateFooterOptions extends ResourceUriResolver {
+export interface GenerateFooterOptions extends ResourceUriResolver, WithNonce {
+    /**
+     * The path of the bundled interface, relative to the resource directory.
+     *
+     * When it is set, the mount point and the bundle are emitted. A document
+     * that does not render a bundled interface simply leaves it out.
+     */
+    bundleFile?: string;
     /**
      * The function that generates additional footer content.
      */
     getFooter?: GetFooterFunction;
-    /**
-     * The path to the script.
-     */
-    scriptFile: string;
-    /**
-     * The path to the CSS file.
-     */
-    styleFile: string;
 }
 
 /**
  * Options for 'generateHeader()' function.
  */
-export interface GenerateHeaderOptions extends ResourceUriResolver, WithTitle {
+export interface GenerateHeaderOptions extends ResourceUriResolver, WithNonce, WithTitle {
+    /**
+     * The path of the stylesheet of the bundled interface.
+     */
+    bundleStyleFile?: string;
 }
 
 /**
  * Options for 'generateHtmlDocument()' function.
  */
-export interface GenerateHtmlDocumentOptions extends HeaderButtonResolver, ResourceUriResolver, WithTitle {
+export interface GenerateHtmlDocumentOptions extends ResourceUriResolver, WithTitle {
+    /**
+     * The path of the bundled interface, relative to the resource directory.
+     */
+    bundleFile?: string;
     /**
      * The function that generates the (body) content.
      *
@@ -71,19 +141,6 @@ export interface GenerateHtmlDocumentOptions extends HeaderButtonResolver, Resou
 }
 
 /**
- * Options for 'generateNavBarHeader()' function.
- */
-export interface GenerateNavBarHeaderOptions extends HeaderButtonResolver, ResourceUriResolver, WithTitle {
-}
-
-/**
- * Function to generate header buttons.
- *
- * @return {string} The generated HTML code.
- */
-export type GetHeaderButtonsFunction = () => string;
-
-/**
  * The function that returns the URI of a resource.
  *
  * @param {string} path The path inside the resource directory.
@@ -93,16 +150,6 @@ export type GetHeaderButtonsFunction = () => string;
 export type GetResourceUriFunction = (path: string) => vscode.Uri;
 
 /**
- * An object that can resolve the HTML code for header buttons.
- */
-export interface HeaderButtonResolver {
-    /**
-     * Custom function to generate header buttons.
-     */
-    getHeaderButtons?: GetHeaderButtonsFunction;
-}
-
-/**
  * An object that resolves a resource URI.
  */
 export interface ResourceUriResolver {
@@ -110,6 +157,16 @@ export interface ResourceUriResolver {
      * The function that returns the URI of a web view resource.
      */
     getResourceUri: GetResourceUriFunction;
+}
+
+/**
+ * An object that carries the nonce of the document.
+ */
+export interface WithNonce {
+    /**
+     * The nonce every script tag of the document carries.
+     */
+    nonce?: string;
 }
 
 /**
@@ -130,14 +187,17 @@ export interface WithTitle {
  * @return {string} The generated HTML code.
  */
 export function generateFooter(opts: GenerateFooterOptions) {
-    return `
-    <div id="vsckb-body-bottom" class="clearfix"></div>
+    const NONCE = vscode_helpers.toStringSafe(opts.nonce);
 
-    <link rel="stylesheet" href="${ opts.getResourceUri('css/style.css') }">
-    <link rel="stylesheet" href="${ opts.getResourceUri('css/' + opts.styleFile + '.css') }" vsckb-style="custom">
+    const BUNDLE_FILE = vscode_helpers.toStringSafe(opts.bundleFile).trim();
 
-    <script src="${ opts.getResourceUri('js/script.js') }" crossorigin="anonymous"></script>
-    <script src="${ opts.getResourceUri('js/' + opts.scriptFile + '.js') }" crossorigin="anonymous"></script>
+    // the bundle is loaded after the mount point exists
+    const BUNDLE = '' === BUNDLE_FILE ? '' : `
+    <div id="${ WEBVIEW_ROOT_ELEMENT_ID }"></div>
+
+    <script nonce="${ NONCE }" src="${ opts.getResourceUri(BUNDLE_FILE) }"></script>`;
+
+    return `${ BUNDLE }
 
 ${ opts.getFooter ? opts.getFooter() : '' }
 
@@ -153,9 +213,21 @@ ${ opts.getFooter ? opts.getFooter() : '' }
  * @return {string} The generated HTML code.
  */
 export function generateHeader(opts: GenerateHeaderOptions) {
-    const AJAX_LOADER_16x11 = `${ opts.getResourceUri('img/ajax-loader-16x11.gif') }`;
-
     const DOC_TITLE = getDocumentTitle(opts.title);
+
+    const NONCE = vscode_helpers.toStringSafe(opts.nonce);
+
+    const BUNDLE_STYLE_FILE = vscode_helpers.toStringSafe(opts.bundleStyleFile).trim();
+
+    const STYLES = VENDOR_STYLES.concat(
+        '' === BUNDLE_STYLE_FILE ? [] : [BUNDLE_STYLE_FILE]
+    ).map(s => {
+        return `        <link rel="stylesheet" href="${ opts.getResourceUri(s) }">`;
+    }).join('\n');
+
+    const SCRIPTS = VENDOR_SCRIPTS.map(s => {
+        return `        <script nonce="${ NONCE }" src="${ opts.getResourceUri(s) }"></script>`;
+    }).join('\n');
 
     return `<!doctype html>
 <html lang="en">
@@ -164,64 +236,13 @@ export function generateHeader(opts: GenerateHeaderOptions) {
 
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <link rel="stylesheet" href="${ opts.getResourceUri('css/font-awesome.css') }">
-        <link rel="stylesheet" href="${ opts.getResourceUri('css/hljs-atom-one-dark.css') }">
-        <link rel="stylesheet" href="${ opts.getResourceUri('css/codemirror.css') }">
-        <link rel="stylesheet" href="${ opts.getResourceUri('css/mermaid/mermaid.css') }">
-        <link rel="stylesheet" href="${ opts.getResourceUri('css/mermaid/mermaid.dark.css') }">
-        <link rel="stylesheet" href="${ opts.getResourceUri('css/bootstrap.min.css') }" vsckb-style="bootstrap">
+${ STYLES }
 
-        <script src="${ opts.getResourceUri('js/filtrex.js') }"></script>
-        <script src="${ opts.getResourceUri('js/moment-with-locales.min.js') }"></script>
-        <script src="${ opts.getResourceUri('js/highlight.pack.js') }"></script>
-        <script src="${ opts.getResourceUri('js/codemirror/codemirror.js') }"></script>
-        <script src="${ opts.getResourceUri('js/codemirror/addon/display/autorefresh.js') }"></script>
-        <script src="${ opts.getResourceUri('js/codemirror/mode/markdown/markdown.js') }"></script>
-        <script src="${ opts.getResourceUri('js/mermaid/mermaid.js') }"></script>
-        <script src="${ opts.getResourceUri('js/mermaid/mermaidAPI.js') }"></script>
-        <script src="${ opts.getResourceUri('js/showdown.min.js') }"></script>
-        <script src="${ opts.getResourceUri('js/jquery.min.js') }" crossorigin="anonymous"></script>
-        <script src="${ opts.getResourceUri('js/bootstrap.bundle.min.js') }" crossorigin="anonymous"></script>
-
-        <script>
-            const vscode = acquireVsCodeApi();
-
-            function vsckb_log(msg) {
-                try {
-                    if (msg instanceof Error) {
-                        msg = \`ERROR: \${ msg.message }
-
-    \${ msg.stack }\`;
-                    }
-
-                    vscode.postMessage({
-                        command: 'log',
-                        data: {
-                            message: JSON.stringify(msg)
-                        }
-                    });
-                } catch (e) { }
-            }
-
-            window.onerror = function(message, url, line, column, error) {
-                vsckb_log({
-                    message: message,
-                    url: url,
-                    line: line,
-                    column: column,
-                    error: error
-                });
-
-                return false;
-            };
-
-            const VSCKB_AJAX_LOADER_16x11 = ${ JSON.stringify( AJAX_LOADER_16x11 ) };
-        </script>
+${ SCRIPTS }
 
         <title>${ HtmlEntities.encode(DOC_TITLE) }</title>
     </head>
     <body>
-        <div id="vsckb-body-top" class="clearfix"></div>
 `;
 }
 
@@ -233,65 +254,27 @@ export function generateHeader(opts: GenerateHeaderOptions) {
  * @return {string} The generated HTML code.
  */
 export function generateHtmlDocument(opts: GenerateHtmlDocumentOptions) {
-    return `${ generateHeader({
-    getResourceUri: opts.getResourceUri,
-    title: opts.title,
-}) }
+    // one nonce per document, shared by every script tag it emits
+    const NONCE = createNonce();
 
-${ generateNavBarHeader({
-    getHeaderButtons: opts.getHeaderButtons,
+    const BUNDLE_FILE = vscode_helpers.toStringSafe(opts.bundleFile).trim();
+
+    return `${ generateHeader({
+    bundleStyleFile: '' === BUNDLE_FILE ? undefined
+                                        : BUNDLE_FILE.replace(/\.js$/, '.css'),
     getResourceUri: opts.getResourceUri,
+    nonce: NONCE,
     title: opts.title,
 }) }
 
 ${ opts.getContent ? opts.getContent() : '' }
 
 ${ generateFooter({
+    bundleFile: opts.bundleFile,
     getFooter: opts.getFooter,
     getResourceUri: opts.getResourceUri,
-    scriptFile: opts.name,
-    styleFile: opts.name,
+    nonce: NONCE,
 }) }`;
-}
-
-/**
- * Generates the common HTML for a header navbar.
- *
- * @param {GenerateNavBarHeaderOptions} opts Options.
- *
- * @return {string} The generated HTML code.
- */
-export function generateNavBarHeader(opts: GenerateNavBarHeaderOptions) {
-    const DOC_TITLE = getDocumentTitle(opts.title);
-
-    return `
-<header>
-    <nav class="navbar navbar-dark fixed-top bg-dark">
-        <a class="navbar-brand" href="#">
-            <img src="${ opts.getResourceUri('img/icon.svg') }" width="30" height="30" class="d-inline-block align-top" alt="">
-            <span>${ HtmlEntities.encode(DOC_TITLE) }</span>
-        </a>
-
-        <form class="form-inline">
-            ${ opts.getHeaderButtons ? opts.getHeaderButtons() : '' }
-
-            <div id="vsckb-social-media-btns">
-                <a class="btn btn-dark btn-sm text-white vsckb-btn-with-known-url" vsckb-url="github" title="Open Project On GitHub">
-                    <i class="fa fa-github" aria-hidden="true"></i>
-                </a>
-
-                <a class="btn btn-dark btn-sm text-white vsckb-btn-with-known-url" vsckb-url="twitter" title="Follow Author On Twitter">
-                    <i class="fa fa-twitter" aria-hidden="true"></i>
-                </a>
-
-                <a class="btn btn-dark btn-sm text-white vsckb-btn-with-known-url" vsckb-url="paypal" title="Support Project via PayPal">
-                    <i class="fa fa-paypal" aria-hidden="true"></i>
-                </a>
-            </div>
-        </form>
-    </nav>
-</header>
-`;
 }
 
 function getDocumentTitle(title: string) {

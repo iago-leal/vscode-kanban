@@ -328,6 +328,20 @@ export interface OpenBoardOptions {
      */
     saveFilter?: SaveBoardFilterEventListener;
     /**
+     * Loads how the board should be displayed.
+     *
+     * It is optional: without it the board opens on its defaults, which is
+     * what keeps the two new commands of the bridge from being required for
+     * the board to work.
+     */
+    loadViewPreferences?: () => any | PromiseLike<any>;
+    /**
+     * Records a change of theme, hiding, collapsing or layout.
+     *
+     * The payload is a delta: what it does not mention keeps its stored value.
+     */
+    saveViewPreferences?: (preferences: any) => any | PromiseLike<any>;
+    /**
      * The settings for the board.
      */
     settings?: BoardSettings;
@@ -424,498 +438,29 @@ export class KanbanBoard extends vscode_helpers.DisposableBase {
             return this.getResourceUri(p);
         };
 
-        const GET_COLUMN_NAME = (column: string, defaultName: string) => {
-            let name: string;
-
-            if (!_.isNil(this.openOptions)) {
-                if (!_.isNil(this.openOptions.settings)) {
-                    if (!_.isNil(this.openOptions.settings.columns)) {
-                        const COL_SETTINGS: ColumnSettings = this.openOptions.settings.columns[column];
-                        if (!_.isNil(COL_SETTINGS)) {
-                            name = COL_SETTINGS.name;
-                        }
-                    }
-                }
-            }
-
-            name = vscode_helpers.toStringSafe(name).trim();
-            if ('' === name) {
-                name = vscode_helpers.toStringSafe(defaultName).trim();
-            }
-
-            return name;
-        };
-
+        //
+        // The document is now a shell: a mount point and the bundle.
+        //
+        // What used to stand here were about 470 lines of literal markup --
+        // the four columns, the three modals and the header buttons -- built
+        // by string concatenation and wired by jQuery. All of it is React now,
+        // under 'src/webview/', where it can be read, typed and tested.
+        //
+        // The one thing the workspace may still contribute is its own
+        // stylesheet, '.vscode/vscode-kanban.css'.
+        //
         return vsckb_html.generateHtmlDocument({
-            getContent: () => {
-                return `
-<main role="main" class="container-fluid h-100">
-    <div class="row h-100">
-        <div class="col col-6 col-md-3 h-100">
-            <div class="card text-dark bg-secondary vsckb-card" id="vsckb-card-todo">
-                <div class="card-header font-weight-bold vsckb-primary-card-header border border-dark border-bottom-0 text-dark">
-                    <span class="vsckb-title">${ HtmlEntities.encode( GET_COLUMN_NAME('todo', 'Todo') ) }</span>
-
-                    <div class="vsckb-buttons float-right">
-                        <a class="btn btn-sm vsckb-add-btn" title="Add Card ...">
-                            <i class="fa fa-plus" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card-body vsckb-primary-card-body h-100 bg-light border border-dark">&nbsp;</div>
-            </div>
-        </div>
-
-        <div class="col col-6 col-md-3 h-100">
-            <div class="card text-white bg-primary vsckb-card" id="vsckb-card-in-progress">
-                <div class="card-header font-weight-bold vsckb-primary-card-header border border-dark border-bottom-0 text-white">
-                    <span class="vsckb-title">${ HtmlEntities.encode( GET_COLUMN_NAME('in-progress', 'In Progress') ) }</span>
-
-                    <div class="vsckb-buttons float-right">
-                        <a class="btn btn-sm vsckb-add-btn" title="Add Card ...">
-                            <i class="fa fa-plus" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card-body vsckb-primary-card-body h-100 bg-light border border-dark">&nbsp;</div>
-            </div>
-        </div>
-
-        <div class="col col-6 col-md-3 h-100">
-            <div class="card text-white bg-warning vsckb-card" id="vsckb-card-testing">
-                <div class="card-header font-weight-bold vsckb-primary-card-header border border-dark border-bottom-0 text-white">
-                    <span class="vsckb-title">${ HtmlEntities.encode( GET_COLUMN_NAME('testing', 'Testing') ) }</span>
-
-                    <div class="vsckb-buttons float-right">
-                        <a class="btn btn-sm vsckb-add-btn" title="Add Card ...">
-                            <i class="fa fa-plus" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card-body vsckb-primary-card-body h-100 bg-light border border-dark">&nbsp;</div>
-            </div>
-        </div>
-
-        <div class="col col-6 col-md-3 h-100">
-            <div class="card text-white bg-success vsckb-card" id="vsckb-card-done">
-                <div class="card-header font-weight-bold vsckb-primary-card-header border border-dark border-bottom-0 text-white">
-                    <span class="vsckb-title">${ HtmlEntities.encode( GET_COLUMN_NAME('done', 'Done') ) }</span>
-
-                    <div class="vsckb-buttons float-right">
-                        <a class="btn btn-sm vsckb-clear-btn" title="Clear ...">
-                            <i class="fa fa-eraser" aria-hidden="true"></i>
-                        </a>
-
-                        <a class="btn btn-sm vsckb-add-btn" title="Add Card ...">
-                            <i class="fa fa-plus" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card-body vsckb-primary-card-body h-100 bg-light border border-dark">&nbsp;</div>
-            </div>
-        </div>
-    </div>
-</main>
-`;
-            },
             getFooter: () => {
                 const CUSTOM_STYLE_FILE = GET_RES_URI('vscode-kanban.css');
 
-                return `
-<div class="modal" tabindex="-1" role="dialog" id="vsckb-add-card-modal" data-keyboard="false">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Card</h5>
-
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-
-            <div class="modal-body">
-                <form>
-                    <div class="form-group">
-                        <label for="vsckb-new-card-title">Title</label>
-                        <input type="text" class="form-control" id="vsckb-new-card-title">
-                    </div>
-
-                    <div class="row">
-                        <div class="col col-10">
-                            <div class="form-group vsckb-card-type-list">
-                                <label for="vsckb-new-card-type">Type</label>
-                                <select id="vsckb-new-card-type" class="form-control"></select>
-                            </div>
-                        </div>
-
-                        <div class="col col-2">
-                            <div class="form-group">
-                                <label for="vsckb-new-card-prio">Prio</label>
-                                <input type="number" id="vsckb-new-card-prio" class="form-control" placeholder="0"></input>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="vsckb-new-card-category">Category</label>
-                        <input type="text" class="form-control" id="vsckb-new-card-category">
-                    </div>
-
-                    <div class="form-group vsckb-card-assigned-to">
-                        <label for="vsckb-new-card-assigned-to">Assigned To</label>
-                        <input type="text" class="form-control" id="vsckb-new-card-assigned-to">
-                    </div>
-
-                    <div class="row">
-                        <div class="col col-12">
-                            <ul class="nav nav-pills vsckb-card-description-details-tablist" id="vsckb-new-card-description-details-tablist" role="tablist">
-                                <li class="nav-item">
-                                    <a class="nav-link active" id="vsckb-new-card-description-tab" data-toggle="pill" href="#vsckb-new-card-description-tab-pane" role="tab" aria-controls="vsckb-new-card-description-tab-pane" aria-selected="true">
-                                        (Short) Description
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link" id="vsckb-new-card-details-tab" data-toggle="pill" href="#vsckb-new-card-details-tab-pane" role="tab" aria-controls="vsckb-new-card-details-tab-pane" aria-selected="false">
-                                        Details
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link" id="vsckb-new-card-references-tab" data-toggle="pill" href="#vsckb-new-card-references-tab-pane" role="tab" aria-controls="vsckb-new-card-references-tab-pane" aria-selected="false">
-                                        References
-                                    </a>
-                                </li>
-                            </ul>
-
-                            <div class="tab-content vsckb-card-description-details-tab-content" id="vsckb-new-card-description-details-tab-content">
-                                <div class="tab-pane form-group show active" id="vsckb-new-card-description-tab-pane" role="tabpanel" aria-labelledby="vsckb-new-card-description-tab">
-                                    <textarea class="form-control vsckb-markdown-editor" id="vsckb-new-card-description" rows="5"></textarea>
-                                </div>
-
-                                <div class="tab-pane form-group" id="vsckb-new-card-details-tab-pane" role="tabpanel" aria-labelledby="vsckb-new-card-details-tab">
-                                    <textarea class="form-control vsckb-markdown-editor" id="vsckb-new-card-details" rows="7"></textarea>
-                                </div>
-
-                                <div class="tab-pane form-group vsckb-card-references-tab-pane" id="vsckb-new-card-references-tab-pane" role="tabpanel" aria-labelledby="vsckb-new-card-references-tab">
-                                    <nav class="navbar navbar-light bg-light">
-                                        <form class="row form-inline" style="margin: 0; padding: 0;">
-                                            <div class="col" style="display: table; margin: 0; padding: 0;">
-                                                <div style="display: table-cell;">
-                                                    <select class="form-control vsckb-card-list"></select>
-                                                </div>
-
-                                                <div style="display: table-cell; width: 32px; padding: 8px; top: -2px; position: relative;">
-                                                    <a class="btn btn-sm btn-primary text-white vsckb-add-link-to-card-btn text-center align-middle" title="Add Link To Card ..." id="vsckb-edit-card-add-link-btn">
-                                                        <i class="fa fa-link" aria-hidden="true"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </nav>
-
-                                    <div class="vsckb-list-of-linked-cards"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-
-                <div class="row">
-                    <div class="col col-12">
-                        <div class="vsckb-help-link">
-                            <i class="fa fa-question-circle" aria-hidden="true"></i> <a href="#" class="vsckb-with-known-url" vsckb-url="markdown-help">Markdown Help</a>
-                        </div>
-
-                        <div class="vsckb-help-link">
-                            <i class="fa fa-question-circle" aria-hidden="true"></i> <a href="#" class="vsckb-with-known-url" vsckb-url="mermaid-help">Diagram Help</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <a class="btn btn-primary text-white">
-                    <i class="fa fa-plus-circle" aria-hidden="true"></i>
-
-                    <span>Add</span>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal" tabindex="-1" role="dialog" id="vsckb-delete-card-modal">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Delete Card</h5>
-
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-
-            <div class="modal-body"></div>
-
-            <div class="modal-footer">
-                <a class="btn btn-warning text-white font-weight-bold vsckb-no-btn">
-                    <span>NO!</span>
-                </a>
-
-                <a class="btn btn-danger text-white vsckb-yes-btn">
-                    <span>Yes</span>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal" tabindex="-1" role="dialog" id="vsckb-edit-card-modal" data-keyboard="false">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Card</h5>
-
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-
-            <div class="modal-body">
-                <form>
-                    <div class="form-group">
-                        <label for="vsckb-edit-card-title">Title</label>
-                        <input type="text" class="form-control" id="vsckb-edit-card-title">
-                    </div>
-
-                    <div class="row">
-                        <div class="col col-10">
-                            <div class="form-group vsckb-card-type-list">
-                                <label for="vsckb-edit-card-type">Type</label>
-                                <select id="vsckb-edit-card-type" class="form-control"></select>
-                            </div>
-                        </div>
-
-                        <div class="col col-2">
-                            <div class="form-group">
-                                <label for="vsckb-edit-card-prio">Prio</label>
-                                <input type="number" id="vsckb-edit-card-prio" class="form-control" placeholder="0"></input>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="vsckb-edit-card-category">Category</label>
-                        <input type="text" class="form-control" id="vsckb-edit-card-category">
-                    </div>
-
-                    <div class="form-group vsckb-card-assigned-to">
-                        <label for="vsckb-edit-card-assigned-to">Assigned To</label>
-                        <input type="text" class="form-control" id="vsckb-edit-card-assigned-to">
-                    </div>
-
-                    <div class="row">
-                        <div class="col col-12">
-                            <ul class="nav nav-pills vsckb-card-description-details-tablist" id="vsckb-edit-card-description-details-tablist" role="tablist">
-                                <li class="nav-item">
-                                    <a class="nav-link active" id="vsckb-edit-card-description-tab" data-toggle="pill" href="#vsckb-edit-card-description-tab-pane" role="tab" aria-controls="vsckb-edit-card-description-tab-pane" aria-selected="true">
-                                        (Short) Description
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link" id="vsckb-edit-card-details-tab" data-toggle="pill" href="#vsckb-edit-card-details-tab-pane" role="tab" aria-controls="vsckb-edit-card-details-tab-pane" aria-selected="false">
-                                        Details
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link" id="vsckb-edit-card-references-tab" data-toggle="pill" href="#vsckb-edit-card-references-tab-pane" role="tab" aria-controls="vsckb-edit-card-references-tab-pane" aria-selected="false">
-                                        References
-                                    </a>
-                                </li>
-                            </ul>
-
-                            <div class="tab-content vsckb-card-description-details-tab-content" id="vsckb-edit-card-description-details-tab-content">
-                                <div class="tab-pane form-group show active" id="vsckb-edit-card-description-tab-pane" role="tabpanel" aria-labelledby="vsckb-edit-card-description-tab">
-                                    <textarea class="form-control vsckb-markdown-editor" id="vsckb-edit-card-description" rows="5" maxlength="255"></textarea>
-                                </div>
-
-                                <div class="tab-pane form-group" id="vsckb-edit-card-details-tab-pane" role="tabpanel" aria-labelledby="vsckb-edit-card-details-tab">
-                                    <textarea class="form-control vsckb-markdown-editor" id="vsckb-edit-card-details" rows="7"></textarea>
-                                </div>
-
-                                <div class="tab-pane form-group vsckb-card-references-tab-pane" id="vsckb-edit-card-references-tab-pane" role="tabpanel" aria-labelledby="vsckb-edit-card-references-tab">
-                                    <nav class="navbar navbar-light bg-light">
-                                        <form class="row form-inline" style="margin: 0; padding: 0;">
-                                            <div class="col" style="display: table; margin: 0; padding: 0;">
-                                                <div style="display: table-cell;">
-                                                    <select class="form-control vsckb-card-list"></select>
-                                                </div>
-
-                                                <div style="display: table-cell; width: 32px; padding: 8px; top: -2px; position: relative;">
-                                                    <a class="btn btn-sm btn-primary text-white vsckb-add-link-to-card-btn text-center align-middle" title="Add Link To Card ..." id="vsckb-edit-card-add-link-btn">
-                                                        <i class="fa fa-link" aria-hidden="true"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </nav>
-
-                                    <div class="vsckb-list-of-linked-cards"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-
-                <div class="row">
-                    <div class="col col-12">
-                        <div class="vsckb-help-link">
-                            <i class="fa fa-question-circle" aria-hidden="true"></i> <a href="#" class="vsckb-with-known-url" vsckb-url="markdown-help">Markdown Help</a>
-                        </div>
-
-                        <div class="vsckb-help-link">
-                            <i class="fa fa-question-circle" aria-hidden="true"></i> <a href="#" class="vsckb-with-known-url" vsckb-url="mermaid-help">Diagram Help</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <a class="btn btn-primary vsckb-save-btn text-white">
-                    <i class="fa fa-floppy-o" aria-hidden="true"></i>
-
-                    <span>Save</span>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal" tabindex="-1" role="dialog" id="vsckb-clear-done-modal">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-white">
-                <h5 class="modal-title"></h5>
-
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-
-            <div class="modal-body">
-                <span>Do you really want to delete ALL cards in <strong>Done</strong>?</span>
-            </div>
-
-            <div class="modal-footer">
-                <a class="btn btn-warning text-white font-weight-bold vsckb-no-btn">
-                    <span>NO!</span>
-                </a>
-
-                <a class="btn btn-danger text-white vsckb-yes-btn">
-                    <span>Yes</span>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal" tabindex="-1" role="dialog" id="vsckb-card-details-modal">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"></h5>
-
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col col-12 vsckb-badge-list"></div>
-                </div>
-
-                <div class="row">
-                    <div class="col col-12 vsckb-body"></div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <a class="btn btn-primary vsckb-edit-btn text-white">
-                    <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-
-                    <span>Edit</span>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal" tabindex="-1" role="dialog" id="vsckb-card-filter-modal">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title">Filter</h5>
-
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="vsckb-card-filter-expr">Expression</label>
-                    <textarea type="text" class="form-control" id="vsckb-card-filter-expr" placeholder="example: type == &quot;emergency&quot; or is_bug" rows="7"></textarea>
-                </div>
-
-                <div class="row">
-                    <div class="col col-12">
-                        <i class="fa fa-question-circle" aria-hidden="true"></i> <a href="#" class="vsckb-with-known-url" vsckb-url="filter-help">Open Help</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <a class="btn btn-primary vsckb-apply-btn text-white">
-                    <i class="fa fa-filter" aria-hidden="true"></i>
-
-                    <span>Apply</span>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-${ CUSTOM_STYLE_FILE ? `<link rel="stylesheet" href="${ CUSTOM_STYLE_FILE }">`
-                     : '' }
-`;
-            },
-            getHeaderButtons: () => {
-                return `
-<div id="vsckb-additional-header-btns">
-    <a class="btn btn-primary btn-sm text-white" id="vsckb-filter-cards-btn" title="Filter">
-        <i class="fa fa-filter" aria-hidden="true"></i>
-    </a>
-
-    <a class="btn btn-secondary btn-sm text-dark" id="vsckb-reload-board-btn" title="Reload Board">
-        <i class="fa fa-refresh" aria-hidden="true"></i>
-    </a>
-
-    <a class="btn btn-secondary btn-sm text-dark" id="vsckb-save-board-btn" title="Save Board">
-        <i class="fa fa-floppy-o" aria-hidden="true"></i>
-    </a>
-</div>
-`;
+                return CUSTOM_STYLE_FILE
+                    ? `<link rel="stylesheet" href="${ CUSTOM_STYLE_FILE }">`
+                    : '';
             },
             getResourceUri: GET_RES_URI,
             name: 'board',
+            // the bundled interface, built by 'scripts/build-webview.js'
+            bundleFile: 'webview/main.js',
         });
     }
 
@@ -984,6 +529,24 @@ ${ CUSTOM_STYLE_FILE ? `<link rel="stylesheet" href="${ CUSTOM_STYLE_FILE }">`
         const FILE = this.file;
         if (!FILE) {
             return;
+        }
+
+        // this one is sent without waiting for the board: the Webview may
+        // receive the four answers in any order, and paints on its own cached
+        // state until they arrive
+        const LOAD_PREFERENCES = this.openOptions.loadViewPreferences;
+        if (LOAD_PREFERENCES) {
+            try {
+                const PREFERENCES = await Promise.resolve(
+                    LOAD_PREFERENCES()
+                );
+
+                if (PREFERENCES) {
+                    await this.postMessage('setViewPreferences', PREFERENCES);
+                }
+            } catch (e) {
+                vsckb.showError(e);
+            }
         }
 
         await this.reloadBoard();
@@ -1227,6 +790,24 @@ ${ CUSTOM_STYLE_FILE ? `<link rel="stylesheet" href="${ CUSTOM_STYLE_FILE }">`
                                         } catch (e) {
                                             vsckb.showError(e);
                                         }
+                                    }
+                                }
+                            };
+                            break;
+
+                        case 'saveViewPreferences':
+                            action = async () => {
+                                // how the board is displayed never touches the
+                                // board file and never raises an event towards
+                                // the script of the user
+                                const SAVE = this.openOptions.saveViewPreferences;
+                                if (SAVE && msg.data) {
+                                    try {
+                                        await Promise.resolve(
+                                            SAVE(msg.data)
+                                        );
+                                    } catch (e) {
+                                        vsckb.showError(e);
                                     }
                                 }
                             };

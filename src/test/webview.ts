@@ -16,21 +16,38 @@
  */
 
 //
-// The board logic lives in the scripts of the Webview ('board.js' and
-// 'script.js'), as plain global functions, and therefore cannot be imported.
+// The characterization suite is a safety net, and a safety net is worth
+// exactly as much as its independence from the thing it catches. So the
+// ASSERTIONS of 'card-sorting.unit.test.ts' and 'card-filter.unit.test.ts' did
+// not move by a character while the board was rewritten; only what stands
+// behind the names they call did.
 //
-// This module loads those scripts, unchanged, into an isolated context, so
-// that their functions can be called from tests. The browser API they touch
-// while loading is replaced by stubs: nothing is rendered, no message is sent
-// to the extension.
+// It used to be 'board.js' and 'script.js', loaded unchanged into an isolated
+// context. It is now the modules of 'src/webview/domain/', reached through a
+// facade that keeps the old names, the old signatures and the old quirks.
+//
+// One of those quirks needs saying out loud. 'vsckb_get_cards_sorted' sorted
+// the column IN PLACE, and a test pins that down. Production does not do that
+// any more: sorting is pure, and the order reaches the file because
+// 'toSavePayload' applies it deliberately (D-07). The facade below reproduces
+// the in-place write so that the test still describes the behaviour it was
+// written against, and this comment is the record that the two are no longer
+// the same mechanism.
 //
 
 import * as FS from 'fs';
 import * as Path from 'path';
 import * as VM from 'vm';
 
+import { compareCards } from '../webview/domain/sorting';
+import { createBaseFilterFunctions } from '../webview/domain/filter-functions';
+import { createFiltrexEvaluator } from '../webview/adapters/filter-language';
+import { createMomentTime } from '../webview/adapters/datetime';
+import { doesMatch } from '../webview/domain/filtering';
+import { prioritySortValue, typeSortValue } from '../webview/domain/card-taxonomy';
+
 /**
- * A loaded copy of the scripts of the Webview.
+ * A loaded copy of the board logic, behind the names the Webview used.
  */
 export interface WebviewContext {
     /**
@@ -58,10 +75,6 @@ export interface WebviewContext {
     /**
      * Assigns a value to a global variable of the Webview.
      *
-     * The variables of 'board.js' are declared with 'let', which does not put
-     * them on the global object: they can only be reached by code, that runs
-     * inside the context.
-     *
      * @param {string} name The name of the variable.
      * @param {any} value The value to assign, as JSON.
      */
@@ -69,39 +82,23 @@ export interface WebviewContext {
 }
 
 /**
- * The scripts, in the order the Webview loads them (s. 'html.ts').
+ * The vendored libraries the domain still reaches through its adapters.
+ *
+ * They are scripts, not packages: they are loaded once, in isolation, and the
+ * one symbol each of them provides is put where the adapters look for it.
  */
-const SCRIPT_FILES = [
-    'filtrex.js',
-    'moment-with-locales.min.js',
-    'script.js',
-    'board.js',
+const VENDOR_FILES = [
+    { file: 'filtrex.js', symbol: 'compileExpression' },
+    { file: 'moment-with-locales.min.js', symbol: 'moment' },
 ];
 
 /**
- * Anything, that is called on this, returns itself: it stands in for the
- * jQuery object, whose methods are chained.
+ * Whether the vendored libraries have already been loaded.
  */
-function createChainableStub(): any {
-    const STUB: any = function () {
-        return STUB;
-    };
-
-    return new Proxy(STUB, {
-        apply: () => STUB,
-        get: (target, property) => {
-            if ('then' === property) {
-                return undefined;  // it is not a promise
-            }
-
-            return STUB;
-        },
-    });
-}
+let vendorsLoaded = false;
 
 /**
- * Returns the directory, that holds the scripts of the Webview: the built
- * resources if they are there, the sources otherwise.
+ * Returns the directory, that holds the vendored scripts.
  */
 function findScriptDir(): string {
     const CANDIDATES = [
@@ -110,58 +107,105 @@ function findScriptDir(): string {
     ];
 
     for (const DIR of CANDIDATES) {
-        if (FS.existsSync(Path.join(DIR, 'board.js'))) {
+        if (FS.existsSync(Path.join(DIR, 'filtrex.js'))) {
             return DIR;
         }
     }
 
     throw new Error(
-        `Scripts of the Webview not found! Looked into: ${ CANDIDATES.join(', ') }`
+        `Vendored scripts not found! Looked into: ${ CANDIDATES.join(', ') }`
     );
 }
 
 /**
- * Loads the scripts of the Webview into a fresh context.
+ * Loads the vendored libraries and publishes them as globals.
+ *
+ * Each script runs in a sandbox of its own, so that nothing else it declares
+ * leaks into the test process; only the symbol the adapters ask for is copied
+ * out.
+ */
+function loadVendors(): void {
+    if (vendorsLoaded) {
+        return;
+    }
+
+    const DIR = findScriptDir();
+
+    for (const VENDOR of VENDOR_FILES) {
+        const FULL_PATH = Path.join(DIR, VENDOR.file);
+
+        if (!FS.existsSync(FULL_PATH)) {
+            continue;
+        }
+
+        const SANDBOX: any = { console: console };
+        SANDBOX.window = SANDBOX;
+        SANDBOX.self = SANDBOX;
+        SANDBOX.globalThis = SANDBOX;
+
+        VM.createContext(SANDBOX);
+
+        VM.runInContext(
+            FS.readFileSync(FULL_PATH, 'utf8'),
+            SANDBOX,
+            { filename: FULL_PATH }
+        );
+
+        if (SANDBOX[VENDOR.symbol]) {
+            (global as any)[VENDOR.symbol] = SANDBOX[VENDOR.symbol];
+        }
+    }
+
+    vendorsLoaded = true;
+}
+
+/**
+ * Builds the facade the tests call through.
  *
  * @return {WebviewContext} The loaded context.
  */
 export function loadWebview(): WebviewContext {
-    const SCRIPT_DIR = findScriptDir();
+    loadVendors();
 
-    const JQUERY = createChainableStub();
+    const TIME = createMomentTime();
+    const EVALUATE = createFiltrexEvaluator();
+    const BASE_FUNCS = createBaseFilterFunctions(TIME);
 
     const SANDBOX: any = {
-        // the board sends its messages through this one
-        vscode: {
-            postMessage: () => { },
-        },
-        // 'vsckb_log()' is defined inline by 'html.ts', not by the scripts
-        vsckb_log: () => { },
-        $: JQUERY,
-        jQuery: JQUERY,
-        document: createChainableStub(),
-        navigator: { userAgent: 'vscode-kanban tests' },
         console: console,
-        setTimeout: setTimeout,
-        clearTimeout: clearTimeout,
-        setInterval: setInterval,
-        clearInterval: clearInterval,
+        JSON: JSON,
+
+        /**
+         * The board, as the Webview used to hold it: a mutable global the
+         * tests assign to and read back.
+         */
+        allCards: undefined,
+
+        vsckb_does_match: (expr: any, opts?: any) => {
+            return doesMatch(expr, opts, EVALUATE, BASE_FUNCS);
+        },
+
+        vsckb_get_card_prio_sort_val: (card: any) => prioritySortValue(card || {}),
+
+        vsckb_get_card_type_sort_val: (card: any) => typeSortValue(card || {}),
+
+        /**
+         * The cards of a column, ordered.
+         *
+         * The column is sorted where it lies, and a column that does not exist
+         * fails on '.sort' -- both of them on purpose, s. the note at the top
+         * of this file.
+         */
+        vsckb_get_cards_sorted: (column: string) => {
+            return SANDBOX.allCards[column].sort(compareCards);
+        },
     };
+
     SANDBOX.window = SANDBOX;
     SANDBOX.self = SANDBOX;
     SANDBOX.globalThis = SANDBOX;
 
     const CONTEXT = VM.createContext(SANDBOX);
-
-    for (const FILE of SCRIPT_FILES) {
-        const FULL_PATH = Path.join(SCRIPT_DIR, FILE);
-
-        VM.runInContext(
-            FS.readFileSync(FULL_PATH, 'utf8'),
-            CONTEXT,
-            { filename: FULL_PATH }
-        );
-    }
 
     const EVAL = <T>(code: string): T => {
         return VM.runInContext(code, CONTEXT);

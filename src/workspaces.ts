@@ -25,6 +25,7 @@ const SanitizeFilename = require('sanitize-filename');
 import * as vsckb from './extension';
 import * as vsckb_boards from './boards';
 import * as vsckb_toggl from './toggl';
+import * as vsckb_view_preferences from './view-preferences';
 import * as vscode from 'vscode';
 import * as vscode_helpers from 'vscode-helpers';
 
@@ -443,6 +444,15 @@ export class Workspace extends vscode_helpers.WorkspaceBase {
             this.boardFile.fsPath
         );
 
+        // the display state is kept in the mementos of the extension, keyed by
+        // this folder: never in a file of the workspace, which would travel in
+        // the repository
+        const VIEW_PREFERENCES = new vsckb_view_preferences.ViewPreferenceStore(
+            this.extension,
+            Path.resolve(this.folder.uri.fsPath),
+            (message) => vsckb.getLogger().warn(message, 'viewPreferences')
+        );
+
         const FILTER_FILE = Path.resolve(
             Path.join(
                 Path.dirname(KANBAN_FILE),
@@ -524,6 +534,7 @@ export class Workspace extends vscode_helpers.WorkspaceBase {
 
                 return '';
             },
+            loadViewPreferences: () => VIEW_PREFERENCES.load(),
             noScmUser: CFG.noScmUser,
             noSystemUser: CFG.noSystemUser,
             raiseEvent: async (ctx) => {
@@ -573,6 +584,13 @@ export class Workspace extends vscode_helpers.WorkspaceBase {
                     } catch (e) {
                         vsckb.showError(e);
                     }
+                }
+            },
+            saveViewPreferences: async (preferences) => {
+                try {
+                    await VIEW_PREFERENCES.save(preferences);
+                } catch (e) {
+                    vsckb.showError(e);
                 }
             },
             saveFilter: async (filter) => {

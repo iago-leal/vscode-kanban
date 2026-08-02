@@ -1,0 +1,35 @@
+{
+    /* The Webview is a separate compilation unit from the extension.
+       It runs in a browser, not in Node, and its code is new: it is
+       type checked strictly, while 'tsconfig.json' keeps the settings
+       the legacy code of the extension still needs. */
+    "compilerOptions": {
+        "target": "es2019",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "lib": [
+            "es2019",
+            "dom",
+            "dom.iterable"
+        ],
+        "jsx": "react-jsx",
+        /* Strict Type-Checking Options: on, for all of them. */
+        "strict": true,
+        "noImplicitOverride": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        /* esbuild emits the bundle; 'tsc' is only the type checker here. */
+        "noEmit": true,
+        "rootDir": "src/webview",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        /* No ambient type package is wanted: this code has no Node API. */
+        "types": [],
+        "skipLibCheck": true
+    },
+    "include": [
+        "src/webview/**/*"
+    ]
+}

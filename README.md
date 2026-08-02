@@ -19,6 +19,7 @@
 1. [Install](#install-)
 2. [How to use](#how-to-use-)
    * [How to execute](#how-to-execute-)
+   * [The board](#the-board-)
    * [Settings](#settings-)
    * [Markdown support](#markdown-support-)
    * [Diagrams and charts](#diagrams-and-charts-)
@@ -58,6 +59,25 @@ Press `F1` and enter one of the following commands:
 | Name | Description | command |
 | ---- | --------- | --------- |
 | `Kanban: Open Board ...` | Opens a kanban board of a workspace (folder). | `extension.kanban.openBoard` |
+
+### The board [[&uarr;](#how-to-use-)]
+
+The bar above the board carries three controls. All three are reachable with
+the tab key and can be pressed with `Enter` or `Space`.
+
+| Control | What it does |
+| ------- | ------------ |
+| **Theme** | Cycles through *follows the editor*, *light* and *dark*. Choosing light or dark fixes the board to it, whatever theme the editor is showing; three presses return to where you started. |
+| **Finished cards** | Hides or shows the cards of the column `Done`. Hiding them is the same act as collapsing that column, and the strip that is left states how many cards are inside. |
+| **Layout** | Switches between the four columns and a single list. The list shows exactly the same cards, each one naming the column it belongs to, and stays usable in a narrow panel. |
+
+Any column can be collapsed on its own by the button in its header, not only
+the finished one.
+
+None of this is written to the board file. The theme is remembered for the
+whole installation; the hiding, the collapsed columns and the layout are
+remembered per workspace folder. Nothing is stored inside `.vscode`, so no
+preference of yours travels in the repository.
 
 ### Settings [[&uarr;](#how-to-use-)]
 
@@ -421,7 +441,18 @@ An example of setting up custom column names:
 
 If you want to style your board, you can create a file, called `vscode-kanban.css`, inside your `.vscode` sub folder of the underlying workspace or your home directory.
 
-Have a look at the files [board.css](https://github.com/mkloubert/vscode-kanban/blob/master/src/res/css/board.css) and [style.css](https://github.com/mkloubert/vscode-kanban/blob/master/src/res/css/style.css) to get an idea of the CSS classes, that are used.
+Have a look at the files [board.css](https://github.com/mkloubert/vscode-kanban/blob/master/src/webview/theme/board.css) and [tokens.css](https://github.com/mkloubert/vscode-kanban/blob/master/src/webview/theme/tokens.css) to get an idea of the CSS classes, that are used.
+
+Every colour of the board is a custom property named after its role, declared
+twice in `tokens.css` — once for the light set and once for the dark one. Your
+own stylesheet is loaded after them, so redefining one of these under
+`.vsckb-board` recolours the board in both themes at once:
+
+```css
+.vsckb-board {
+    --vsckb-card-emergency: #7a0f0a;
+}
+```
 
 ## Logs [[&uarr;](#table-of-contents)]
 
