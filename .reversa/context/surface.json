@@ -1,0 +1,171 @@
+{
+  "generated_at": "2026-08-02T00:00:00Z",
+  "project_root": "/Users/iagoleal/dev/vscode-kanban",
+  "project_name": "vscode-kanban",
+  "project_version": "1.33.1",
+  "artifact_type": "vscode_extension",
+  "languages": [
+    { "name": "TypeScript", "extensions": [".ts"], "file_count": 8 },
+    { "name": "JavaScript", "extensions": [".js"], "file_count": 192, "note": "190 são bibliotecas vendorizadas em src/res/js; código próprio: board.js e script.js" },
+    { "name": "CSS", "extensions": [".css"], "file_count": 19, "note": "2 próprios (board.css, style.css); demais vendorizados" },
+    { "name": "JSON", "extensions": [".json"], "file_count": 8 },
+    { "name": "Markdown", "extensions": [".md"], "file_count": 4 },
+    { "name": "YAML", "extensions": [".yml"], "file_count": 2 }
+  ],
+  "primary_language": "TypeScript",
+  "frameworks": [
+    { "name": "VS Code Extension API", "version": "^1.62.0", "source": "package.json (engines.vscode)" },
+    { "name": "vscode-helpers", "version": "9.0.0", "source": "package.json" },
+    { "name": "lodash", "version": "4.17.21", "source": "package.json" },
+    { "name": "fs-extra", "version": "10.1.0", "source": "package.json" },
+    { "name": "marked", "version": "4.0.14", "source": "package.json" },
+    { "name": "html-entities", "version": "2.3.3", "source": "package.json" },
+    { "name": "humanize-duration", "version": "3.27.1", "source": "package.json" },
+    { "name": "sanitize-filename", "version": "1.6.3", "source": "package.json" },
+    { "name": "TypeScript", "version": "4.4.4", "source": "package.json (devDependencies)" },
+    { "name": "TSLint", "version": "6.1.3", "source": "package.json (devDependencies)" },
+    { "name": "Mocha (vscode/lib/testrunner)", "version": "vscode 1.1.37", "source": "package.json (devDependencies)" },
+    { "name": "CodeMirror", "version": "vendorizado", "source": "src/res/js/codemirror/" },
+    { "name": "jQuery", "version": "vendorizado", "source": "src/res/js/jquery.min.js" },
+    { "name": "Bootstrap", "version": "vendorizado", "source": "src/res/js/bootstrap.bundle.min.js" },
+    { "name": "Mermaid", "version": "vendorizado", "source": "src/res/js/mermaid/" },
+    { "name": "Showdown", "version": "vendorizado", "source": "src/res/js/showdown.min.js" },
+    { "name": "highlight.js", "version": "vendorizado", "source": "src/res/js/highlight.pack.js" },
+    { "name": "Filtrex", "version": "vendorizado", "source": "src/res/js/filtrex.js" }
+  ],
+  "package_manager": "npm",
+  "lock_file": "package-lock.json",
+  "entry_points": [
+    { "path": "src/extension.ts", "type": "extension_entry", "symbol": "activate" },
+    { "path": "src/extension.ts", "type": "extension_exit", "symbol": "deactivate" },
+    { "path": "out/extension", "type": "bundle_entry", "note": "campo main do package.json" },
+    { "path": "src/res/js/board.js", "type": "webview_entry" },
+    { "path": "extension.kanban.openBoard", "type": "command_entry", "note": "único comando contribuído" }
+  ],
+  "config_files": [
+    "package.json",
+    "tsconfig.json",
+    "tslint.json",
+    ".vscodeignore",
+    ".vscode/launch.json",
+    ".vscode/tasks.json",
+    ".vscode/settings.json",
+    ".vscode/extensions.json"
+  ],
+  "ci_cd": [
+    ".github/workflows/publish.yml"
+  ],
+  "ci_runs_tests": false,
+  "docker": null,
+  "database_hints": [],
+  "persistence": [
+    { "path": ".vscode/vscode-kanban.json", "type": "json_board_state", "scope": "workspace" },
+    { "path": ".vscode/vscode-kanban.filter", "type": "filter_state", "scope": "workspace" },
+    { "path": ".vscode/vscode-kanban.js", "type": "user_event_script", "scope": "workspace", "risk": "execução de código arbitrário do workspace" },
+    { "path": "~/.vscode-kanban/.logs/YYYYMMDD.log", "type": "log_file", "scope": "user_home" }
+  ],
+  "test_framework": "Mocha (tdd UI)",
+  "test_file_count": 2,
+  "test_coverage_note": "Suíte de exemplo do scaffold; nenhum teste exercita o domínio. Cobertura de domínio ≈ 0%.",
+  "modules": [
+    "extension",
+    "workspaces",
+    "boards",
+    "html",
+    "toggl",
+    "announcements",
+    "board-ui",
+    "webview-utils"
+  ],
+  "module_details": [
+    { "name": "extension", "path": "src/extension.ts", "loc": 586, "role": "Ciclo de vida da extensão, logger, registro de comandos, utilitários compartilhados" },
+    { "name": "workspaces", "path": "src/workspaces.ts", "loc": 1134, "role": "Workspace por pasta, configuração kanban.*, scripts de evento do usuário, exportação Markdown, detecção de usuário" },
+    { "name": "boards", "path": "src/boards.ts", "loc": 1509, "role": "Modelo do quadro e dos cartões, painel Webview KanbanBoard, protocolo de mensagens" },
+    { "name": "html", "path": "src/html.ts", "loc": 307, "role": "Geração do HTML do Webview" },
+    { "name": "toggl", "path": "src/toggl.ts", "loc": 333, "role": "Time tracking via API Toggl v8" },
+    { "name": "announcements", "path": "src/announcements.ts", "loc": 102, "role": "Avisos únicos ao usuário na ativação" },
+    { "name": "board-ui", "path": "src/res/js/board.js", "loc": 2161, "role": "Lógica do quadro no Webview: CRUD de cartões, ordenação, detalhes, links entre cartões" },
+    { "name": "webview-utils", "path": "src/res/js/script.js", "loc": 520, "role": "Utilitários do Webview: Markdown, Mermaid, highlight, filtro, datas, UUID, postMessage" }
+  ],
+  "internal_dependency_graph": {
+    "extension": ["announcements", "workspaces"],
+    "workspaces": ["extension", "boards", "toggl"],
+    "boards": ["extension", "html"],
+    "toggl": ["extension", "workspaces"],
+    "html": [],
+    "announcements": []
+  },
+  "has_circular_dependencies": true,
+  "external_integrations": [
+    { "name": "Toggl API v8", "base_url": "https://www.toggl.com/api/v8", "auth": "Basic (token:api_token em base64)", "endpoints": ["/projects/{id}", "/workspaces", "/workspaces/{id}/projects", "/time_entries/current", "/time_entries/start", "/time_entries/{id}/stop"], "note": "v8 descontinuada pelo fornecedor; atual é v9" },
+    { "name": "VS Code Marketplace", "auth": "VSCE_TOKEN", "note": "publicação via CI" },
+    { "name": "SCM local (Git)", "note": "detecção do nome de usuário, desativável por noScmUser" }
+  ],
+  "domain_constants": {
+    "board_columns": ["Todo", "In Progress", "Testing", "Done"],
+    "source": "BOARD_COLMNS em src/boards.ts"
+  },
+  "configuration_namespace": "kanban",
+  "configuration_properties": [
+    "canExecute", "cleanupExports", "columns.todo", "columns.inProgress", "columns.testing", "columns.done",
+    "exportOnSave", "exportPath", "maxExportNameLength", "globals", "noScmUser", "noSystemUser",
+    "noTimeTrackingIfIdle", "openOnStartup", "simpleIDs", "trackTime"
+  ],
+  "activation_events": ["*"],
+  "repository": {
+    "url": "https://github.com/mkloubert/vscode-kanban",
+    "default_branch": "master",
+    "commit_count": 86,
+    "first_commit": "2018-05-25",
+    "last_commit": "2022-11-07",
+    "last_commit_subject": "fix GitHub actions"
+  },
+  "license": "LGPL-3.0",
+  "total_files": 262,
+  "own_code_files": 12,
+  "own_code_loc": 6933,
+  "organization_suggestion": {
+    "granularity": "feature",
+    "rationale": "Não há roteamento centralizado, pastas top-level de domínio nem specs Gherkin; o domínio se expressa como capacidades do quadro distribuídas entre poucos arquivos grandes, de modo que a organização por feature descreve melhor o sistema do que a divisão física dos arquivos.",
+    "signals": [
+      { "type": "no_centralized_routing", "evidence": ["src/extension.ts", "src/boards.ts"] },
+      { "type": "no_domain_top_level_folders", "evidence": ["src/"] },
+      { "type": "no_bdd_specs", "evidence": ["src/test/extension.test.ts"] },
+      { "type": "capability_spread_across_few_large_files", "evidence": ["src/boards.ts", "src/workspaces.ts", "src/res/js/board.js"] }
+    ],
+    "features": [
+      "abertura-do-quadro",
+      "persistencia-do-quadro",
+      "gestao-de-cartoes",
+      "colunas-e-movimentacao",
+      "filtro-de-cartoes",
+      "vinculo-entre-cartoes",
+      "renderizacao-markdown-e-diagramas",
+      "time-tracking",
+      "integracao-toggl",
+      "exportacao-markdown",
+      "scripts-de-evento-do-usuario",
+      "configuracao-do-workspace",
+      "identificacao-de-usuario",
+      "anuncios-e-changelog"
+    ],
+    "alternative": {
+      "granularity": "module",
+      "note": "Cada arquivo TS corresponde a um domínio nítido (boards, workspaces, toggl, html, announcements); a granularidade por módulo é defensável se o objetivo for espelhar o código em vez do comportamento."
+    }
+  },
+  "preliminary_findings": [
+    { "id": "F1", "finding": "activationEvents ['*'] ativa a extensão em toda abertura do VS Code", "confidence": "confirmado" },
+    { "id": "F2", "finding": ".vscode/vscode-kanban.js executa código arbitrário do workspace", "confidence": "confirmado" },
+    { "id": "F3", "finding": "API Toggl v8 descontinuada", "confidence": "inferido" },
+    { "id": "F4", "finding": "Dependências circulares entre módulos TypeScript", "confidence": "confirmado" },
+    { "id": "F5", "finding": "Suíte de testes sem cobertura de domínio", "confidence": "confirmado" },
+    { "id": "F6", "finding": "CI publica na Marketplace sem rodar testes nem lint", "confidence": "confirmado" },
+    { "id": "F7", "finding": "tsconfig com strict = false", "confidence": "confirmado" },
+    { "id": "F8", "finding": "Script build usa cp/mkdir POSIX e quebra em Windows", "confidence": "inferido" },
+    { "id": "F9", "finding": "TSLint e pacote vscode deprecados; toolchain congelado em TS 4.4 e Node 16", "confidence": "confirmado" },
+    { "id": "F10", "finding": "board.js com 2.161 linhas em escopo global, sem modularização", "confidence": "confirmado" },
+    { "id": "F11", "finding": "moment importado sem estar declarado no package.json", "confidence": "confirmado" },
+    { "id": "F12", "finding": "Nove bibliotecas vendorizadas sem controle de versão nem de CVE", "confidence": "confirmado" }
+  ]
+}

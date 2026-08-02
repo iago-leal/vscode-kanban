@@ -1,0 +1,399 @@
+{
+  "generated_at": "2026-08-02T00:00:00Z",
+  "doc_level": "completo",
+  "modules": [
+    {
+      "name": "extension",
+      "path": "src/extension.ts",
+      "purpose": "Ciclo de vida da extensão, logger de arquivo, registro do comando openBoard, watcher de workspaces e utilitários transversais",
+      "primary_files": ["src/extension.ts"],
+      "loc": 586,
+      "functions": [
+        { "name": "activate", "file": "src/extension.ts", "params": ["context: vscode.ExtensionContext"], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "deactivate", "file": "src/extension.ts", "params": [], "returns": "void", "confidence": "confirmed" },
+        { "name": "createNewWorkspace", "file": "src/extension.ts", "params": ["folder: vscode.WorkspaceFolder", "extension: vscode.ExtensionContext"], "returns": "Promise<Workspace>", "confidence": "confirmed" },
+        { "name": "getExtensionDir", "file": "src/extension.ts", "params": [], "returns": "string", "confidence": "confirmed" },
+        { "name": "getLogger", "file": "src/extension.ts", "params": [], "returns": "vscode_helpers.Logger", "confidence": "confirmed" },
+        { "name": "getWebViewResourceUris", "file": "src/extension.ts", "params": [], "returns": "vscode.Uri[]", "confidence": "confirmed" },
+        { "name": "open", "file": "src/extension.ts", "params": ["target: string", "opts?: OpenOptions"], "returns": "Promise<ChildProcess.ChildProcess>", "confidence": "confirmed" },
+        { "name": "saveToFile", "file": "src/extension.ts", "params": ["path: string", "data: any"], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "showError", "file": "src/extension.ts", "params": ["err: any"], "returns": "Promise<any>", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "ActionQuickPickItem", "fields": [{ "name": "action", "type": "() => any", "required": false }], "confidence": "confirmed" },
+        { "name": "ActionMessageItem", "fields": [{ "name": "action", "type": "() => any", "required": false }], "confidence": "confirmed" },
+        { "name": "OpenOptions", "fields": [{ "name": "app", "type": "string | string[]", "required": false }, { "name": "cwd", "type": "string", "required": false }, { "name": "env", "type": "any", "required": false }, { "name": "wait", "type": "boolean", "required": false }], "confidence": "confirmed" },
+        { "name": "PackageFile", "fields": [{ "name": "displayName", "type": "string", "required": true }, { "name": "name", "type": "string", "required": true }, { "name": "version", "type": "string", "required": true }], "confidence": "confirmed" },
+        { "name": "WebViewMessage", "fields": [{ "name": "command", "type": "string", "required": true }, { "name": "data", "type": "any", "required": false }], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "Só pastas com esquema de URI '' ou 'file' viram Workspace; URIs remotas são ignoradas", "location": "src/extension.ts:274", "confidence": "confirmed" },
+        { "description": "Com um único workspace, o quick pick é pulado", "location": "src/extension.ts:250", "confidence": "confirmed" },
+        { "description": "O CHANGELOG é exibido uma única vez por versão, controlado por globalState.vsckbLastKnownVersion", "location": "src/extension.ts:311", "confidence": "confirmed" },
+        { "description": "activationEvents ['*'] ativa a extensão em toda abertura do VS Code", "location": "package.json:21", "confidence": "confirmed" }
+      ],
+      "dependencies": ["announcements", "workspaces"],
+      "algorithms": [
+        { "name": "Formato de log estilo Apache com escrita síncrona", "location": "src/extension.ts:122-194", "confidence": "confirmed" },
+        { "name": "Abertura multiplataforma de alvo externo (darwin/win32/unix)", "location": "src/extension.ts:446-553", "confidence": "confirmed" },
+        { "name": "Exibição condicional do CHANGELOG por comparação de versão", "location": "src/extension.ts:301-360", "confidence": "confirmed" }
+      ],
+      "findings": [
+        { "severity": "medium", "description": "deactivate() apenas marca flag; não descarta watcher nem painéis", "location": "src/extension.ts:389-395" },
+        { "severity": "medium", "description": "Monkey patching de workspaces.getAllWorkspaces em tempo de execução para quebrar a dependência circular", "location": "src/extension.ts:294" },
+        { "severity": "low", "description": "Quatro blocos catch vazios engolem erros sem log", "location": "src/extension.ts:217,351,366,433" },
+        { "severity": "medium", "description": "marked chamado com opções sanitize e mangle, removidas em versões posteriores", "location": "src/extension.ts:333-339" }
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "workspaces",
+      "path": "src/workspaces.ts",
+      "purpose": "Representa uma pasta do workspace: configuração kanban.*, arquivo do quadro, scripts de evento do usuário, exportação Markdown e time tracking interno",
+      "primary_files": ["src/workspaces.ts"],
+      "loc": 1134,
+      "functions": [
+        { "name": "Workspace.initialize", "file": "src/workspaces.ts", "params": [], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "Workspace.onDidChangeConfiguration", "file": "src/workspaces.ts", "params": [], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "Workspace.openBoard", "file": "src/workspaces.ts", "params": [], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "Workspace.raiseEvent", "file": "src/workspaces.ts", "params": ["context: EventListenerContext"], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "Workspace.trackTime", "file": "src/workspaces.ts", "params": ["args: TrackTimeEventArguments"], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "exportBoardCardsTo", "file": "src/workspaces.ts", "params": ["opts: ExportBoardCardsToOptions"], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "saveBoardTo", "file": "src/workspaces.ts", "params": ["board: Board", "file: string"], "returns": "Promise<void>", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "Config", "fields": [
+          { "name": "canExecute", "type": "boolean", "required": false, "default": false },
+          { "name": "cleanupExports", "type": "boolean", "required": false, "default": true },
+          { "name": "columns", "type": "{done, inProgress, testing, todo: string}", "required": false },
+          { "name": "exportOnSave", "type": "boolean", "required": false, "default": false },
+          { "name": "exportPath", "type": "string", "required": false },
+          { "name": "globals", "type": "any", "required": false },
+          { "name": "maxExportNameLength", "type": "number", "required": false, "default": 48 },
+          { "name": "noScmUser", "type": "boolean", "required": false, "default": false },
+          { "name": "noSystemUser", "type": "boolean", "required": false, "default": false },
+          { "name": "noTimeTrackingIfIdle", "type": "boolean", "required": false, "default": false },
+          { "name": "openOnStartup", "type": "boolean", "required": false, "default": false },
+          { "name": "simpleIDs", "type": "boolean", "required": false, "default": true },
+          { "name": "trackTime", "type": "boolean | TimeTrackingSettings", "required": false, "default": false }
+        ], "confidence": "confirmed" },
+        { "name": "EventScriptModule", "fields": [
+          { "name": "onCardCreated", "type": "EventScriptFunction", "required": false },
+          { "name": "onCardDeleted", "type": "EventScriptFunction", "required": false },
+          { "name": "onCardMoved", "type": "EventScriptFunction", "required": false },
+          { "name": "onCardUpdated", "type": "EventScriptFunction", "required": false },
+          { "name": "onColumnCleared", "type": "EventScriptFunction", "required": false },
+          { "name": "onExecute", "type": "EventScriptFunction", "required": false },
+          { "name": "onTrackTime", "type": "EventScriptFunction", "required": false },
+          { "name": "onEvent", "type": "EventScriptFunction", "required": false }
+        ], "confidence": "confirmed" },
+        { "name": "EventScriptFunctionArguments", "fields": [
+          { "name": "data", "type": "any", "required": true },
+          { "name": "extension", "type": "vscode.ExtensionContext", "required": true },
+          { "name": "file", "type": "string", "required": true },
+          { "name": "globals", "type": "any", "required": true },
+          { "name": "logger", "type": "vscode_helpers.Logger", "required": true },
+          { "name": "name", "type": "string", "required": true },
+          { "name": "options", "type": "any", "required": false },
+          { "name": "require", "type": "(id: string) => any", "required": true },
+          { "name": "session", "type": "any", "required": true },
+          { "name": "state", "type": "any", "required": true }
+        ], "confidence": "confirmed" },
+        { "name": "TimeTrackingSettings", "fields": [{ "name": "type", "type": "string", "required": false }], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "canTrackTime é verdadeiro sempre que trackTime não é nulo nem false", "location": "src/workspaces.ts:356-362", "confidence": "confirmed" },
+        { "description": "Recarregamento reentrante de configuração é reagendado em 1 segundo", "location": "src/workspaces.ts:394-404", "confidence": "confirmed" },
+        { "description": "openOnStartup abre o quadro a cada mudança de configuração, não apenas na ativação", "location": "src/workspaces.ts:413,590-598", "confidence": "confirmed" },
+        { "description": "Título do quadro é o nome da pasta ou 'Workspace #<índice>' quando vazio", "location": "src/workspaces.ts:471-474", "confidence": "confirmed" },
+        { "description": "exportPath vazio resolve para .vscode/; caminho relativo resolve a partir de .vscode/", "location": "src/workspaces.ts:532-541", "confidence": "confirmed" },
+        { "description": "maxExportNameLength inválido ou menor que 1 volta a 48", "location": "src/workspaces.ts:543-551", "confidence": "confirmed" },
+        { "description": "cleanupExports apaga por glob todos os vscode-kanban_*.card.md do diretório de exportação", "location": "src/workspaces.ts:970-986", "confidence": "confirmed" },
+        { "description": "Tipo de cartão vazio é exportado como 'note'", "location": "src/workspaces.ts:1055-1058", "confidence": "confirmed" },
+        { "description": "trackTime com type desconhecido retorna sem efeito nem aviso", "location": "src/workspaces.ts:747-748", "confidence": "confirmed" },
+        { "description": "Script do usuário sem a função do evento cai no fallback onEvent", "location": "src/workspaces.ts:805", "confidence": "confirmed" },
+        { "description": "Falha ao salvar o quadro não impede a exportação (blocos try/catch independentes)", "location": "src/workspaces.ts:518-562", "confidence": "confirmed" }
+      ],
+      "dependencies": ["extension", "boards", "toggl"],
+      "algorithms": [
+        { "name": "Despacho de eventos com resolução em três camadas (toggl, script, fallback onEvent)", "location": "src/workspaces.ts:600-886", "confidence": "confirmed" },
+        { "name": "Time tracking por carimbos alternados com recálculo total a cada acionamento", "location": "src/workspaces.ts:892-950", "confidence": "confirmed" },
+        { "name": "Exportação Markdown com saneamento de nome, truncamento e sufixo decrescente na colisão", "location": "src/workspaces.ts:959-1122", "confidence": "confirmed" }
+      ],
+      "findings": [
+        { "severity": "critical", "description": "loadModule executa .vscode/vscode-kanban.js com require irrestrito e ExtensionContext completo, sem confirmação do usuário", "location": "src/workspaces.ts:769" },
+        { "severity": "critical", "description": "cleanupExports apaga arquivos do diretório de exportação escolhido pelo usuário sem confirmação", "location": "src/workspaces.ts:970-986" },
+        { "severity": "medium", "description": "raiseEvent tem cerca de 286 linhas, muito acima do limite de 50", "location": "src/workspaces.ts:600-886" },
+        { "severity": "low", "description": "HtmlEntities.encode aplicado a conteúdo Markdown exportado (escape na camada errada)", "location": "src/workspaces.ts:1087-1094" },
+        { "severity": "low", "description": "new Buffer deprecado", "location": "src/workspaces.ts:568" }
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "boards",
+      "path": "src/boards.ts",
+      "purpose": "Modelo de dados do quadro e dos cartões, painel Webview KanbanBoard e protocolo de mensagens entre extensão e interface",
+      "primary_files": ["src/boards.ts"],
+      "loc": 1509,
+      "functions": [
+        { "name": "openBoard", "file": "src/boards.ts", "params": ["opts?: OpenBoardOptions"], "returns": "Promise<KanbanBoard>", "confidence": "confirmed" },
+        { "name": "newBoard", "file": "src/boards.ts", "params": [], "returns": "Board", "confidence": "confirmed" },
+        { "name": "KanbanBoard.open", "file": "src/boards.ts", "params": ["opts?: OpenBoardOptions"], "returns": "Promise<boolean>", "confidence": "confirmed" },
+        { "name": "KanbanBoard.reloadBoard", "file": "src/boards.ts", "params": [], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "KanbanBoard.onLoaded", "file": "src/boards.ts", "params": [], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "KanbanBoard.postMessage", "file": "src/boards.ts", "params": ["command: string", "data?: any"], "returns": "Promise<boolean>", "confidence": "confirmed" },
+        { "name": "KanbanBoard.getResourceUri", "file": "src/boards.ts", "params": ["p: string"], "returns": "vscode.Uri", "confidence": "confirmed" },
+        { "name": "KanbanBoard.generateHTML", "file": "src/boards.ts", "params": [], "returns": "string", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "Board", "fields": [
+          { "name": "todo", "type": "BoardCard[]", "required": true },
+          { "name": "in-progress", "type": "BoardCard[]", "required": true },
+          { "name": "testing", "type": "BoardCard[]", "required": true },
+          { "name": "done", "type": "BoardCard[]", "required": true }
+        ], "confidence": "confirmed" },
+        { "name": "BoardCard", "fields": [
+          { "name": "title", "type": "string", "required": true },
+          { "name": "id", "type": "string", "required": false },
+          { "name": "type", "type": "string", "required": false, "default": "" },
+          { "name": "prio", "type": "number", "required": false },
+          { "name": "category", "type": "string", "required": false },
+          { "name": "assignedTo", "type": "{name?: string}", "required": false },
+          { "name": "creation_time", "type": "string (ISO 8601 UTC)", "required": false },
+          { "name": "description", "type": "BoardCardContentValue", "required": false },
+          { "name": "details", "type": "BoardCardContentValue", "required": false },
+          { "name": "references", "type": "string[]", "required": false },
+          { "name": "tag", "type": "any", "required": false }
+        ], "confidence": "confirmed" },
+        { "name": "BoardCardContent", "fields": [
+          { "name": "content", "type": "string", "required": false },
+          { "name": "mime", "type": "'text/markdown' | 'text/plain'", "required": false, "default": "text/plain" }
+        ], "confidence": "confirmed" },
+        { "name": "BoardSettings", "fields": [
+          { "name": "canExecute", "type": "boolean", "required": false },
+          { "name": "canTrackTime", "type": "boolean", "required": false },
+          { "name": "columns", "type": "{todo, in-progress, testing, done: ColumnSettings}", "required": false },
+          { "name": "hideTimeTrackingIfIdle", "type": "boolean", "required": false },
+          { "name": "simpleIDs", "type": "boolean", "required": false, "default": true }
+        ], "confidence": "confirmed" },
+        { "name": "OpenBoardOptions", "fields": [
+          { "name": "additionalResourceRoots", "type": "vscode.Uri | vscode.Uri[]", "required": false },
+          { "name": "fileResolver", "type": "() => vscode.Uri", "required": false },
+          { "name": "git", "type": "any", "required": false },
+          { "name": "loadFilter", "type": "() => string | PromiseLike<string>", "required": false },
+          { "name": "noScmUser", "type": "boolean", "required": false },
+          { "name": "noSystemUser", "type": "boolean", "required": false },
+          { "name": "saveBoard", "type": "SaveBoardEventListener", "required": false },
+          { "name": "saveFilter", "type": "SaveBoardFilterEventListener", "required": false },
+          { "name": "settings", "type": "BoardSettings", "required": false },
+          { "name": "showOptions", "type": "vscode.ViewColumn", "required": false },
+          { "name": "raiseEvent", "type": "EventListener", "required": false },
+          { "name": "title", "type": "string", "required": false }
+        ], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "As colunas são fixas: todo, in-progress, testing, done (BOARD_COLMNS)", "location": "src/boards.ts:388-393", "confidence": "confirmed" },
+        { "description": "Cartão sem id recebe inteiro sequencial quando simpleIDs (padrão), ou id composto data_aleatório_uuid caso contrário", "location": "src/boards.ts:1411-1437", "confidence": "confirmed" },
+        { "description": "MIME diferente de text/markdown é forçado a text/plain na carga", "location": "src/boards.ts:1374-1383", "confidence": "confirmed" },
+        { "description": "Conteúdo vazio faz description/details virar undefined", "location": "src/boards.ts:1368-1370", "confidence": "confirmed" },
+        { "description": "openExternalUrl exige confirmação do usuário; openKnownUrl abre direto a partir de lista fixa", "location": "src/boards.ts:1149-1197", "confidence": "confirmed" },
+        { "description": "Nome do usuário vem do Git (git config user.name) e, na ausência, do sistema operacional, respeitando noScmUser e noSystemUser", "location": "src/boards.ts:998-1033", "confidence": "confirmed" },
+        { "description": "open() devolve false se já existir painel, impedindo duas instâncias do mesmo quadro", "location": "src/boards.ts:1078-1080", "confidence": "confirmed" }
+      ],
+      "dependencies": ["extension", "html"],
+      "algorithms": [
+        { "name": "Normalização do quadro na carga (colunas, ids, MIME)", "location": "src/boards.ts:1336-1462", "confidence": "confirmed" },
+        { "name": "Resolução de URI de recurso por varredura de raízes com fallback silencioso", "location": "src/boards.ts:941-963", "confidence": "confirmed" },
+        { "name": "Despacho de comandos do Webview por switch com ação assíncrona", "location": "src/boards.ts:1115-1262", "confidence": "confirmed" }
+      ],
+      "findings": [
+        { "severity": "critical", "description": "localResourceRoots inclui o diretório home inteiro do usuário", "location": "src/boards.ts:922-932" },
+        { "severity": "critical", "description": "Webview criado com enableScripts e enableCommandUris ligados, sem Content-Security-Policy", "location": "src/boards.ts:1106-1112" },
+        { "severity": "high", "description": "JSON.parse do arquivo do quadro sem tratamento de erro nem backup", "location": "src/boards.ts:1342" },
+        { "severity": "medium", "description": "Cerca de 470 das 1.509 linhas são HTML literal de modais embutido no TypeScript", "location": "src/boards.ts:449-919" }
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "html",
+      "path": "src/html.ts",
+      "purpose": "Geração do documento HTML do Webview por concatenação de strings",
+      "primary_files": ["src/html.ts"],
+      "loc": 307,
+      "functions": [
+        { "name": "generateHtmlDocument", "file": "src/html.ts", "params": ["opts: GenerateHtmlDocumentOptions"], "returns": "string", "confidence": "confirmed" },
+        { "name": "generateHeader", "file": "src/html.ts", "params": ["opts: GenerateHeaderOptions"], "returns": "string", "confidence": "confirmed" },
+        { "name": "generateNavBarHeader", "file": "src/html.ts", "params": ["opts: GenerateNavBarHeaderOptions"], "returns": "string", "confidence": "confirmed" },
+        { "name": "generateFooter", "file": "src/html.ts", "params": ["opts: GenerateFooterOptions"], "returns": "string", "confidence": "confirmed" },
+        { "name": "getDocumentTitle", "file": "src/html.ts", "params": ["title: string"], "returns": "string", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "GenerateHtmlDocumentOptions", "fields": [{ "name": "name", "type": "string", "required": true }, { "name": "title", "type": "string", "required": false }, { "name": "getContent", "type": "() => string", "required": false }, { "name": "getFooter", "type": "GetFooterFunction", "required": false }, { "name": "getHeaderButtons", "type": "GetHeaderButtonsFunction", "required": false }, { "name": "getResourceUri", "type": "GetResourceUriFunction", "required": true }], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "O campo name determina por convenção o carregamento de js/<name>.js e css/<name>.css", "location": "src/html.ts:139-140,252-253", "confidence": "confirmed" },
+        { "description": "Título do documento é 'Kanban Board' com sufixo entre parênteses quando há título", "location": "src/html.ts:297-307", "confidence": "confirmed" }
+      ],
+      "dependencies": [],
+      "algorithms": [],
+      "findings": [
+        { "severity": "critical", "description": "Nenhum meta Content-Security-Policy é emitido no documento do Webview", "location": "src/html.ts:160-226" },
+        { "severity": "low", "description": "crossorigin=anonymous em scripts locais do esquema vscode-resource não tem efeito", "location": "src/html.ts:139-140,183-184" }
+      ],
+      "complexity": "low"
+    },
+    {
+      "name": "toggl",
+      "path": "src/toggl.ts",
+      "purpose": "Cliente da API Toggl v8 para iniciar e parar entradas de tempo a partir de um cartão",
+      "primary_files": ["src/toggl.ts"],
+      "loc": 333,
+      "functions": [
+        { "name": "trackTime", "file": "src/toggl.ts", "params": ["args: TrackTimeEventArguments", "settings: TimeTrackingByToggleSettings"], "returns": "Promise<void>", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "TimeTrackingByToggleSettings", "fields": [{ "name": "token", "type": "string", "required": true }, { "name": "project", "type": "number", "required": false }, { "name": "type", "type": "'toggl' | 'toggle'", "required": true }], "confidence": "confirmed" },
+        { "name": "TogglProject", "fields": [{ "name": "id", "type": "number", "required": true }, { "name": "name", "type": "string", "required": true }, { "name": "__vsckbWorkspace", "type": "TogglWorkspace", "required": false }], "confidence": "confirmed" },
+        { "name": "TogglTimeEntry", "fields": [{ "name": "id", "type": "number", "required": true }, { "name": "pid", "type": "number", "required": false }], "confidence": "confirmed" },
+        { "name": "TogglWorkspace", "fields": [{ "name": "id", "type": "number", "required": true }, { "name": "name", "type": "string", "required": true }], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "token aceita valor literal ou caminho de arquivo; caminho relativo resolve a partir do diretório home", "location": "src/toggl.ts:71-92", "confidence": "confirmed" },
+        { "description": "Autenticação Basic com <token>:api_token em base64", "location": "src/toggl.ts:101", "confidence": "confirmed" },
+        { "description": "Token vazio lança 'No API token defined!'", "location": "src/toggl.ts:96-98", "confidence": "confirmed" },
+        { "description": "Projeto configurado e existente dispensa a varredura de workspaces; 404 apenas avisa e retorna", "location": "src/toggl.ts:115-138", "confidence": "confirmed" },
+        { "description": "Entrada de tempo corrente de outro projeto bloqueia o início e exige parada manual", "location": "src/toggl.ts:217-224", "confidence": "confirmed" },
+        { "description": "Tags da entrada: 'vscode', nome da pasta, basename da pasta e coluna do cartão, normalizadas, deduplicadas e ordenadas", "location": "src/toggl.ts:229-242", "confidence": "confirmed" },
+        { "description": "Descrição da entrada é o título do cartão e created_with é 'vscode-kanban'", "location": "src/toggl.ts:236-244", "confidence": "confirmed" },
+        { "description": "Quick pick ordenado por nome do projeto e depois por nome do workspace; um único projeto é escolhido automaticamente", "location": "src/toggl.ts:297-322", "confidence": "confirmed" }
+      ],
+      "dependencies": ["extension", "workspaces"],
+      "algorithms": [
+        { "name": "Alternância início/parada baseada na entrada de tempo corrente da API", "location": "src/toggl.ts:195-291", "confidence": "confirmed" }
+      ],
+      "findings": [
+        { "severity": "high", "description": "API Toggl v8 descontinuada pelo fornecedor; a versão vigente é a v9 em api.track.toggl.com", "location": "src/toggl.ts:117-270" },
+        { "severity": "low", "description": "new Buffer deprecado na montagem da autenticação", "location": "src/toggl.ts:101" },
+        { "severity": "low", "description": "folder.name e basename(folder.name) produzem a mesma tag; a duplicata é removida por distinct()", "location": "src/toggl.ts:230-231" }
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "announcements",
+      "path": "src/announcements.ts",
+      "purpose": "Exibir uma única vez o aviso de recrutamento para refatoração da extensão",
+      "primary_files": ["src/announcements.ts"],
+      "loc": 102,
+      "functions": [
+        { "name": "showAnnouncements", "file": "src/announcements.ts", "params": ["context: vscode.ExtensionContext"], "returns": "Promise<void>", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "MessageItem", "fields": [{ "name": "id", "type": "number", "required": true }, { "name": "title", "type": "string", "required": true }], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "O aviso reaparece enquanto globalState[vsckb_announcement_20201009_655f729b] não for exatamente '3'", "location": "src/announcements.ts:36-37", "confidence": "confirmed" },
+        { "description": "Abrir o link externo com sucesso equivale a 'não mostrar de novo'; falha ao abrir faz o aviso voltar", "location": "src/announcements.ts:62,84", "confidence": "confirmed" },
+        { "description": "A opção 'Later' não grava nada, por desenho", "location": "src/announcements.ts:48-51", "confidence": "confirmed" }
+      ],
+      "dependencies": [],
+      "algorithms": [],
+      "findings": [
+        { "severity": "low", "description": "TODO 'load from external resource' sem ação desde outubro de 2020", "location": "src/announcements.ts:31" },
+        { "severity": "low", "description": "O aviso convida a portar a extensão para React; a refatoração nunca ocorreu", "location": "src/announcements.ts:39" }
+      ],
+      "complexity": "low"
+    },
+    {
+      "name": "board-ui",
+      "path": "src/res/js/board.js",
+      "purpose": "Comportamento do quadro dentro do Webview: estado vivo dos cartões, CRUD, renderização, ordenação, filtragem, movimentação e disparo de eventos",
+      "primary_files": ["src/res/js/board.js"],
+      "loc": 2161,
+      "functions": [
+        { "name": "vsckb_refresh_card_view", "file": "src/res/js/board.js", "params": ["onAdded?"], "returns": "void", "confidence": "confirmed" },
+        { "name": "vsckb_get_cards_sorted", "file": "src/res/js/board.js", "params": ["type"], "returns": "BoardCard[]", "confidence": "confirmed" },
+        { "name": "vsckb_get_card_colors_by_type", "file": "src/res/js/board.js", "params": ["cardType", "opts"], "returns": "{background, text}", "confidence": "confirmed" },
+        { "name": "vsckb_edit_card", "file": "src/res/js/board.js", "params": ["i", "opts"], "returns": "void", "confidence": "confirmed" },
+        { "name": "vsckb_save_board", "file": "src/res/js/board.js", "params": [], "returns": "void", "confidence": "confirmed" },
+        { "name": "vsckb_reload_board", "file": "src/res/js/board.js", "params": [], "returns": "void", "confidence": "confirmed" },
+        { "name": "vsckb_get_other_cards", "file": "src/res/js/board.js", "params": ["thisCard"], "returns": "object", "confidence": "confirmed" },
+        { "name": "vsckb_find_next_simple_card_id", "file": "src/res/js/board.js", "params": [], "returns": "number", "confidence": "confirmed" },
+        { "name": "vsckb_update_card_item_footer", "file": "src/res/js/board.js", "params": ["item", "entry"], "returns": "void", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "estado global do Webview", "fields": [
+          { "name": "allCards", "type": "Board", "required": true },
+          { "name": "boardSettings", "type": "BoardSettings", "required": false },
+          { "name": "cardDisplayFilter", "type": "string", "required": false },
+          { "name": "currentUser", "type": "{name: string}", "required": false },
+          { "name": "nextKanbanCardId", "type": "number", "required": false }
+        ], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "Ordenação dentro da coluna: prioridade decrescente, depois tipo (emergency -2, bug -1, demais 0), depois título", "location": "src/res/js/board.js:464-484", "confidence": "confirmed" },
+        { "description": "Cores por tipo: bug fundo escuro, emergency vermelho, demais info com texto escuro", "location": "src/res/js/board.js:368-380", "confidence": "confirmed" },
+        { "description": "Predicados do filtro: is_bug abrange bug e issue; is_note abrange vazio, note e task", "location": "src/res/js/board.js:807-809", "confidence": "confirmed" },
+        { "description": "O seletor da interface oferece apenas bug, emergency e vazio (Note / task)", "location": "src/res/js/board.js:2099-2101", "confidence": "confirmed" },
+        { "description": "__uid é gerado a cada carga como <índice>-<aleatório>-<epoch> e nunca persistido", "location": "src/res/js/board.js:2013", "confidence": "confirmed" },
+        { "description": "Todo evento carrega 'others' com cópia dos demais cartões do quadro", "location": "src/res/js/board.js:1473", "confidence": "confirmed" },
+        { "description": "A gravação do quadro precede o disparo do evento correspondente", "location": "src/res/js/board.js:1459-1477", "confidence": "confirmed" },
+        { "description": "O usuário corrente detectado preenche 'Assigned To' apenas se o campo estiver vazio", "location": "src/res/js/board.js:2047-2058", "confidence": "confirmed" }
+      ],
+      "dependencies": ["webview-utils"],
+      "algorithms": [
+        { "name": "Ordenação encadeada de três critérios, in place sobre o estado persistido", "location": "src/res/js/board.js:464-484", "confidence": "confirmed" },
+        { "name": "Montagem do contexto de filtro por cartão (valores e funções temporais)", "location": "src/res/js/board.js:770-928", "confidence": "confirmed" },
+        { "name": "Movimentação de cartão com gravação, re-renderização e evento", "location": "src/res/js/board.js:1459-1477", "confidence": "confirmed" }
+      ],
+      "findings": [
+        { "severity": "high", "description": "Estado autoritativo do quadro vive no Webview; não há reconciliação nem detecção de conflito", "location": "src/res/js/board.js:2" },
+        { "severity": "medium", "description": "Ordenação in place altera a ordem persistida dos cartões", "location": "src/res/js/board.js:465" },
+        { "severity": "medium", "description": "Dois vocabulários divergentes de tipo de cartão entre seletor, filtro e cores", "location": "src/res/js/board.js:807-809,2099-2101" },
+        { "severity": "medium", "description": "Arquivo de 2.161 linhas em escopo global, sem modularização nem modo estrito", "location": "src/res/js/board.js" },
+        { "severity": "low", "description": "Número mágico 597923979 na geração de identificadores, também presente em boards.ts", "location": "src/res/js/board.js:2013" }
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "webview-utils",
+      "path": "src/res/js/script.js",
+      "purpose": "Utilitários compartilhados do Webview: linguagem de filtro (Filtrex), conversão de Markdown, Mermaid, realce de sintaxe, datas, UUID e ponte de mensagens",
+      "primary_files": ["src/res/js/script.js"],
+      "loc": 520,
+      "functions": [
+        { "name": "vsckb_does_match", "file": "src/res/js/script.js", "params": ["expr", "opts"], "returns": "boolean", "confidence": "confirmed" },
+        { "name": "vsckb_from_markdown", "file": "src/res/js/script.js", "params": ["md"], "returns": "jQuery", "confidence": "confirmed" },
+        { "name": "vsckb_apply_mermaid", "file": "src/res/js/script.js", "params": ["element"], "returns": "void", "confidence": "confirmed" },
+        { "name": "vsckb_apply_highlight", "file": "src/res/js/script.js", "params": ["selector"], "returns": "void", "confidence": "confirmed" },
+        { "name": "vsckb_post", "file": "src/res/js/script.js", "params": ["cmd", "data"], "returns": "void", "confidence": "confirmed" },
+        { "name": "vsckb_raise_event", "file": "src/res/js/script.js", "params": ["name", "data"], "returns": "void", "confidence": "confirmed" },
+        { "name": "vsckb_uuid", "file": "src/res/js/script.js", "params": [], "returns": "string", "confidence": "confirmed" },
+        { "name": "vsckb_to_pretty_time", "file": "src/res/js/script.js", "params": ["time"], "returns": "string", "confidence": "confirmed" }
+      ],
+      "entities": [],
+      "business_rules": [
+        { "description": "Expressão de filtro inválida ou com erro de execução devolve true, mostrando todos os cartões", "location": "src/res/js/script.js:213-217", "confidence": "confirmed" },
+        { "description": "Expressão vazia também devolve true", "location": "src/res/js/script.js:208", "confidence": "confirmed" },
+        { "description": "A conversão de Markdown remove tags script do resultado", "location": "src/res/js/script.js:235", "confidence": "confirmed" }
+      ],
+      "dependencies": [],
+      "algorithms": [
+        { "name": "Compilação de expressão de filtro com Filtrex e ambiente de 18 funções genéricas", "location": "src/res/js/script.js:58-218", "confidence": "confirmed" }
+      ],
+      "findings": [
+        { "severity": "critical", "description": "Sanitização de Markdown limitada à remoção de <script>; atributos de evento e iframes passam intactos", "location": "src/res/js/script.js:235" },
+        { "severity": "low", "description": "Variável global implícita 'i' por falta de let no laço de str_invoke", "location": "src/res/js/script.js:163" }
+      ],
+      "complexity": "medium"
+    }
+  ],
+  "summary": {
+    "modules_analyzed": 8,
+    "total_own_loc": 6933,
+    "entities": 22,
+    "business_rules": 39,
+    "algorithms": 13,
+    "critical_findings": 6,
+    "circular_dependencies": [["extension", "workspaces"], ["workspaces", "boards", "extension"], ["toggl", "workspaces"]]
+  }
+}

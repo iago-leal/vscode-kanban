@@ -8,3 +8,7 @@ node_modules
 /typedoc.sh
 /tsdoc
 /.vscode/vscode-kanban.filter
+
+# Agents
+.claude/
+.agents/
