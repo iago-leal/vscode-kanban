@@ -190,13 +190,18 @@ export function useBoard(
     }, [MUTATE, onPreferences]);
 
     useEffect(() => {
-        const STOP = bridge.onMessage(HANDLE);
-
-        // nothing arrives until the extension is told the panel is ready
-        bridge.onLoaded();
-
-        return STOP;
+        return bridge.onMessage(HANDLE);
     }, [bridge, HANDLE]);
+
+    // Nothing arrives until the extension is told the panel is ready, and it
+    // is told ONCE: the extension answers every announcement by reading the
+    // board file from disk, so an announcement tied to the handler above --
+    // which is rebuilt whenever the display state changes -- turned a change
+    // of theme into a re-read, and the answer to it into the next
+    // announcement.
+    useEffect(() => {
+        bridge.onLoaded();
+    }, [bridge]);
 
     const SET_FILTER = useCallback((expression: string) => {
         setFilterValue(expression);

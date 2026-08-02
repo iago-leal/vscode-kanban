@@ -73,6 +73,18 @@ export function useViewState(bridge: Bridge): ViewStateControls {
         setViewState(previous => RECORD(change(previous), previous));
     }, [RECORD]);
 
+    // what the extension stored is not recorded back to it: doing so would
+    // answer every load with a write
+    //
+    // Its identity never changes, and that is load-bearing: 'useBoard' hangs
+    // the registration of its listener on this function, and a new one on
+    // every change of state made the Webview announce 'onLoaded' again, which
+    // the extension answers by reading the board file and sending the state
+    // back -- a loop that fed itself.
+    const ACCEPT = useCallback((preferences: Partial<ViewPreferences>) => {
+        setViewState(() => normalizeViewState(preferences));
+    }, []);
+
     return useMemo<ViewStateControls>(() => ({
         viewState: viewState,
 
@@ -92,11 +104,7 @@ export function useViewState(bridge: Bridge): ViewStateControls {
             state => withCollapsedColumn(state, column, collapsed)
         ),
 
-        // what the extension stored is not recorded back to it: doing so would
-        // answer every load with a write
-        accept: (preferences: Partial<ViewPreferences>) => setViewState(
-            () => normalizeViewState(preferences)
-        ),
-    }), [viewState, APPLY]);
+        accept: ACCEPT,
+    }), [viewState, APPLY, ACCEPT]);
 }
 
