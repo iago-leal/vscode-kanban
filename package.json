@@ -172,6 +172,7 @@
         "vscode:prepublish": "npm run compile",
         "build": "(del ./out) && (tsc -p ./) && (mkdir \"./out/res\") && (cp -r ./src/res/* ./out/res)",
         "compile": "tsc -p ./",
+        "lint": "tslint -p ./",
         "watch": "tsc -watch -p ./",
         "pretest": "npm run build",
         "test": "node ./out/test/runTest.js",

@@ -28,7 +28,7 @@ interface MessageItem extends vscode.MessageItem {
  * Shows announcements.
  */
 export async function showAnnouncements(context: vscode.ExtensionContext) {
-    //TODO: load from external resource
+    // TODO: load from external resource
 
     let doNotShowAgain = false;
 

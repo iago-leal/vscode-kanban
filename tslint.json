@@ -44,5 +44,5 @@
             "check-type"
         ]
 	},
-	"defaultSeverity": "warning"
+	"defaultSeverity": "error"
 }
