@@ -180,6 +180,9 @@ export function App(props: { services: Services }) {
                     onReload={ BRIDGE.reloadBoard }
                 />
 
+                { dialog ? (
+                <DialogLayer>
+
                 { 'add' === dialog?.kind ? (
                     <AddCardDialog
                         column={ dialog.column }
@@ -217,6 +220,9 @@ export function App(props: { services: Services }) {
                         onConfirm={ () => DELETE_CARD(dialog.column, dialog.card) }
                         onClose={ CLOSE }
                     />
+                ) : null }
+
+                </DialogLayer>
                 ) : null }
             </ThemeProvider>
         </ServicesProvider>
@@ -278,6 +284,29 @@ function BoardShell(props: {
 /**
  * The element that carries the colour set in force.
  */
+/**
+ * The scope the dialogs are painted in.
+ *
+ * A dialog is a SIBLING of the board, not a descendant, so it inherits nothing
+ * the board declares. Carrying the theme attributes itself is what puts the
+ * colour tokens of 'tokens.css' in scope: without it every surface, border and
+ * text colour of a dialog resolves to nothing, and what the user sees is the
+ * form lying naked over the board.
+ */
+function DialogLayer(props: { children: ReactNode }) {
+    const THEME = useTheme();
+
+    return (
+        <div
+            className="vsckb-dialog-layer"
+            data-vsckb-theme={ THEME.effective }
+            data-vsckb-contrast={ THEME.highContrast ? 'high' : undefined }
+        >
+            { props.children }
+        </div>
+    );
+}
+
 function ThemedShell(props: {
     viewMode: string;
     children: ReactNode;

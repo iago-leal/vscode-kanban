@@ -10,26 +10,35 @@
  * the list layout stays usable down to 320 px, which is why it exists.
  */
 
-.vsckb-board {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    margin: 0;
-    background: var(--vsckb-surface);
+/*
+ * The type belongs to the theme scope and not to the board, for the same reason
+ * the colours do: a dialog is a sibling of the board. Left here, dialogs fell
+ * back to the serif default of the document.
+ */
+[data-vsckb-theme] {
     color: var(--vsckb-text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     font-size: 13px;
     line-height: 1.5;
 }
 
-.vsckb-board *,
-.vsckb-board *::before,
-.vsckb-board *::after {
+.vsckb-board {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    background: var(--vsckb-surface);
+}
+
+/* the reset follows the theme scope, so that dialogs are covered too */
+[data-vsckb-theme] *,
+[data-vsckb-theme] *::before,
+[data-vsckb-theme] *::after {
     box-sizing: border-box;
 }
 
 /* every interactive element says where the keyboard is */
-.vsckb-board :focus-visible {
+[data-vsckb-theme] :focus-visible {
     outline: 2px solid var(--vsckb-focus-ring);
     outline-offset: 2px;
 }
@@ -233,8 +242,15 @@
 
 /* --------------------------------------------------------------------- card */
 
+/*
+ * A card keeps its own height. Without this, the column being a flex box with
+ * its own scrollbar, a column holding more cards than fit shrank every one of
+ * them instead of scrolling, and the 'overflow: hidden' below cut title and
+ * description off: twenty-six cards became twenty-six stripes.
+ */
 .vsckb-card {
     display: flex;
+    flex: 0 0 auto;
     flex-direction: column;
     border: 1px solid var(--vsckb-border);
     border-radius: var(--vsckb-radius);
@@ -523,16 +539,29 @@
     color: var(--vsckb-text-on-accent);
 }
 
+/*
+ * Three things are read here, and each is read differently: the facts of the
+ * card at a glance, the one-line description, and the body. They are told apart
+ * by surface and by rule, not by spacing alone -- the body carries markdown of
+ * its own, and spacing competes with it.
+ */
 .vsckb-details-facts {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 2px 12px;
-    margin: 0 0 12px;
+    gap: 6px 16px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--vsckb-border);
+    border-radius: var(--vsckb-radius);
+    background: var(--vsckb-surface-sunken);
 }
 
 .vsckb-details-facts dt {
+    align-self: baseline;
     color: var(--vsckb-text-muted);
     font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
@@ -540,11 +569,113 @@
     margin: 0;
 }
 
+.vsckb-details-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--vsckb-border);
+}
+
 .vsckb-details-section h3 {
-    margin: 12px 0 4px;
-    font-size: 12px;
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--vsckb-text-muted);
+}
+
+/*
+ * The headings INSIDE the body are the card author's own, and they were coming
+ * out at body size: a section of details read as one undifferentiated block.
+ * They get a scale, so that the structure the author wrote survives.
+ */
+.vsckb-markdown-body h1,
+.vsckb-markdown-body h2,
+.vsckb-markdown-body h3,
+.vsckb-markdown-body h4 {
+    margin: 16px 0 6px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.vsckb-markdown-body h1 {
+    font-size: 16px;
+}
+
+.vsckb-markdown-body h2 {
+    font-size: 14px;
+}
+
+.vsckb-markdown-body h3,
+.vsckb-markdown-body h4 {
+    font-size: 13px;
+}
+
+/* ------------------------------------------------ the markdown editor */
+
+/*
+ * CodeMirror ships its own light theme -- white surface, black text, blue
+ * headings -- and applies it to whatever it is opened over. Left alone, the two
+ * editors of the card form stayed white inside a dark dialog. What follows
+ * names the same tokens as everything else, so the editor follows the theme
+ * instead of contradicting it.
+ */
+[data-vsckb-theme] .CodeMirror {
+    height: 220px;
+    background: var(--vsckb-surface-raised);
+    color: var(--vsckb-text);
+    border: 1px solid var(--vsckb-border);
+    border-radius: var(--vsckb-radius);
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+}
+
+[data-vsckb-theme] .CodeMirror-gutters {
+    background: var(--vsckb-surface-sunken);
+    border-right: 1px solid var(--vsckb-border);
+}
+
+[data-vsckb-theme] .CodeMirror-linenumber {
+    color: var(--vsckb-text-muted);
+}
+
+[data-vsckb-theme] .CodeMirror-cursor {
+    border-left-color: var(--vsckb-text);
+}
+
+[data-vsckb-theme] .CodeMirror-selected {
+    background: var(--vsckb-control-active);
+}
+
+[data-vsckb-theme] .CodeMirror-scrollbar-filler,
+[data-vsckb-theme] .CodeMirror-gutter-filler {
+    background: transparent;
+}
+
+/*
+ * The markdown mode paints headings, links and emphasis. Its default palette is
+ * chosen against white, so each colour is restated against the surface in
+ * force; the accent carries what the mode calls structure.
+ */
+[data-vsckb-theme] .cm-s-default .cm-header,
+[data-vsckb-theme] .cm-s-default .cm-variable-2 {
+    color: var(--vsckb-accent);
+}
+
+[data-vsckb-theme] .cm-s-default .cm-link,
+[data-vsckb-theme] .cm-s-default .cm-url {
+    color: var(--vsckb-accent);
+}
+
+[data-vsckb-theme] .cm-s-default .cm-quote,
+[data-vsckb-theme] .cm-s-default .cm-comment {
+    color: var(--vsckb-text-muted);
+}
+
+[data-vsckb-theme] .cm-s-default .cm-string,
+[data-vsckb-theme] .cm-s-default .cm-string-2,
+[data-vsckb-theme] .cm-s-default .cm-keyword {
+    color: var(--vsckb-text);
 }
 
 /* the four columns need room; below it, one column at a time is panned to */

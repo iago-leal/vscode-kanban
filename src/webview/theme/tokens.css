@@ -13,9 +13,15 @@
  *
  * The set is chosen by the attribute 'data-vsckb-theme' on the root of the
  * interface, so a change of theme is one attribute away and never a reload.
+ *
+ * The set is attached to the ATTRIBUTE and not to '.vsckb-board', because a
+ * dialog is a sibling of the board and not a descendant of it: scoped to the
+ * class, every 'var(--vsckb-…)' inside a dialog resolved to nothing, and a
+ * dialog painted with no surface at all is a form of loose text lying over the
+ * board. Whatever carries the attribute carries the colours.
  */
 
-.vsckb-board {
+[data-vsckb-theme] {
     /* the surfaces, from the panel down to a single card */
     --vsckb-surface: #f2f3f5;
     --vsckb-surface-sunken: #e7e9ed;
@@ -70,7 +76,7 @@
     --vsckb-radius: 4px;
 }
 
-.vsckb-board[data-vsckb-theme="dark"] {
+[data-vsckb-theme="dark"] {
     --vsckb-surface: #1e1f22;
     --vsckb-surface-sunken: #17181b;
     --vsckb-surface-raised: #26282d;
@@ -111,7 +117,7 @@
  * resolves to dark and only strengthens the borders, so that the shape of the
  * board is drawn by lines rather than by fills.
  */
-.vsckb-board[data-vsckb-contrast="high"] {
+[data-vsckb-contrast="high"] {
     --vsckb-border: var(--vsckb-border-strong);
     --vsckb-shadow: none;
 }
