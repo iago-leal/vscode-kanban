@@ -40,6 +40,7 @@ import { useBoard } from './use-board';
 import { useViewState } from './use-view-state';
 
 import '../theme/board.css';
+import '../theme/appearance.css';
 
 /**
  * The dialog that is open, if any.

@@ -7,7 +7,7 @@
  */
 
 import { FormControl, Textarea } from '@primer/react';
-import { useEffect, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useRef, useState } from 'react';
 
 import { CodeEditor, createCodeMirrorEditor } from '../../adapters/code-editor';
 import { useServices } from '../services';
@@ -73,7 +73,15 @@ export function MarkdownField(props: {
         // description; the text area inside it is a real one, which is what
         // the editor opens over. Nothing of the adapter changes: it still
         // receives an element and knows nothing of forms
-        <FormControl id={ props.id } className="vsckb-field">
+        // the number of lines travels to the stylesheet as a variable, because
+        // the editor opened over the text area does not inherit the 'rows' of
+        // it: without this the two fields of the form asked for five and seven
+        // lines and both got whatever their content happened to need
+        <FormControl
+            id={ props.id }
+            className="vsckb-field"
+            style={ { '--vsckb-editor-rows': props.rows } as CSSProperties }
+        >
             <FormControl.Label>{ props.label }</FormControl.Label>
 
             <Textarea

@@ -12,6 +12,8 @@
  * stylesheet of the design system switched off, the board has to come out
  * unpainted -- and it cannot, if a second stylesheet is quietly redeclaring
  * the colours. A test reads this file and fails on any property that paints.
+ * What paints lives in 'appearance.css', which may paint only by naming a
+ * token; the same test forbids literals there.
  *
  * The spacing below is written as lengths because it is length: a gap is not a
  * colour, and naming a token for it would move the number without making it
@@ -114,7 +116,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 8px;
+    padding: 8px 8px 6px;
     flex: 0 0 auto;
 }
 
@@ -135,7 +137,7 @@
     flex: 1 1 auto;
     flex-direction: column;
     gap: 8px;
-    padding: 4px;
+    padding: 2px 8px 8px;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -201,20 +203,25 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 8px;
-    min-height: 28px;
+    padding: 8px 10px 0;
 }
 
 .vsckb-card-type {
     margin-right: auto;
 }
 
+/* the top padding is the card's own: a card without a type renders no row
+   above at all, and used to start flush against its own edge when it did */
 .vsckb-card-info {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 0 8px 8px;
+    padding: 8px 10px 0;
     min-width: 0;
+}
+
+.vsckb-card-stripe + .vsckb-card-info {
+    padding-top: 6px;
 }
 
 [data-vsckb="card-title"] {
@@ -240,7 +247,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 6px;
-    padding: 4px 8px 6px;
+    padding: 2px 6px 2px 10px;
 }
 
 .vsckb-card-time {
@@ -357,16 +364,23 @@
 
 /*
  * The editor of Markdown is a vendored library that measures itself, and a
- * height it is never given is a height it reports as zero. Everything it looks
- * like now reaches it through the field control it sits inside.
+ * height it is never given is a height it reports as zero. It is given a FIXED
+ * one, because 'height: auto' let the editor grow with its text: a long
+ * description pushed the details field off the bottom of the dialog and the
+ * two fields never had the same size twice. The field asks for as many lines
+ * as the form asked the text area for, and anything longer scrolls inside the
+ * editor instead of resizing the dialog.
+ *
+ * The editor is a DESCENDANT of the field and not its sibling: the class of the
+ * component lands on the wrapper the design system draws around a text area,
+ * and CodeMirror inserts itself inside that wrapper. A sibling selector matched
+ * nothing, and matching nothing is how the editor kept the three hundred pixels
+ * its own stylesheet gives it by default. The scroller is left alone: the
+ * library already gives it the full height, and the floor this sheet used to
+ * declare for it was what made a field ignore the size it was asked for.
  */
-.vsckb-markdown-editor + .CodeMirror {
-    height: auto;
-    min-height: 120px;
-}
-
-.CodeMirror-scroll {
-    min-height: 120px;
+.vsckb-markdown-editor .CodeMirror {
+    height: calc(var(--vsckb-editor-rows, 5) * 1.5em + 16px);
 }
 
 /* ----------------------------------------------------------------- narrow */

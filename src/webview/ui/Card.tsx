@@ -15,14 +15,16 @@
  */
 
 import { ActionList, ActionMenu, IconButton as SystemIconButton, Label, ProgressBar } from '@primer/react';
+import type { LabelColorOptions } from '@primer/react';
 
 import { BoardCard, BoardSettings, ColumnKey } from '../domain/types';
+import type { CardColorGroup } from '../domain/card-taxonomy';
+import { colorGroupOf } from '../domain/card-taxonomy';
 import { Icon, IconName } from './icons';
 import { IconButton } from './IconButton';
 import { Markdown } from './Markdown';
 import { anchored } from './anchors';
 import { columnName, movesFrom } from '../domain/columns';
-import { colorGroupOf } from '../domain/card-taxonomy';
 import { contentOf } from '../domain/types';
 import { taskProgressOf } from '../domain/task-progress';
 import { toStringSafe } from '../domain/text';
@@ -39,6 +41,25 @@ export interface CardActions {
     onExecute(card: BoardCard, column: ColumnKey): void;
     onTrackTime(card: BoardCard, column: ColumnKey): void;
 }
+
+/**
+ * The colour the design system gives each group of types.
+ *
+ * The GROUPING is the domain's ('colorGroupOf'); which of the ten colours of
+ * the design system answers for a group is a question of appearance, and is
+ * answered here and in 'appearance.css' -- the label and the stripe of the same
+ * card have to agree, and they agree because both read the same group.
+ *
+ * 'danger' and 'attention' are not decoration: they are the two the design
+ * system reserves for "something is wrong" and "something needs looking at",
+ * which is what an emergency and a bug are. Everything else is secondary,
+ * because a note that shouted would leave nothing for the two that should.
+ */
+const GROUP_LABELS: { [group in CardColorGroup]: LabelColorOptions } = {
+    'emergency': 'danger',
+    'bug': 'attention',
+    'default': 'secondary',
+};
 
 /**
  * The icon of each move, in the words of the board.
@@ -99,9 +120,21 @@ export function Card(props: {
             data-vsckb-group={ GROUP }
             aria-label={ NAME }
         >
+            { /*
+               * The row of the type and the two optional buttons. A card that
+               * has none of the three used to render it anyway, as an empty
+               * strip twenty-eight pixels tall at the top of every note on the
+               * board -- room the column was paying for and nothing occupied.
+               */ }
+            { '' === TYPE && !CAN_EXECUTE && !CAN_TRACK_TIME ? null : (
             <div className="vsckb-card-stripe">
                 { '' === TYPE ? <span /> : (
-                    <Label className="vsckb-card-type">{ TYPE }</Label>
+                    <Label
+                        className="vsckb-card-type"
+                        variant={ GROUP_LABELS[GROUP] }
+                    >
+                        { TYPE }
+                    </Label>
                 ) }
 
                 { CAN_EXECUTE ? (
@@ -120,6 +153,7 @@ export function Card(props: {
                     />
                 ) : null }
             </div>
+            ) }
 
             <div { ...anchored({ anchor: 'card-footer', className: 'vsckb-card-info' }) }>
                 <h3 { ...anchored({ anchor: 'card-title', className: 'vsckb-card-title' }) }>
