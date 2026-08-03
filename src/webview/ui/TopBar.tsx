@@ -1,27 +1,51 @@
 /**
  * The bar above the board.
  *
- * It carries the three controls this feature adds — the theme, the hiding of
- * finished cards and the layout — beside the filter and the title that were
- * already there.
+ * It carries the three controls that decide what the board shows -- the theme,
+ * the hiding of finished cards and the layout -- beside the filter and the
+ * title that were already there.
  *
- * All three are buttons, reachable by tab and pressable by Enter or Space
- * (RF-06, RF-12). Two of them are two-state and say so through 'aria-pressed';
- * the theme has three states, which 'aria-pressed' cannot express, so it
- * announces the current state in its own name instead of pretending to be a
- * toggle.
+ * The controls are the ones of the design system now, which is what pays for
+ * the focus ring, the pressed state and the hit area being right without a
+ * rule of ours (RF-01).
+ *
+ * What each control SAYS is ours, and it says where it goes, not where it is.
+ * A control reading 'light' while the board is light states the obvious and
+ * leaves the useful part -- what pressing it does -- to be guessed; reading
+ * 'Dark' on a light board, it answers the only question anyone asks of a
+ * button. The visible name is therefore the destination throughout: the next
+ * theme of the cycle, the layout not in force, the fate of the finished cards.
+ *
+ * Sight is what that trades on, though, and a name that changes under the
+ * pointer is no use to someone who cannot see the board it describes. So the
+ * accessible name carries BOTH, state first and action second -- 'Theme:
+ * light. Press for dark' -- which is what keeps RF-14 satisfied while the
+ * visible label stays short. And 'aria-pressed' is gone from all three: a
+ * button labelled with its action has no pressed state to report, and
+ * announcing 'List, pressed' while the board shows columns would be a
+ * contradiction read aloud.
  */
+
+import { Button, IconButton as SystemIconButton, TextInput } from '@primer/react';
 
 import { Icon, IconName } from './icons';
 import { ThemePreference, ViewMode } from '../domain/types';
+import { anchored } from './anchors';
+import { nextThemePreference } from '../domain/view-state';
 
 /**
- * How each preference of theme is announced and drawn.
+ * How each preference of theme is drawn, named as a state and named as an act.
+ *
+ * The two names differ by more than capitals: 'follows the editor' describes a
+ * board, 'Follow the editor' asks for one.
  */
-const THEME_LABELS: { [preference in ThemePreference]: { text: string; icon: IconName } } = {
-    'follow-editor': { text: 'follows the editor', icon: 'theme-auto' },
-    'light': { text: 'light', icon: 'theme-light' },
-    'dark': { text: 'dark', icon: 'theme-dark' },
+const THEME_LABELS: {
+    [preference in ThemePreference]: { state: string; action: string; icon: IconName }
+} = {
+    'follow-editor': { state: 'follows the editor', action: 'Follow the editor', icon: 'theme-auto' },
+    'light': { state: 'light', action: 'Light', icon: 'theme-light' },
+    'dark': { state: 'dark', action: 'Dark', icon: 'theme-dark' },
+    'high-contrast': { state: 'high contrast', action: 'High contrast', icon: 'theme-contrast' },
 };
 
 /**
@@ -41,12 +65,16 @@ export function TopBar(props: {
     onReload(): void;
 }) {
     const THEME = THEME_LABELS[props.theme] || THEME_LABELS['follow-editor'];
+    const NEXT_THEME = THEME_LABELS[nextThemePreference(props.theme)];
+
+    const IS_LIST = 'list' === props.viewMode;
 
     return (
-        <header className="vsckb-topbar">
+        <header { ...anchored({ anchor: 'board-header', className: 'vsckb-topbar' }) }>
             <h1 className="vsckb-topbar-title">{ props.title }</h1>
 
-            <input
+            <TextInput
+                { ...anchored({ anchor: 'action-filter' }) }
                 type="search"
                 className="vsckb-topbar-filter"
                 value={ props.filter }
@@ -56,59 +84,44 @@ export function TopBar(props: {
             />
 
             <div className="vsckb-topbar-controls">
-                <button
-                    type="button"
-                    className="vsckb-control"
-                    title={ `Theme: ${ THEME.text }` }
-                    aria-label={ `Theme: ${ THEME.text }. Press to change` }
+                <Button
+                    leadingVisual={ () => <Icon name={ NEXT_THEME.icon } /> }
+                    title={ `Theme: ${ THEME.state }. Press for ${ NEXT_THEME.state }` }
+                    aria-label={ `Theme: ${ THEME.state }. Press for ${ NEXT_THEME.state }` }
                     onClick={ props.onCycleTheme }
                 >
-                    <Icon name={ THEME.icon } />
-                    <span className="vsckb-control-text">{ THEME.text }</span>
-                </button>
+                    { NEXT_THEME.action }
+                </Button>
 
-                <button
-                    type="button"
-                    className="vsckb-control"
-                    aria-pressed={ props.hideDone }
+                <Button
+                    leadingVisual={ () => <Icon name={ props.hideDone ? 'show' : 'hide' } /> }
                     title={ props.hideDone ? 'Finished cards are hidden'
                                            : 'Finished cards are shown' }
                     aria-label={ hideDoneLabel(props.hideDone, props.hiddenCount) }
                     onClick={ props.onToggleHideDone }
                 >
-                    <Icon name={ props.hideDone ? 'hide' : 'show' } />
-                    <span className="vsckb-control-text">
-                        { props.hideDone ? `Finished hidden (${ props.hiddenCount })`
-                                         : 'Finished shown' }
-                    </span>
-                </button>
+                    { props.hideDone ? `Show finished (${ props.hiddenCount })`
+                                     : 'Hide finished' }
+                </Button>
 
-                <button
-                    type="button"
-                    className="vsckb-control"
-                    aria-pressed={ 'list' === props.viewMode }
-                    title={ 'list' === props.viewMode ? 'Showing a single list'
-                                                      : 'Showing four columns' }
-                    aria-label={ 'list' === props.viewMode
-                        ? 'Layout: single list. Press to show columns'
+                <Button
+                    leadingVisual={ () => <Icon name={ IS_LIST ? 'columns' : 'list' } /> }
+                    title={ IS_LIST ? 'Showing a single list. Press for four columns'
+                                    : 'Showing four columns. Press for a single list' }
+                    aria-label={ IS_LIST
+                        ? 'Layout: single list. Press to show four columns'
                         : 'Layout: four columns. Press to show a single list' }
                     onClick={ props.onToggleViewMode }
                 >
-                    <Icon name={ 'list' === props.viewMode ? 'list' : 'columns' } />
-                    <span className="vsckb-control-text">
-                        { 'list' === props.viewMode ? 'List' : 'Columns' }
-                    </span>
-                </button>
+                    { IS_LIST ? 'Columns' : 'List' }
+                </Button>
 
-                <button
-                    type="button"
-                    className="vsckb-control"
-                    title="Read the board from disk again"
+                <SystemIconButton
+                    { ...anchored({ anchor: 'action-reload' }) }
+                    icon={ () => <Icon name="reload" /> }
                     aria-label="Read the board from disk again"
                     onClick={ props.onReload }
-                >
-                    <Icon name="reload" />
-                </button>
+                />
             </div>
         </header>
     );
@@ -118,7 +131,8 @@ export function TopBar(props: {
  * Names the control of the finished cards, counting what it is hiding.
  *
  * Announcing the count is what keeps the control honest for someone who cannot
- * see the strip of the collapsed column.
+ * see the strip of the collapsed column: the visible label shows the same
+ * number, but only the accessible name says what it counts.
  */
 function hideDoneLabel(hidden: boolean, count: number): string {
     return hidden

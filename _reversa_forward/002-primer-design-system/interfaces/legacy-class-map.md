@@ -41,6 +41,22 @@ O que o mecanismo precisa garantir: um seletor antigo escrito na folha do usuár
 efeito visual que produzia na 1.33.1, e a folha do usuário continua vencendo por ser a última da
 cascata.
 
+> **Reconciliação de 2026-08-03, na execução.** O mecanismo mudou; o mapa, não. A folha ilustrada
+> acima **não pode existir**: CSS não tem aliasing de seletor. Uma regra escrita pelo usuário contra
+> `.vsckb-kanban-card` casa os elementos que carregam essa classe e mais nada, e `:is()` ou
+> `:where()` agrupam seletores dentro da regra em que aparecem, sem alcançar regra de terceiro.
+>
+> O artefato gerado passou a ser um **módulo**, `src/webview/theme/legacy-compat.ts`, e os nomes
+> antigos voltam para os próprios elementos, aplicados no render pelo auxiliar
+> `src/webview/ui/anchors.ts`. Um nome que era identificador na 1.33.1 volta como identificador; um
+> que era classe, como classe. O efeito prometido no parágrafo acima é cumprido por inteiro, e a
+> folha do usuário continua sendo a última injetada.
+>
+> Consequências registradas: `T041` versiona um módulo, e não uma folha; `T044` não tem folha de
+> compatibilidade para servir, de modo que a cascata da §8 de `style-anchors.md` passa a ter dois
+> níveis, não três. O gerador recusa destino que não seja âncora declarada, e
+> `src/test/legacy-compat.unit.test.ts` reprova qualquer divergência entre este documento e o módulo.
+
 ## 3. Mapa suportado
 
 ### 3.1 Estrutura do quadro

@@ -12,6 +12,7 @@
  * form, and the difference is reproduced rather than tidied away.
  */
 
+import { FormControl, Select, TextInput } from '@primer/react';
 import { useState } from 'react';
 
 import { BoardCard, contentOf } from '../../domain/types';
@@ -126,70 +127,63 @@ export function CardForm(props: {
 
     return (
         <div className="vsckb-form">
-            <div className="vsckb-field">
-                <label className="vsckb-field-label" htmlFor={ ID('title') }>Title</label>
-                <input
-                    id={ ID('title') }
-                    className="vsckb-field-input"
+            <FormControl id={ ID('title') } className="vsckb-field">
+                <FormControl.Label>Title</FormControl.Label>
+                <TextInput
+                    block
                     type="text"
                     value={ VALUE.title }
                     onChange={ e => SET('title', e.target.value) }
                 />
-            </div>
+            </FormControl>
 
             <div className="vsckb-field-row">
-                <div className="vsckb-field">
-                    <label className="vsckb-field-label" htmlFor={ ID('type') }>Type</label>
-                    <select
-                        id={ ID('type') }
-                        className="vsckb-field-input"
+                <FormControl id={ ID('type') } className="vsckb-field">
+                    <FormControl.Label>Type</FormControl.Label>
+                    <Select
+                        block
                         value={ VALUE.type }
                         onChange={ e => SET('type', e.target.value) }
                     >
                         { TYPES.map(type => (
-                            <option key={ type.value } value={ type.value }>
+                            <Select.Option key={ type.value } value={ type.value }>
                                 { type.label }
-                            </option>
+                            </Select.Option>
                         )) }
-                    </select>
-                </div>
+                    </Select>
+                </FormControl>
 
-                <div className="vsckb-field">
-                    <label className="vsckb-field-label" htmlFor={ ID('prio') }>Prio</label>
-                    <input
-                        id={ ID('prio') }
-                        className="vsckb-field-input"
+                <FormControl id={ ID('prio') } className="vsckb-field">
+                    <FormControl.Label>Prio</FormControl.Label>
+                    <TextInput
+                        block
                         type="number"
                         placeholder="0"
                         value={ VALUE.prio }
                         onChange={ e => SET('prio', e.target.value) }
                     />
-                </div>
+                </FormControl>
             </div>
 
-            <div className="vsckb-field">
-                <label className="vsckb-field-label" htmlFor={ ID('category') }>Category</label>
-                <input
-                    id={ ID('category') }
-                    className="vsckb-field-input"
+            <FormControl id={ ID('category') } className="vsckb-field">
+                <FormControl.Label>Category</FormControl.Label>
+                <TextInput
+                    block
                     type="text"
                     value={ VALUE.category }
                     onChange={ e => SET('category', e.target.value) }
                 />
-            </div>
+            </FormControl>
 
-            <div className="vsckb-field">
-                <label className="vsckb-field-label" htmlFor={ ID('assigned-to') }>
-                    Assigned to
-                </label>
-                <input
-                    id={ ID('assigned-to') }
-                    className="vsckb-field-input"
+            <FormControl id={ ID('assigned-to') } className="vsckb-field">
+                <FormControl.Label>Assigned to</FormControl.Label>
+                <TextInput
+                    block
                     type="text"
                     value={ VALUE.assignedTo }
                     onChange={ e => SET('assignedTo', e.target.value) }
                 />
-            </div>
+            </FormControl>
 
             <MarkdownField
                 id={ ID('description') }

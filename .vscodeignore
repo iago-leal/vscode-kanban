@@ -5,7 +5,26 @@ out/**/*.map
 src/**
 .gitignore
 tsconfig.json
+tsconfig.webview.json
 tslint.json
 img/**
 pushall.sh
 package-lock.json
+
+# O que a extensão faz não depende de como ela foi projetada. Os artefatos
+# abaixo são material interno de trabalho -- specs, decisões, andaimes de
+# agente, cobertura -- e estavam sendo distribuídos junto com o código até a
+# versão 1.34.5, que carregava '_reversa_sdd/' inteiro para dentro do editor
+# de quem instalasse.
+_reversa_sdd/**
+_reversa_forward/**
+_reversa_docs/**
+_reversa_bugs/**
+.reversa/**
+.claude/**
+.agents/**
+coverage/**
+scripts/**
+CLAUDE.md
+AGENTS.md
+publish.js

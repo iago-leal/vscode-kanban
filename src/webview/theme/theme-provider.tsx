@@ -12,12 +12,12 @@
  * lives in the domain, and this file only feeds it what the editor is doing.
  */
 
+import { ThemeProvider as DesignSystemProvider } from '@primer/react';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
 import { EffectiveTheme, ThemePreference } from '../domain/types';
-import { resolveTheme } from '../domain/view-state';
-
-import './tokens.css';
+import { isHighContrast, resolveTheme } from '../domain/view-state';
+import { primerThemeAttributes } from './primer-themes';
 
 /**
  * What the editor is showing, as the board reads it.
@@ -42,7 +42,11 @@ export interface ThemeContextValue {
     effective: EffectiveTheme;
 
     /**
-     * Whether the editor is in a high contrast theme.
+     * Whether the high contrast sets are in force.
+     *
+     * This follows the CHOICE, never the editor. A high contrast theme of the
+     * editor makes the board dark or light like any other, and nothing more
+     * (RF-09).
      */
     highContrast: boolean;
 }
@@ -123,6 +127,37 @@ export function useEditorTheme(): EditorTheme {
 }
 
 /**
+ * Writes on the root of the document what the design system reads.
+ *
+ * The root of the DOCUMENT, and not the root of the board, because a dialog is
+ * a sibling of the board rather than a descendant: an attribute written on the
+ * board would leave every dialog outside the colour set and painted in
+ * nothing. Writing it once, above both, is what makes that impossible instead
+ * of merely unlikely.
+ *
+ * Which names to write is not decided here. It comes from the mapping in
+ * 'primer-themes.ts', which stays the only place that knows what the design
+ * system calls its colour sets.
+ *
+ * @param {EffectiveTheme} effective The scheme being painted.
+ * @param {boolean} highContrast Whether the high contrast sets are in force.
+ */
+function useThemeAttributes(effective: EffectiveTheme, highContrast: boolean): void {
+    useEffect(() => {
+        if ('undefined' === typeof document || !document.documentElement) {
+            return;
+        }
+
+        const ROOT = document.documentElement;
+        const ATTRIBUTES = primerThemeAttributes(effective, highContrast);
+
+        for (const NAME of Object.keys(ATTRIBUTES)) {
+            ROOT.setAttribute(NAME, (ATTRIBUTES as any)[NAME]);
+        }
+    }, [effective, highContrast]);
+}
+
+/**
  * Puts the colour set in force over its children.
  */
 export function ThemeProvider(props: {
@@ -135,13 +170,33 @@ export function ThemeProvider(props: {
         return {
             preference: props.preference,
             effective: resolveTheme(props.preference, EDITOR.scheme),
-            highContrast: EDITOR.highContrast,
+            highContrast: isHighContrast(props.preference),
         };
-    }, [props.preference, EDITOR.scheme, EDITOR.highContrast]);
+    }, [props.preference, EDITOR.scheme]);
+
+    useThemeAttributes(VALUE.effective, VALUE.highContrast);
+
+    const ATTRIBUTES = primerThemeAttributes(VALUE.effective, VALUE.highContrast);
 
     return (
         <THEME_CONTEXT.Provider value={ VALUE }>
-            { props.children }
+            {/*
+              * The design system keeps a context of its own, which a few of
+              * its components read. It is fed from the value above and asked
+              * for CONTEXT ONLY: left to itself it would render a wrapper
+              * carrying the theme attributes a second time, and a second
+              * writer of those attributes is a second answer to the question
+              * of what colour set is in force. There is one answer, and it is
+              * the view state (D-20).
+              */}
+            <DesignSystemProvider
+                contextOnly
+                colorMode={ ATTRIBUTES['data-color-mode'] }
+                dayScheme={ ATTRIBUTES['data-light-theme'] }
+                nightScheme={ ATTRIBUTES['data-dark-theme'] }
+            >
+                { props.children }
+            </DesignSystemProvider>
         </THEME_CONTEXT.Provider>
     );
 }

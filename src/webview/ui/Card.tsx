@@ -1,19 +1,26 @@
 /**
  * A card of the board.
  *
- * The three colour groups of the type survive untouched — 'emergency', 'bug'
- * and everything else — and only their tones are now decided by the theme
- * (RN-11). The grouping itself is a rule of the domain, and the card asks for
- * it rather than deciding it.
+ * The card stays a composition of this project: the design system supplies the
+ * controls inside it -- buttons, label, progress bar, action menu -- and none
+ * of the arrangement (RF-01, RF-24). What holds the pieces together is
+ * geometry, declared in 'board.css', and no colour of ours.
  *
- * Every action of the card is a real button: the old card put its handlers on
- * anchors and on the body of the card itself, which made the board unreachable
- * by keyboard. The set of actions has not changed.
+ * Three things about it are rules rather than taste. The colour group of the
+ * type survives untouched, and is asked of the domain rather than decided here
+ * (RN-11). The type is also written out in words, so that two cards remain
+ * distinguishable with the colour gone (D-24, RN-03, RF-10). And every action
+ * is a real control, reachable by keyboard: the card of version 1.33.1 put its
+ * handlers on anchors and on the body of the card itself.
  */
+
+import { ActionList, ActionMenu, IconButton as SystemIconButton, Label, ProgressBar } from '@primer/react';
 
 import { BoardCard, BoardSettings, ColumnKey } from '../domain/types';
 import { Icon, IconName } from './icons';
+import { IconButton } from './IconButton';
 import { Markdown } from './Markdown';
+import { anchored } from './anchors';
 import { columnName, movesFrom } from '../domain/columns';
 import { colorGroupOf } from '../domain/card-taxonomy';
 import { contentOf } from '../domain/types';
@@ -84,12 +91,18 @@ export function Card(props: {
 
     return (
         <article
-            className="vsckb-card"
+            { ...anchored({
+                anchor: 'card',
+                cardType: '' === TYPE ? undefined : TYPE.toLowerCase(),
+                className: 'vsckb-card',
+            }) }
             data-vsckb-group={ GROUP }
             aria-label={ NAME }
         >
             <div className="vsckb-card-stripe">
-                <span className="vsckb-card-type">{ TYPE }</span>
+                { '' === TYPE ? <span /> : (
+                    <Label className="vsckb-card-type">{ TYPE }</Label>
+                ) }
 
                 { CAN_EXECUTE ? (
                     <IconButton
@@ -108,8 +121,10 @@ export function Card(props: {
                 ) : null }
             </div>
 
-            <div className="vsckb-card-info">
-                <h3 className="vsckb-card-title">{ TITLE }</h3>
+            <div { ...anchored({ anchor: 'card-footer', className: 'vsckb-card-info' }) }>
+                <h3 { ...anchored({ anchor: 'card-title', className: 'vsckb-card-title' }) }>
+                    { TITLE }
+                </h3>
 
                 { props.showColumn ? (
                     <p className="vsckb-card-column">
@@ -118,29 +133,37 @@ export function Card(props: {
                 ) : null }
 
                 { '' === CATEGORY ? null : (
-                    <p className="vsckb-card-category">{ CATEGORY }</p>
+                    <p { ...anchored({ anchor: 'card-category', className: 'vsckb-card-category' }) }>
+                        { CATEGORY }
+                    </p>
                 ) }
 
                 { PROGRESS ? (
                     <div
-                        className="vsckb-card-progress"
-                        role="progressbar"
-                        aria-valuemin={ 0 }
-                        aria-valuemax={ PROGRESS.total }
-                        aria-valuenow={ PROGRESS.checked }
-                        aria-label={ `${ PROGRESS.checked } of ${ PROGRESS.total } tasks done` }
+                        { ...anchored({ anchor: 'card-progress', className: 'vsckb-card-progress' }) }
                         title={ `${ PROGRESS.percentage.toFixed(1) } %` }
                     >
-                        <div
-                            className="vsckb-card-progress-bar"
+                        <ProgressBar
+                            { ...anchored({
+                                anchor: 'card-progress-bar',
+                                className: 'vsckb-card-progress-bar',
+                            }) }
+                            progress={ PROGRESS.percentage }
+                            aria-valuemin={ 0 }
+                            aria-valuemax={ PROGRESS.total }
+                            aria-valuenow={ PROGRESS.checked }
+                            aria-label={ `${ PROGRESS.checked } of ${ PROGRESS.total } tasks done` }
                             data-vsckb-level={ progressLevel(PROGRESS.percentage) }
-                            style={ { width: `${ Math.floor(PROGRESS.percentage) }%` } }
                         />
                     </div>
                 ) : null }
 
                 { '' === DESCRIPTION ? null : (
-                    <Markdown source={ DESCRIPTION } className="vsckb-card-body" />
+                    <Markdown
+                        source={ DESCRIPTION }
+                        anchor="card-body"
+                        className="vsckb-card-body"
+                    />
                 ) }
             </div>
 
@@ -151,15 +174,14 @@ export function Card(props: {
                     </time>
                 ) }
 
-                <div className="vsckb-card-actions">
-                    { movesFrom(props.column).map(move => (
-                        <IconButton
-                            key={ move.to }
-                            icon={ MOVE_ICONS[move.icon] }
-                            label={ `Move '${ NAME }' to '${ columnName(move.to, SETTINGS) }'` }
-                            onClick={ () => props.actions.onMove(CARD, props.column, move.to) }
-                        />
-                    )) }
+                <div { ...anchored({ anchor: 'card-actions', className: 'vsckb-card-actions' }) }>
+                    <MoveMenu
+                        card={ CARD }
+                        column={ props.column }
+                        name={ NAME }
+                        settings={ SETTINGS }
+                        onMove={ props.actions.onMove }
+                    />
 
                     <IconButton
                         icon="details"
@@ -168,6 +190,7 @@ export function Card(props: {
                     />
 
                     <IconButton
+                        anchor="action-edit"
                         icon="edit"
                         label={ `Edit '${ NAME }'` }
                         onClick={ () => props.actions.onEdit(CARD, props.column) }
@@ -185,26 +208,55 @@ export function Card(props: {
 }
 
 /**
- * A button that shows an icon and is named for whoever cannot see it.
+ * The destinations the card can be moved to, as a menu.
+ *
+ * This replaces the row of one icon per move that feature 001 drew. The moves
+ * offered are the SAME ones -- 'movesFrom' decides them, here as there -- and
+ * so is what gets written to the file. What changes is that each destination
+ * is now named in words instead of guessed from a glyph, and that the footer
+ * gives back the room the type label of D-24 needed (RF-15).
  */
-export function IconButton(props: {
-    icon: IconName;
-    label: string;
-    onClick(): void;
-    pressed?: boolean;
-    className?: string;
+function MoveMenu(props: {
+    card: BoardCard;
+    column: ColumnKey;
+    name: string;
+    settings?: BoardSettings;
+    onMove(card: BoardCard, from: ColumnKey, to: ColumnKey): void;
 }) {
+    const MOVES = movesFrom(props.column);
+
+    if (!MOVES.length) {
+        return null;
+    }
+
     return (
-        <button
-            type="button"
-            className={ `vsckb-icon-button ${ props.className || '' }`.trim() }
-            title={ props.label }
-            aria-label={ props.label }
-            aria-pressed={ undefined === props.pressed ? undefined : props.pressed }
-            onClick={ props.onClick }
-        >
-            <Icon name={ props.icon } />
-        </button>
+        <ActionMenu>
+            <ActionMenu.Anchor>
+                <SystemIconButton
+                    icon={ () => <Icon name="expand" /> }
+                    aria-label={ `Move '${ props.name }' to another column` }
+                    variant="invisible"
+                    size="small"
+                />
+            </ActionMenu.Anchor>
+
+            <ActionMenu.Overlay>
+                <ActionList>
+                    { MOVES.map(move => (
+                        <ActionList.Item
+                            key={ move.to }
+                            onSelect={ () => props.onMove(props.card, props.column, move.to) }
+                        >
+                            <ActionList.LeadingVisual>
+                                <Icon name={ MOVE_ICONS[move.icon] } />
+                            </ActionList.LeadingVisual>
+
+                            { `Move to '${ columnName(move.to, props.settings) }'` }
+                        </ActionList.Item>
+                    )) }
+                </ActionList>
+            </ActionMenu.Overlay>
+        </ActionMenu>
     );
 }
 

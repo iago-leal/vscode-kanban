@@ -6,9 +6,12 @@
  * do on the board, and the sanitising barrier is the same one.
  */
 
+import { Button } from '@primer/react';
+
 import { BoardCard, contentOf } from '../../domain/types';
 import { Dialog } from './Dialog';
 import { Markdown } from '../Markdown';
+import { anchored } from '../anchors';
 import { toStringSafe } from '../../domain/text';
 import { useServices } from '../services';
 
@@ -32,15 +35,16 @@ export function CardDetailsDialog(props: {
     return (
         <Dialog
             title={ toStringSafe(CARD.title) || 'Card without a title' }
+            kind="card-details"
             onClose={ props.onClose }
             footer={
-                <button
-                    type="button"
-                    className="vsckb-button vsckb-button-primary"
+                <Button
+                    { ...anchored({ anchor: 'dialog-confirm' }) }
+                    variant="primary"
                     onClick={ props.onClose }
                 >
                     Close
-                </button>
+                </Button>
             }
         >
             <dl className="vsckb-details-facts">

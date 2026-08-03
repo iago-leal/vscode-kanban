@@ -13,6 +13,8 @@
 
 import { ReactNode, useCallback, useMemo, useState } from 'react';
 
+import { BaseStyles } from '@primer/react';
+
 import { AddCardDialog } from './dialogs/AddCardDialog';
 import { BoardCard, ColumnKey } from '../domain/types';
 import { CardActions } from './Card';
@@ -22,9 +24,10 @@ import { ConfirmDialog } from './dialogs/ConfirmDialog';
 import { EditCardDialog } from './dialogs/EditCardDialog';
 import { ListView } from './ListView';
 import { Services, ServicesProvider } from './services';
-import { ThemeProvider, useTheme } from '../theme/theme-provider';
+import { ThemeProvider } from '../theme/theme-provider';
 import { TopBar } from './TopBar';
 import { addCard, removeCard, updateCard } from '../domain/board-operations';
+import { anchored } from './anchors';
 import { columnName } from '../domain/columns';
 import { computeVisibleBoard } from '../domain/visibility';
 import { createBaseFilterFunctions } from '../domain/filter-functions';
@@ -214,6 +217,7 @@ export function App(props: { services: Services }) {
 
                 { 'delete' === dialog?.kind ? (
                     <ConfirmDialog
+                        kind="delete-card"
                         title="Delete this card?"
                         message={ `'${ toStringSafe(dialog.card.title) }' is removed from the board. This cannot be undone.` }
                         confirmLabel="Delete"
@@ -282,46 +286,66 @@ function BoardShell(props: {
 }
 
 /**
- * The element that carries the colour set in force.
- */
-/**
  * The scope the dialogs are painted in.
  *
  * A dialog is a SIBLING of the board, not a descendant, so it inherits nothing
- * the board declares. Carrying the theme attributes itself is what puts the
- * colour tokens of 'tokens.css' in scope: without it every surface, border and
- * text colour of a dialog resolves to nothing, and what the user sees is the
- * form lying naked over the board.
+ * the board declares. It no longer needs to carry the theme itself: the
+ * attributes the design system reads are written on the root of the DOCUMENT,
+ * above both, which is what stops a dialog from ever opening unpainted.
  */
 function DialogLayer(props: { children: ReactNode }) {
-    const THEME = useTheme();
-
-    return (
-        <div
-            className="vsckb-dialog-layer"
-            data-vsckb-theme={ THEME.effective }
-            data-vsckb-contrast={ THEME.highContrast ? 'high' : undefined }
-        >
-            { props.children }
-        </div>
-    );
+    return <div className="vsckb-dialog-layer">{ props.children }</div>;
 }
 
+/**
+ * The root of the board, and the anchors a user stylesheet reaches it by.
+ *
+ * '[data-vsckb="board"]' and '[data-vsckb-view]' are promises of
+ * 'interfaces/style-anchors.md' §3 and §4: what they reach does not change
+ * meaning while they exist. The colour set is NOT written here any more, and
+ * on purpose -- §6 of that contract says the attributes of the design system
+ * are not anchors, and keeping them off the board is what keeps the two kinds
+ * of attribute from being confused for one another.
+ *
+ * The surface itself is painted HERE rather than in 'theme/board.css', and the
+ * two tokens below are the only paint the interface writes by hand. The reason
+ * is RN-07: the stylesheet of the board is the proof that switching the design
+ * system off leaves the board unpainted, so it may declare no colour at all,
+ * variable or not. A component naming a token of the design system is the
+ * opposite case -- it introduces no second source of colour, because with the
+ * sheet gone the token resolves to nothing and the surface goes with it.
+ *
+ * Without this the board was legible only by accident: the panel kept the pale
+ * background of the editor while the text and the controls took their colours
+ * from whichever set was in force, so choosing the dark one wrote pale text
+ * onto a pale panel.
+ *
+ * 'BaseStyles' is what brings the rest of the ground floor -- 'box-sizing',
+ * the margin of the body, the foreground colour and, less obviously but just
+ * as visibly, 'color-scheme', which is what makes the scrollbars and the
+ * native parts of a form follow the board instead of the operating system.
+ */
 function ThemedShell(props: {
     viewMode: string;
     children: ReactNode;
 }) {
-    const THEME = useTheme();
-
     return (
-        <div
-            className="vsckb-board"
-            data-vsckb-theme={ THEME.effective }
-            data-vsckb-contrast={ THEME.highContrast ? 'high' : undefined }
-            data-vsckb-mode={ props.viewMode }
+        <BaseStyles
+            style={ {
+                backgroundColor: 'var(--bgColor-default)',
+                height: '100%',
+            } }
         >
-            { props.children }
-        </div>
+            <div
+                { ...anchored({
+                    anchor: 'board',
+                    view: props.viewMode,
+                    className: 'vsckb-board',
+                }) }
+            >
+                { props.children }
+            </div>
+        </BaseStyles>
     );
 }
 

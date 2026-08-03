@@ -104,8 +104,13 @@ export interface BoardSettings {
  *
  * 'follow-editor' is not a colour scheme of its own: it resolves to light or
  * dark according to the theme of the editor, and keeps following it.
+ *
+ * Neither is 'high-contrast'. It says how far the colours separate, not which
+ * ones they are, and so it takes its light or dark from the editor as well.
+ * It is only ever in force because it was chosen: an editor showing its own
+ * high contrast theme does not put the board into one.
  */
-export type ThemePreference = 'light' | 'dark' | 'follow-editor';
+export type ThemePreference = 'light' | 'dark' | 'high-contrast' | 'follow-editor';
 
 /**
  * The colour scheme a preference resolves to.

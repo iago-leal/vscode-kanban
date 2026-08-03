@@ -6,6 +6,56 @@
 <span class="badge-patreon"><a href="https://patreon.com/mkloubert" title="Donate to this project using Patreon"><img src="https://img.shields.io/badge/patreon-donate-yellow.svg" alt="Patreon donate button" /></a></span>
 <span class="badge-buymeacoffee"><a href="https://buymeacoffee.com/mkloubert" title="Donate to this project using Buy Me A Coffee"><img src="https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg" alt="Buy Me A Coffee donate button" /></a></span>
 
+## 1.34.0 (unreleased; the board is repainted by a design system)
+
+**Breaking.** Two things change for anyone who has customised the board or who
+runs an older editor. Both are described in detail in the
+[migration section of the README](https://github.com/mkloubert/vscode-kanban#migrating-a-custom-stylesheet-).
+
+* **The surface a custom stylesheet reaches has changed, and is now a contract.**
+  The class names the interface used are gone, replaced by the components of
+  [Primer](https://primer.style), whose class names are hashed and change
+  whenever a component changes. In their place the board declares **style
+  anchors** — `[data-vsckb="card"]`, `[data-vsckb-column="done"]` and so on —
+  which the project undertakes to keep reaching the same element between
+  versions. Write your `vscode-kanban.css` against those.
+* **A stylesheet written against version 1.33.1 keeps working.** Thirty-nine of
+  the sixty-eight names that version exposed are put back onto the elements they
+  used to reach, so old rules go on matching without being edited. The layer is
+  transitory and will be removed in a future major version, with notice. What is
+  covered and what is not is listed in the migration section.
+* **The extension now requires [Visual Studio Code 1.78](https://code.visualstudio.com/updates/v1_78)**,
+  up from 1.62. The stylesheets of the design system use the relational selector
+  and container queries, which need the Chromium that ships with 1.78. An
+  installation between 1.62 and 1.77 stops receiving updates and keeps the
+  version it has.
+
+Fixed:
+
+* **Highlighted code was unreadable on a light board.** One fixed dark palette
+  was served whatever the board was showing, so a code block on a light theme
+  came out dark text on dark ground. Both palettes are served now and the board
+  switches to the one in force.
+* **The panel declares a Content-Security-Policy.** Nothing may be loaded from
+  outside the extension, and nothing at all may be fetched over the network. One
+  clause is still loose — `'unsafe-eval'`, which the filter language needs to
+  compile an expression; that is
+  [issue 7](https://github.com/mkloubert/vscode-kanban/issues) of the internal
+  board and goes when the evaluator is replaced.
+* **A missing interface bundle says so.** It used to produce a blank panel.
+
+Also:
+
+* A fourth theme state, **high contrast**, joins light, dark and following the
+  editor. It is a choice of its own and is never deduced from the theme of the
+  editor.
+* Every card states its type **in words** as well as in colour, so two cards
+  stay distinguishable to someone who cannot tell the colours apart.
+* Moving a card is now a menu naming each destination column, in place of a row
+  of icons.
+* The six libraries that travel inside the repository finally state their
+  versions, in [`src/res/VENDORED.md`](https://github.com/mkloubert/vscode-kanban/blob/master/src/res/VENDORED.md).
+
 ## 1.33.0 (April 29th, 2022; npm update)
 
 * npm update

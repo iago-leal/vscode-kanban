@@ -25,7 +25,9 @@
 import * as assert from 'assert';
 import { DEFAULT_VIEW_STATE, ViewState } from '../webview/domain/types';
 import {
+    THEME_CYCLE,
     isCollapsed,
+    isHighContrast,
     nextThemePreference,
     normalizeViewState,
     resolveTheme,
@@ -63,12 +65,32 @@ suite('Display state of the board', function () {
     });
 
     suite('the theme control', function () {
-        test('returns to where it started after three presses', function () {
-            const FIRST = nextThemePreference('follow-editor');
-            const SECOND = nextThemePreference(FIRST);
-            const THIRD = nextThemePreference(SECOND);
+        // The count is read off the cycle rather than written down, because
+        // what the rule always meant is 'walk through every state and come
+        // back', not 'three'. The number of states offered is free to grow.
+        test('returns to where it started after a full cycle', function () {
+            let state = THEME_CYCLE[0];
 
-            assert.strictEqual(THIRD, 'follow-editor');
+            for (let i = 0; i < THEME_CYCLE.length; i++) {
+                state = nextThemePreference(state);
+            }
+
+            assert.strictEqual(state, THEME_CYCLE[0]);
+        });
+
+        test('visits every state offered before repeating one', function () {
+            const VISITED = [];
+
+            let state = THEME_CYCLE[0];
+
+            for (let i = 0; i < THEME_CYCLE.length; i++) {
+                VISITED.push(state);
+                state = nextThemePreference(state);
+            }
+
+            assert.deepStrictEqual(
+                VISITED.slice().sort(), THEME_CYCLE.slice().sort()
+            );
         });
 
         test('passes through light and dark', function () {
@@ -96,6 +118,61 @@ suite('Display state of the board', function () {
         test('ignores the editor, when the choice was explicit', function () {
             assert.strictEqual(resolveTheme('light', 'dark'), 'light');
             assert.strictEqual(resolveTheme('dark', 'light'), 'dark');
+        });
+
+        test('takes the mode from the editor under high contrast', function () {
+            // high contrast is an axis of its own, not a third colour mode:
+            // it says how much the colours separate, not which ones they are
+            assert.strictEqual(resolveTheme('high-contrast', 'dark'), 'dark');
+            assert.strictEqual(resolveTheme('high-contrast', 'light'), 'light');
+        });
+    });
+
+    suite('the high contrast sets', function () {
+        test('are in force when that is what was chosen', function () {
+            assert.strictEqual(isHighContrast('high-contrast'), true);
+        });
+
+        test('are never deduced from the editor', function () {
+            // an editor showing its own high contrast theme does not put the
+            // board into one: only an explicit choice does
+            assert.strictEqual(isHighContrast('follow-editor'), false);
+        });
+
+        test('are not in force under an explicit light or dark', function () {
+            assert.strictEqual(isHighContrast('light'), false);
+            assert.strictEqual(isHighContrast('dark'), false);
+        });
+    });
+
+    suite('a preference read back from storage', function () {
+        test('keeps the three values the previous version wrote', function () {
+            for (const WRITTEN of ['light', 'dark', 'follow-editor']) {
+                assert.strictEqual(
+                    stateOf({ theme: WRITTEN as any }).theme, WRITTEN
+                );
+            }
+        });
+
+        test('keeps high contrast, which only this version writes', function () {
+            assert.strictEqual(
+                stateOf({ theme: 'high-contrast' }).theme, 'high-contrast'
+            );
+        });
+
+        test('falls back to following the editor when unrecognised', function () {
+            // an installation moving back to the previous version finds a
+            // value it does not know and lands on the default, without error
+            // and without loss
+            assert.strictEqual(
+                stateOf({ theme: 'contrast' as any }).theme, 'follow-editor'
+            );
+            assert.strictEqual(
+                stateOf({ theme: 42 as any }).theme, 'follow-editor'
+            );
+            assert.strictEqual(
+                stateOf({ theme: undefined }).theme, 'follow-editor'
+            );
         });
     });
 

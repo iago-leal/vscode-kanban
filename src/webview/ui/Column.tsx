@@ -6,11 +6,20 @@
  * That count is the whole point. Cards missing from the screen must never be
  * mistaken for cards missing from the file, and the strip is what makes the
  * difference visible without expanding anything (RN-13).
+ *
+ * The column stays a composition of this project. What comes from the design
+ * system is the heading, the counter and the two buttons; the arrangement, and
+ * the fact that the body scrolls while the header does not, is geometry
+ * declared in 'board.css' (RF-01, RF-24).
  */
 
+import { CounterLabel, Heading } from '@primer/react';
+
 import { BoardCard, BoardSettings, ColumnKey } from '../domain/types';
-import { Card, CardActions, IconButton } from './Card';
+import { Card, CardActions } from './Card';
+import { IconButton } from './IconButton';
 import { VisibleColumn } from '../domain/visibility';
+import { anchored } from './anchors';
 import { columnName } from '../domain/columns';
 
 /**
@@ -29,8 +38,12 @@ export function Column(props: {
     if (COLUMN.collapsed) {
         return (
             <section
-                className="vsckb-column vsckb-column-collapsed"
-                data-vsckb-column={ COLUMN.key }
+                { ...anchored({
+                    anchor: 'column',
+                    column: COLUMN.key,
+                    collapsed: true,
+                    className: 'vsckb-column vsckb-column-collapsed',
+                }) }
                 aria-label={ `${ NAME }, collapsed, ${ COLUMN.hiddenCount } cards` }
             >
                 <button
@@ -49,11 +62,16 @@ export function Column(props: {
 
     return (
         <section
-            className="vsckb-column"
-            data-vsckb-column={ COLUMN.key }
+            { ...anchored({
+                anchor: 'column',
+                column: COLUMN.key,
+                className: 'vsckb-column',
+            }) }
             aria-label={ NAME }
         >
-            <header className="vsckb-column-header">
+            <header
+                { ...anchored({ anchor: 'column-header', className: 'vsckb-column-header' }) }
+            >
                 <IconButton
                     icon="collapse"
                     label={ `Collapse '${ NAME }'` }
@@ -61,18 +79,23 @@ export function Column(props: {
                     onClick={ () => props.onToggleCollapsed(COLUMN.key, true) }
                 />
 
-                <h2 className="vsckb-column-name">{ NAME }</h2>
+                <Heading as="h2" className="vsckb-column-name">{ NAME }</Heading>
 
-                <span className="vsckb-column-count">{ COLUMN.matchingCount }</span>
+                <CounterLabel className="vsckb-column-count">
+                    { COLUMN.matchingCount }
+                </CounterLabel>
 
                 <IconButton
+                    anchor="action-add"
                     icon="add"
                     label={ `Add a card to '${ NAME }'` }
                     onClick={ () => props.onAddCard(COLUMN.key) }
                 />
             </header>
 
-            <div className="vsckb-column-cards">
+            <div
+                { ...anchored({ anchor: 'column-body', className: 'vsckb-column-cards' }) }
+            >
                 { COLUMN.cards.map(card => (
                     <Card
                         key={ keyOf(card) }

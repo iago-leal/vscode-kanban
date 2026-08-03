@@ -21,9 +21,13 @@ import {
 /**
  * The order the theme control cycles through.
  *
- * Three presses return to where it started.
+ * As many presses as there are states return to where it started. The rule was
+ * never about the number: it is that the control walks through everything it
+ * offers and comes back.
  */
-export const THEME_CYCLE: ThemePreference[] = ['follow-editor', 'light', 'dark'];
+export const THEME_CYCLE: ThemePreference[] = [
+    'follow-editor', 'light', 'dark', 'high-contrast',
+];
 
 /**
  * The column the 'hide done' control collapses.
@@ -52,8 +56,10 @@ export function nextThemePreference(current: ThemePreference): ThemePreference {
 /**
  * Resolves a preference into the colour scheme actually painted.
  *
- * An explicit choice wins over the editor; 'follow-editor' takes whatever the
- * editor currently shows.
+ * An explicit light or dark wins over the editor. 'follow-editor' takes
+ * whatever the editor currently shows, and so does 'high-contrast': the latter
+ * is not a scheme of its own but a degree of separation applied to one, and
+ * which of the two it applies to is still the editor's business.
  *
  * @param {ThemePreference} preference What the user chose.
  * @param {EffectiveTheme} editorTheme What the editor is showing.
@@ -69,6 +75,22 @@ export function resolveTheme(
     }
 
     return 'dark' === editorTheme ? 'dark' : 'light';
+}
+
+/**
+ * Tells whether the high contrast sets are in force.
+ *
+ * This is the whole of the rule that the editor may not decide it. The editor
+ * theme is not a parameter here, and cannot become one without the rule being
+ * rewritten on purpose: high contrast follows from the choice, never from what
+ * the editor happens to be showing.
+ *
+ * @param {ThemePreference} preference What the user chose.
+ *
+ * @return {boolean} In force or not.
+ */
+export function isHighContrast(preference: ThemePreference): boolean {
+    return 'high-contrast' === preference;
 }
 
 /**
@@ -221,9 +243,9 @@ export function otherViewMode(mode: ViewMode): ViewMode {
 }
 
 function isThemePreference(value: unknown): value is ThemePreference {
-    return 'light' === value ||
-           'dark' === value ||
-           'follow-editor' === value;
+    // a value written by a newer version, or a value corrupted altogether,
+    // reaches the default the same way: by not being on this list
+    return THEME_CYCLE.indexOf(value as ThemePreference) > -1;
 }
 
 function isViewMode(value: unknown): value is ViewMode {

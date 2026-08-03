@@ -2,10 +2,10 @@
     "name": "vscode-kanban",
     "displayName": "Kanban",
     "description": "Kanban board for Visual Studio Code.",
-    "version": "1.33.1",
+    "version": "1.35.2",
     "publisher": "mkloubert",
     "engines": {
-        "vscode": "^1.62.0"
+        "vscode": "^1.78.0"
     },
     "categories": [
         "Other"
@@ -234,6 +234,9 @@
         "vsce": "2.7.0"
     },
     "dependencies": {
+        "@primer/octicons-react": "19.32.0",
+        "@primer/primitives": "11.10.0",
+        "@primer/react": "38.34.0",
         "fs-extra": "10.1.0",
         "html-entities": "2.3.3",
         "humanize-duration": "3.27.1",
@@ -241,6 +244,7 @@
         "marked": "4.0.14",
         "react": "18.3.1",
         "react-dom": "18.3.1",
+        "react-is": "18.3.1",
         "sanitize-filename": "1.6.3",
         "vscode-helpers": "9.0.0"
     }

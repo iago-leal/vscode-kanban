@@ -132,12 +132,33 @@ estilizá-lo. Estão documentados aqui apenas para que ninguém os confunda com 
 - **Nenhum valor computado.** Cor, medida e espaçamento vêm do sistema adotado e mudam quando ele
   muda. Quem quiser fixá-los precisa declará-los na própria folha.
 
+## 7.1 Âncoras declaradas que hoje não alcançam elemento
+
+> **Reconciliação de 2026-08-03, na execução.** Quatro âncoras da §5 foram declaradas para nomes da
+> 1.33.1 cujo controle **não existe mais** na interface, de modo que não há o que marcar:
+>
+> | Âncora | Por que não há elemento |
+> |---|---|
+> | `[data-vsckb="action-save"]` | O quadro grava conforme é editado desde a feature `001`; não há botão de gravar |
+> | `[data-vsckb="action-clear"]` | Não há botão de limpar a coluna Done |
+> | `[data-vsckb="card-reference"]` | O cartão guarda vínculos e nada os renderiza: o que o vínculo significa nunca foi decidido (cartão `[13]` do quadro) |
+> | `[data-vsckb="card-references"]` | Mesma razão |
+>
+> Pelo mesmo motivo, `[data-vsckb-dialog="clear-done"]` da §5.2 não é escrito por diálogo algum.
+>
+> A lacuna está **fixada em teste** (`src/test/legacy-compat.unit.test.ts`), com o tamanho declarado:
+> instrumentar uma delas exige apagar a linha correspondente, e o aparecimento de uma quinta reprova.
+> Uma folha de usuário escrita contra qualquer uma das quatro não surte efeito hoje, e a promessa
+> vale de novo assim que o controle voltar a existir.
+
 ## 8. Regra de cascata
 
 A ordem de injeção no documento é, e permanece:
 
 1. o pacote da interface, com a folha do sistema de design;
-2. a folha de compatibilidade da versão 1.33.1;
+2. ~~a folha de compatibilidade da versão 1.33.1~~ — **não existe**, ver a reconciliação em
+   `legacy-class-map.md` §2: a compatibilidade deixou de ser folha e passou a ser nome aplicado ao
+   elemento, de modo que nada se interpõe entre os dois níveis restantes;
 3. `.vscode/vscode-kanban.css`, a folha do usuário.
 
 A folha do usuário é sempre a última e, em igualdade de especificidade, vence. Isso está verificado

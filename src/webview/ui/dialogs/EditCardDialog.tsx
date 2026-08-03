@@ -11,11 +11,13 @@
  * recorded in 'legacy-impact.md' so that the repair can be a change of its own.
  */
 
+import { Button, Flash } from '@primer/react';
 import { useState } from 'react';
 
 import { BoardCard } from '../../domain/types';
 import { CardForm, fromFormValue, useCardForm } from './CardForm';
 import { Dialog } from './Dialog';
+import { anchored } from '../anchors';
 
 /**
  * The cap the old edit dialog put on the description.
@@ -47,24 +49,31 @@ export function EditCardDialog(props: {
     return (
         <Dialog
             title={ `Edit a card of '${ props.columnLabel }'` }
+            kind="edit-card"
             onClose={ props.onClose }
             footer={
                 <>
-                    <button type="button" className="vsckb-button" onClick={ props.onClose }>
+                    <Button
+                        { ...anchored({ anchor: 'dialog-cancel' }) }
+                        onClick={ props.onClose }
+                    >
                         Cancel
-                    </button>
-                    <button
-                        type="button"
-                        className="vsckb-button vsckb-button-primary"
+                    </Button>
+
+                    <Button
+                        { ...anchored({ anchor: 'dialog-confirm' }) }
+                        variant="primary"
                         onClick={ SAVE }
                     >
                         Save
-                    </button>
+                    </Button>
                 </>
             }
         >
             { '' === error ? null : (
-                <p className="vsckb-form-error" role="alert">{ error }</p>
+                <Flash className="vsckb-form-error" variant="danger" role="alert">
+                    { error }
+                </Flash>
             ) }
 
             <CardForm

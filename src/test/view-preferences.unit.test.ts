@@ -37,6 +37,7 @@ import {
     normalize,
 } from '../view-preferences';
 import { DEFAULT_VIEW_STATE, ViewState } from '../webview/domain/types';
+import { computeVisibleBoard } from '../webview/domain/visibility';
 import {
     nextThemePreference,
     normalizeViewState,
@@ -166,6 +167,34 @@ suite('Preferences of display', function () {
             }
         });
 
+        test('leave the board itself identical, byte for byte', function () {
+            // RF-05 read literally. Not saving the board is one half; the
+            // other is that recomputing what to SHOW does not quietly reorder
+            // or rewrite the board it read, which a comparison of objects
+            // would forgive and a diff on disk would not.
+            const BOARD: any = {
+                todo: [{ title: 'one', prio: 3 }, { title: 'two' }],
+                'in-progress': [],
+                testing: [{ title: 'three', type: 'bug' }],
+                done: [{ title: 'four' }],
+            };
+
+            const BEFORE = JSON.stringify(BOARD, null, 4);
+
+            let state: ViewState = normalizeViewState(DEFAULT_VIEW_STATE);
+
+            for (const CHANGE of CHANGES) {
+                state = CHANGE(state);
+
+                computeVisibleBoard(BOARD, state, () => true);
+            }
+
+            assert.strictEqual(
+                JSON.stringify(BOARD, null, 4), BEFORE,
+                'Deciding what to show changed the board it was shown from'
+            );
+        });
+
         test('leave the board back where it started', function () {
             // ten presses of a three-state control land one step along; ten of
             // a two-state control land where they began
@@ -229,6 +258,21 @@ suite('Preferences of display', function () {
             assert.strictEqual(STATE.theme, 'dark');
             assert.strictEqual(STATE.hideDone, true);
             assert.strictEqual(STATE.viewMode, 'list');
+        });
+
+        test('keeps a theme this side did not exist to receive', async function () {
+            // the set of themes is declared on both sides of the bridge, in
+            // two compilation units that cannot import each other. A value the
+            // Webview sends and this side does not know is not rejected
+            // loudly: it is dropped on the way to storage and the preference
+            // silently fails to stick. So the newest one is pinned here.
+            const EXTENSION = createExtension();
+
+            const STORE = new ViewPreferenceStore(EXTENSION.context, '/a/folder');
+
+            await STORE.save({ theme: 'high-contrast' });
+
+            assert.strictEqual(STORE.load().theme, 'high-contrast');
         });
 
         test('opens on the defaults, when nothing was ever stored', function () {

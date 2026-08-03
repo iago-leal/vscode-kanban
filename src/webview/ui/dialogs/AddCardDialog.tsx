@@ -11,12 +11,14 @@
  * That difference is inherited, not designed (s. 'CardForm.tsx').
  */
 
+import { Button, Flash } from '@primer/react';
 import { useState } from 'react';
 
 import { Board, BoardCard, BoardSettings, ColumnKey } from '../../domain/types';
 import { CardForm, fromFormValue, useCardForm } from './CardForm';
 import { CurrentUser } from '../../bridge/messages';
 import { Dialog } from './Dialog';
+import { anchored } from '../anchors';
 import { nextCardId } from '../../domain/card-id';
 
 /**
@@ -54,24 +56,31 @@ export function AddCardDialog(props: {
     return (
         <Dialog
             title={ `Add a card to '${ props.columnLabel }'` }
+            kind="add-card"
             onClose={ props.onClose }
             footer={
                 <>
-                    <button type="button" className="vsckb-button" onClick={ props.onClose }>
+                    <Button
+                        { ...anchored({ anchor: 'dialog-cancel' }) }
+                        onClick={ props.onClose }
+                    >
                         Cancel
-                    </button>
-                    <button
-                        type="button"
-                        className="vsckb-button vsckb-button-primary"
+                    </Button>
+
+                    <Button
+                        { ...anchored({ anchor: 'dialog-confirm' }) }
+                        variant="primary"
                         onClick={ SAVE }
                     >
                         Add
-                    </button>
+                    </Button>
                 </>
             }
         >
             { '' === error ? null : (
-                <p className="vsckb-form-error" role="alert">{ error }</p>
+                <Flash className="vsckb-form-error" variant="danger" role="alert">
+                    { error }
+                </Flash>
             ) }
 
             <CardForm

@@ -12,6 +12,7 @@ import { BoardSettings, ColumnKey } from '../domain/types';
 import { CardActions } from './Card';
 import { Column } from './Column';
 import { VisibleBoard } from '../domain/visibility';
+import { anchored } from './anchors';
 
 /**
  * Renders the board in columns.
@@ -24,7 +25,7 @@ export function ColumnsView(props: {
     onAddCard(column: ColumnKey): void;
 }) {
     return (
-        <div className="vsckb-columns">
+        <div { ...anchored({ anchor: 'columns', className: 'vsckb-columns' }) }>
             { props.board.columns.map(column => (
                 <Column
                     key={ column.key }

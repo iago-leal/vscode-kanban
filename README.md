@@ -34,6 +34,8 @@
 3. [Customization](#customization-)
    * [Columns](#columns-)
    * [CSS](#css-)
+     * [Style anchors](#style-anchors-)
+     * [Migrating a custom stylesheet](#migrating-a-custom-stylesheet-)
 4. [Logs](#logs-)
 5. [Support and contribute](#support-and-contribute-)
    * [Contributors](#contributors-)
@@ -439,20 +441,85 @@ An example of setting up custom column names:
 
 ### CSS [[&uarr;](#customization-)]
 
-If you want to style your board, you can create a file, called `vscode-kanban.css`, inside your `.vscode` sub folder of the underlying workspace or your home directory.
+If you want to style your board, you can create a file, called `vscode-kanban.css`, inside your `.vscode` sub folder of the underlying workspace or your home directory. It is the **last** stylesheet the panel loads, so on equal specificity it wins.
 
-Have a look at the files [board.css](https://github.com/mkloubert/vscode-kanban/blob/master/src/webview/theme/board.css) and [tokens.css](https://github.com/mkloubert/vscode-kanban/blob/master/src/webview/theme/tokens.css) to get an idea of the CSS classes, that are used.
+#### Style anchors [[&uarr;](#css-)]
 
-Every colour of the board is a custom property named after its role, declared
-twice in `tokens.css` — once for the light set and once for the dark one. Your
-own stylesheet is loaded after them, so redefining one of these under
-`.vsckb-board` recolours the board in both themes at once:
+Write your rules against the **style anchors**. An anchor is a selector this
+project undertakes to keep reaching the same element between versions; anything
+else you can reach with the inspector — including the hashed class names of the
+design system — may change without notice.
+
+Every anchor is a data attribute, never a class name:
 
 ```css
-.vsckb-board {
-    --vsckb-card-emergency: #7a0f0a;
+[data-vsckb="card"]        { /* every card */ }
+[data-vsckb="column"]      { /* every column */ }
+[data-vsckb-column="done"] { /* the Done column */ }
+```
+
+**Structure.** `board`, `board-header`, `columns`, `column`, `column-header`,
+`column-body`, `card`, `card-title`, `card-body`, `card-footer`,
+`card-actions`, `list`, `dialog`.
+
+**State**, which qualifies the structure rather than naming an element:
+`[data-vsckb-column]` with the key of one of the four columns,
+`[data-vsckb-card-type]` with the type of the card, `[data-vsckb-collapsed]`,
+`[data-vsckb-view]` with `columns` or `list`.
+
+**Compatibility**, whose life is that of the layer described below:
+`action-save`, `action-reload`, `action-filter`, `action-add`, `action-edit`,
+`action-clear`, `dialog-confirm`, `dialog-cancel`, `card-category`,
+`card-progress`, `card-progress-bar`, `card-reference`, `card-references`, and
+`[data-vsckb-dialog]` with one of `add-card`, `edit-card`, `card-details`,
+`delete-card`, `clear-done`.
+
+Three things the anchors deliberately do **not** promise: any class name; any
+nesting, so write descendant selectors and not child ones; and any computed
+value — colour, spacing and type come from the design system and move when it
+moves. Fix one in your own stylesheet if you need it fixed:
+
+```css
+[data-vsckb-card-type="bug"] {
+    background-color: #7a0f0a;
 }
 ```
+
+#### Migrating a custom stylesheet [[&uarr;](#css-)]
+
+Version 1.34 replaced the appearance of the board with the components of
+[Primer](https://primer.style). The class names the interface used are gone,
+and the ones the components carry are hashed and change whenever a component
+changes — which is why the anchors above exist.
+
+**A stylesheet written against version 1.33.1 keeps working.** Thirty-nine of
+the sixty-eight names that version exposed are put back onto the elements they
+used to reach, so rules like these go on matching, unedited:
+
+| Written in 1.33.1 | Reaches today |
+|---|---|
+| `.vsckb-kanban-card` | every card |
+| `.vsckb-kanban-card-title`, `.vsckb-title` | the title of a card |
+| `.vsckb-kanban-card-body`, `.vsckb-body` | the description of a card |
+| `.vsckb-kanban-card-col` | a column |
+| `.vsckb-card-list`, `.vsckb-primary-card-body` | the scrolling stack of cards |
+| `.vsckb-primary-card-header` | the header of a column |
+| `#vsckb-card-todo`, `#vsckb-card-in-progress`, `#vsckb-card-testing`, `#vsckb-card-done` | one named column |
+| `.vsckb-add-btn`, `.vsckb-edit-btn`, `.vsckb-clear-btn` | the matching action |
+| `#vsckb-add-card-modal` and the other four modals | the matching dialog |
+| `.vsckb-yes-btn`, `.vsckb-save-btn`, `.vsckb-apply-btn` / `.vsckb-no-btn` | confirm / cancel |
+
+**What is not covered**, and why: the identifiers of individual form fields, the
+tab vocabulary of Bootstrap, the internals of the Markdown editor, the filter
+modal — there is no filter dialog any more, the filter is a field of the top bar
+— and a handful of names like `.vsckb-time` or `.vsckb-details` that version
+1.33.1 reused in several unrelated places, where any single destination would be
+wrong somewhere.
+
+This layer is **transitory**. Removing it will be a major version with a note in
+the changelog, and the compatibility anchors listed above go with it. The
+structural and state anchors do not: they outlive it. Moving your rules onto
+them is the migration.
 
 ## Logs [[&uarr;](#table-of-contents)]
 

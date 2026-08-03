@@ -50,8 +50,16 @@ export type ColumnKey = 'todo' | 'in-progress' | 'testing' | 'done';
 
 /**
  * What the user asked the board to look like.
+ *
+ * This is the same set of values as 'ThemePreference' in
+ * 'src/webview/domain/types.ts', declared a second time because the two sides
+ * are separate compilation units and neither may import the other. The two
+ * declarations have to be changed together: a value the Webview sends and this
+ * side does not recognise is dropped on the way to storage, and the preference
+ * silently fails to stick. It is the same class of debt as card [12] of the
+ * board of this project, on a different pair of files.
  */
-export type ThemePreference = 'light' | 'dark' | 'follow-editor';
+export type ThemePreference = 'light' | 'dark' | 'high-contrast' | 'follow-editor';
 
 /**
  * How the cards are laid out.
@@ -101,7 +109,9 @@ const THEME_KEY = 'vsckb.viewPreferences.theme';
 const FOLDER_KEY_PREFIX = 'vsckb.viewPreferences.folder:';
 
 const COLUMN_KEYS: ColumnKey[] = ['todo', 'in-progress', 'testing', 'done'];
-const THEMES: ThemePreference[] = ['light', 'dark', 'follow-editor'];
+const THEMES: ThemePreference[] = [
+    'light', 'dark', 'high-contrast', 'follow-editor',
+];
 const VIEW_MODES: ViewMode[] = ['columns', 'list'];
 
 /**

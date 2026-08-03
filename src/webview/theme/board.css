@@ -1,377 +1,262 @@
 /*
- * The layout of the board.
+ * The geometry of the board.
  *
- * It replaces Bootstrap 4.1.1 and 'board.css'. Every colour here names a token
- * of 'tokens.css' and none is written literally, which is what makes the two
- * themes one change of attribute apart.
+ * What is left here after the design system was adopted is placement and
+ * nothing else: how wide a column lane is, how the cards stack inside it, how
+ * a collapsed column becomes a strip, and how the whole thing rearranges when
+ * the panel is narrow. Colour, radius, shadow and type size are the business
+ * of the design system, and this sheet declares none of them (D-21, RF-24,
+ * RN-07).
+ *
+ * That is not a preference of style but the proof of a promise. With the
+ * stylesheet of the design system switched off, the board has to come out
+ * unpainted -- and it cannot, if a second stylesheet is quietly redeclaring
+ * the colours. A test reads this file and fails on any property that paints.
+ *
+ * The spacing below is written as lengths because it is length: a gap is not a
+ * colour, and naming a token for it would move the number without making it
+ * anyone else's decision.
  *
  * Two widths matter. Below 800 px four columns stop being readable, so the
  * columns layout falls back to a single scrolling row the user pans through;
  * the list layout stays usable down to 320 px, which is why it exists.
+ *
+ * Selectors use the style anchors of 'interfaces/style-anchors.md' wherever
+ * the element is one a user stylesheet may reach. The class names left over
+ * are internal and promise nothing.
  */
 
-/*
- * The type belongs to the theme scope and not to the board, for the same reason
- * the colours do: a dialog is a sibling of the board. Left here, dialogs fell
- * back to the serif default of the document.
- */
-[data-vsckb-theme] {
-    color: var(--vsckb-text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-    font-size: 13px;
-    line-height: 1.5;
+/* ------------------------------------------------------------------ shell */
+
+.vsckb-base {
+    height: 100%;
 }
 
-.vsckb-board {
+[data-vsckb="board"] {
     display: flex;
     flex-direction: column;
     height: 100vh;
     margin: 0;
-    background: var(--vsckb-surface);
+    overflow: hidden;
 }
 
-/* the reset follows the theme scope, so that dialogs are covered too */
-[data-vsckb-theme] *,
-[data-vsckb-theme] *::before,
-[data-vsckb-theme] *::after {
-    box-sizing: border-box;
-}
+/* -------------------------------------------------------------------- bar */
 
-/* every interactive element says where the keyboard is */
-[data-vsckb-theme] :focus-visible {
-    outline: 2px solid var(--vsckb-focus-ring);
-    outline-offset: 2px;
-}
-
-/* ------------------------------------------------------------------ top bar */
-
-.vsckb-topbar {
+[data-vsckb="board-header"] {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
     align-items: center;
+    gap: 8px;
     padding: 8px 12px;
-    border-bottom: 1px solid var(--vsckb-border);
-    background: var(--vsckb-surface-raised);
+    flex: 0 0 auto;
 }
 
 .vsckb-topbar-title {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
+    min-width: 120px;
     margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .vsckb-topbar-filter {
-    flex: 1 1 200px;
-    min-width: 120px;
-    padding: 4px 8px;
-    border: 1px solid var(--vsckb-border);
-    border-radius: var(--vsckb-radius);
-    background: var(--vsckb-control);
-    color: var(--vsckb-text);
-    font: inherit;
+    flex: 2 1 220px;
+    min-width: 160px;
 }
 
 .vsckb-topbar-controls {
     display: flex;
-    flex: 0 0 auto;
-    gap: 4px;
-}
-
-.vsckb-control {
-    display: inline-flex;
-    gap: 6px;
     align-items: center;
-    padding: 4px 8px;
-    border: 1px solid var(--vsckb-border);
-    border-radius: var(--vsckb-radius);
-    background: var(--vsckb-control);
-    color: var(--vsckb-text);
-    font: inherit;
-    cursor: pointer;
+    gap: 4px;
+    flex: 0 0 auto;
 }
 
-.vsckb-control:hover {
-    background: var(--vsckb-control-hover);
-}
-
-.vsckb-control[aria-pressed="true"] {
-    background: var(--vsckb-control-active);
-    border-color: var(--vsckb-border-strong);
-}
-
-/* the words of a control disappear before the control itself does */
 @media (max-width: 720px) {
-    .vsckb-control-text {
-        display: none;
+    .vsckb-topbar-title {
+        flex-basis: 100%;
+    }
+
+    .vsckb-topbar-filter {
+        flex-basis: 100%;
     }
 }
 
-/* ------------------------------------------------------------------ columns */
+/* ---------------------------------------------------------------- columns */
 
-.vsckb-columns {
+[data-vsckb="columns"] {
     display: flex;
     flex: 1 1 auto;
     gap: 8px;
-    padding: 8px;
-    overflow: auto;
+    padding: 0 12px 12px;
+    overflow: hidden;
 }
 
-.vsckb-column {
+[data-vsckb="column"] {
     display: flex;
-    flex-direction: column;
-    /* the space a collapsed column gives up goes to the open ones */
     flex: 1 1 0;
-    min-width: 180px;
-    border: 1px solid var(--vsckb-border);
-    border-radius: var(--vsckb-radius);
-    background: var(--vsckb-surface-sunken);
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
 }
 
-.vsckb-column-collapsed {
+/*
+ * The room a collapsed column gives up goes to the ones still open, instead of
+ * being left as a gap. With a fixed quarter each, collapsing would hide cards
+ * without ever making the remaining ones easier to read.
+ */
+[data-vsckb="column"][data-vsckb-collapsed] {
     flex: 0 0 auto;
     min-width: 0;
 }
 
-.vsckb-column-header {
+[data-vsckb="column-header"] {
     display: flex;
-    gap: 6px;
     align-items: center;
+    gap: 6px;
     padding: 6px 8px;
-    border-bottom: 1px solid var(--vsckb-border);
+    flex: 0 0 auto;
 }
 
 .vsckb-column-name {
     flex: 1 1 auto;
     margin: 0;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .vsckb-column-count {
-    padding: 0 6px;
-    border-radius: 10px;
-    background: var(--vsckb-control-active);
-    color: var(--vsckb-text-muted);
-    font-size: 11px;
+    flex: 0 0 auto;
 }
 
-.vsckb-column-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 8px;
-    overflow-y: auto;
-}
-
-/*
- * A collapsed column is a strip that still says its name and how many cards
- * it is holding: never a column that simply vanished.
- */
-.vsckb-column-strip {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center;
-    height: 100%;
-    padding: 10px 6px;
-    border: 0;
-    border-radius: var(--vsckb-radius);
-    background: transparent;
-    color: var(--vsckb-text);
-    font: inherit;
-    cursor: pointer;
-}
-
-.vsckb-column-strip:hover {
-    background: var(--vsckb-control-hover);
-}
-
-.vsckb-column-strip-name {
-    writing-mode: vertical-rl;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.vsckb-column-strip-count {
-    padding: 1px 6px;
-    border-radius: 10px;
-    background: var(--vsckb-control-active);
-    font-size: 11px;
-}
-
-/* --------------------------------------------------------------------- list */
-
-.vsckb-list {
+[data-vsckb="column-body"] {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
     gap: 8px;
-    padding: 8px;
+    padding: 4px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.vsckb-column-strip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 40px;
+    height: 100%;
+    padding: 10px 0;
+    border: 0;
+    cursor: pointer;
+}
+
+.vsckb-column-strip-name {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vsckb-column-strip-count {
+    flex: 0 0 auto;
+}
+
+/* ------------------------------------------------------------------- list */
+
+[data-vsckb="list"] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 12px 12px;
     overflow-y: auto;
 }
 
 .vsckb-list-toolbar {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-}
-
-.vsckb-list-add {
-    padding: 3px 8px;
-    border: 1px solid var(--vsckb-border);
-    border-radius: var(--vsckb-radius);
-    background: var(--vsckb-control);
-    color: var(--vsckb-text);
-    font: inherit;
-    cursor: pointer;
+    gap: 6px;
+    flex: 0 0 auto;
 }
 
 .vsckb-list-hidden,
 .vsckb-list-empty {
     margin: 0;
-    color: var(--vsckb-text-muted);
+    padding: 6px 2px;
 }
 
-/* --------------------------------------------------------------------- card */
+/* ------------------------------------------------------------------- card */
 
-/*
- * A card keeps its own height. Without this, the column being a flex box with
- * its own scrollbar, a column holding more cards than fit shrank every one of
- * them instead of scrolling, and the 'overflow: hidden' below cut title and
- * description off: twenty-six cards became twenty-six stripes.
- */
-.vsckb-card {
+[data-vsckb="card"] {
     display: flex;
-    flex: 0 0 auto;
     flex-direction: column;
-    border: 1px solid var(--vsckb-border);
-    border-radius: var(--vsckb-radius);
-    background: var(--vsckb-surface-raised);
-    box-shadow: var(--vsckb-shadow);
+    flex: 0 0 auto;
     overflow: hidden;
 }
 
 .vsckb-card-stripe {
     display: flex;
-    gap: 4px;
     align-items: center;
-    min-height: 22px;
-    padding: 2px 8px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.vsckb-card[data-vsckb-group="emergency"] .vsckb-card-stripe {
-    background: var(--vsckb-card-emergency);
-    color: var(--vsckb-card-emergency-text);
-}
-
-.vsckb-card[data-vsckb-group="bug"] .vsckb-card-stripe {
-    background: var(--vsckb-card-bug);
-    color: var(--vsckb-card-bug-text);
-}
-
-.vsckb-card[data-vsckb-group="default"] .vsckb-card-stripe {
-    background: var(--vsckb-card-default);
-    color: var(--vsckb-card-default-text);
+    gap: 6px;
+    padding: 6px 8px;
+    min-height: 28px;
 }
 
 .vsckb-card-type {
-    flex: 1 1 auto;
+    margin-right: auto;
 }
 
 .vsckb-card-info {
-    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 8px 8px;
+    min-width: 0;
 }
 
-.vsckb-card-title {
+[data-vsckb="card-title"] {
     margin: 0;
-    font-size: 13px;
-    font-weight: 600;
     overflow-wrap: anywhere;
 }
 
 .vsckb-card-column,
-.vsckb-card-category {
-    margin: 2px 0 0;
-    color: var(--vsckb-text-muted);
-    font-size: 11px;
+[data-vsckb="card-category"] {
+    margin: 0;
 }
 
-.vsckb-card-progress {
-    height: 4px;
-    margin: 6px 0;
-    border-radius: 2px;
-    background: var(--vsckb-control-active);
-    overflow: hidden;
+[data-vsckb="card-progress"] {
+    width: 100%;
 }
 
-.vsckb-card-progress-bar {
-    height: 100%;
-}
-
-.vsckb-card-progress-bar[data-vsckb-level="low"] {
-    background: var(--vsckb-danger);
-}
-
-.vsckb-card-progress-bar[data-vsckb-level="middle"] {
-    background: var(--vsckb-warning);
-}
-
-.vsckb-card-progress-bar[data-vsckb-level="full"] {
-    background: var(--vsckb-success);
-}
-
-.vsckb-card-body {
-    margin-top: 6px;
+[data-vsckb="card-body"] {
     overflow-wrap: anywhere;
 }
 
 .vsckb-card-footer {
     display: flex;
-    gap: 6px;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 8px;
-    border-top: 1px solid var(--vsckb-border);
+    gap: 6px;
+    padding: 4px 8px 6px;
 }
 
 .vsckb-card-time {
-    color: var(--vsckb-text-muted);
-    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.vsckb-card-actions {
+[data-vsckb="card-actions"] {
     display: flex;
+    align-items: center;
     gap: 2px;
+    flex: 0 0 auto;
 }
 
-.vsckb-icon-button {
-    display: inline-flex;
-    padding: 3px;
-    border: 0;
-    border-radius: var(--vsckb-radius);
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-}
-
-.vsckb-icon-button:hover {
-    background: var(--vsckb-control-hover);
-}
-
-/* ----------------------------------------------------------------- markdown */
+/* --------------------------------------------------------------- markdown */
 
 .vsckb-markdown-body > :first-child {
     margin-top: 0;
@@ -381,20 +266,9 @@
     margin-bottom: 0;
 }
 
-.vsckb-markdown-body a {
-    color: var(--vsckb-accent);
-}
-
 .vsckb-markdown-body pre {
-    padding: 6px 8px;
-    border-radius: var(--vsckb-radius);
-    background: var(--vsckb-surface-sunken);
     overflow-x: auto;
-}
-
-.vsckb-markdown-body code {
-    font-family: "SF Mono", Menlo, Consolas, monospace;
-    font-size: 12px;
+    padding: 8px;
 }
 
 .vsckb-img-fluid {
@@ -409,72 +283,34 @@
 
 .vsckb-table th,
 .vsckb-table td {
-    padding: 3px 6px;
-    border: 1px solid var(--vsckb-border);
+    padding: 4px 8px;
+    text-align: left;
 }
 
 .vsckb-task-list {
-    padding-left: 0;
     list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 .vsckb-task {
     display: flex;
-    gap: 6px;
     align-items: baseline;
+    gap: 6px;
 }
 
-/* ------------------------------------------------------------------ dialogs */
-
-.vsckb-dialog-backdrop {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    background: var(--vsckb-surface-overlay);
-    z-index: 10;
-}
-
-.vsckb-dialog {
-    display: flex;
-    flex-direction: column;
-    width: min(640px, 100%);
-    max-height: 100%;
-    border: 1px solid var(--vsckb-border);
-    border-radius: var(--vsckb-radius);
-    background: var(--vsckb-surface-raised);
-    box-shadow: var(--vsckb-shadow);
-}
-
-.vsckb-dialog-header,
-.vsckb-dialog-footer {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding: 10px 12px;
-}
-
-.vsckb-dialog-header {
-    justify-content: space-between;
-    border-bottom: 1px solid var(--vsckb-border);
-}
-
-.vsckb-dialog-footer {
-    justify-content: flex-end;
-    border-top: 1px solid var(--vsckb-border);
-}
-
-.vsckb-dialog-title {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-}
+/* ---------------------------------------------------------------- dialogs */
 
 .vsckb-dialog-body {
-    padding: 12px;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.vsckb-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
 }
 
 .vsckb-form {
@@ -488,199 +324,59 @@
     gap: 10px;
 }
 
-.vsckb-field {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    gap: 3px;
+.vsckb-field-row > .vsckb-field {
+    flex: 1 1 0;
+    min-width: 0;
 }
 
-.vsckb-field-label {
-    color: var(--vsckb-text-muted);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+.vsckb-markdown-editor {
+    width: 100%;
 }
 
-.vsckb-field-input {
-    padding: 4px 8px;
-    border: 1px solid var(--vsckb-border);
-    border-radius: var(--vsckb-radius);
-    background: var(--vsckb-control);
-    color: var(--vsckb-text);
-    font: inherit;
-}
-
-.vsckb-form-error {
-    margin: 0 0 10px;
-    color: var(--vsckb-danger);
-}
-
-.vsckb-button {
-    padding: 4px 12px;
-    border: 1px solid var(--vsckb-border);
-    border-radius: var(--vsckb-radius);
-    background: var(--vsckb-control);
-    color: var(--vsckb-text);
-    font: inherit;
-    cursor: pointer;
-}
-
-.vsckb-button-primary {
-    border-color: var(--vsckb-accent);
-    background: var(--vsckb-accent);
-    color: var(--vsckb-text-on-accent);
-}
-
-.vsckb-button-danger {
-    border-color: var(--vsckb-danger);
-    background: var(--vsckb-danger);
-    color: var(--vsckb-text-on-accent);
-}
-
-/*
- * Three things are read here, and each is read differently: the facts of the
- * card at a glance, the one-line description, and the body. They are told apart
- * by surface and by rule, not by spacing alone -- the body carries markdown of
- * its own, and spacing competes with it.
- */
 .vsckb-details-facts {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 6px 16px;
+    gap: 4px 12px;
     margin: 0;
-    padding: 10px 12px;
-    border: 1px solid var(--vsckb-border);
-    border-radius: var(--vsckb-radius);
-    background: var(--vsckb-surface-sunken);
 }
 
 .vsckb-details-facts dt {
-    align-self: baseline;
-    color: var(--vsckb-text-muted);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    margin: 0;
 }
 
 .vsckb-details-facts dd {
     margin: 0;
-}
-
-.vsckb-details-section {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid var(--vsckb-border);
+    overflow-wrap: anywhere;
 }
 
 .vsckb-details-section h3 {
-    margin: 0 0 8px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--vsckb-text-muted);
+    margin: 0 0 6px;
 }
+
+/* -------------------------------------------------------- embedded editor */
 
 /*
- * The headings INSIDE the body are the card author's own, and they were coming
- * out at body size: a section of details read as one undifferentiated block.
- * They get a scale, so that the structure the author wrote survives.
+ * The editor of Markdown is a vendored library that measures itself, and a
+ * height it is never given is a height it reports as zero. Everything it looks
+ * like now reaches it through the field control it sits inside.
  */
-.vsckb-markdown-body h1,
-.vsckb-markdown-body h2,
-.vsckb-markdown-body h3,
-.vsckb-markdown-body h4 {
-    margin: 16px 0 6px;
-    font-weight: 600;
-    line-height: 1.3;
+.vsckb-markdown-editor + .CodeMirror {
+    height: auto;
+    min-height: 120px;
 }
 
-.vsckb-markdown-body h1 {
-    font-size: 16px;
+.CodeMirror-scroll {
+    min-height: 120px;
 }
 
-.vsckb-markdown-body h2 {
-    font-size: 14px;
-}
+/* ----------------------------------------------------------------- narrow */
 
-.vsckb-markdown-body h3,
-.vsckb-markdown-body h4 {
-    font-size: 13px;
-}
-
-/* ------------------------------------------------ the markdown editor */
-
-/*
- * CodeMirror ships its own light theme -- white surface, black text, blue
- * headings -- and applies it to whatever it is opened over. Left alone, the two
- * editors of the card form stayed white inside a dark dialog. What follows
- * names the same tokens as everything else, so the editor follows the theme
- * instead of contradicting it.
- */
-[data-vsckb-theme] .CodeMirror {
-    height: 220px;
-    background: var(--vsckb-surface-raised);
-    color: var(--vsckb-text);
-    border: 1px solid var(--vsckb-border);
-    border-radius: var(--vsckb-radius);
-    font-family: "SF Mono", Menlo, Consolas, monospace;
-    font-size: 12px;
-}
-
-[data-vsckb-theme] .CodeMirror-gutters {
-    background: var(--vsckb-surface-sunken);
-    border-right: 1px solid var(--vsckb-border);
-}
-
-[data-vsckb-theme] .CodeMirror-linenumber {
-    color: var(--vsckb-text-muted);
-}
-
-[data-vsckb-theme] .CodeMirror-cursor {
-    border-left-color: var(--vsckb-text);
-}
-
-[data-vsckb-theme] .CodeMirror-selected {
-    background: var(--vsckb-control-active);
-}
-
-[data-vsckb-theme] .CodeMirror-scrollbar-filler,
-[data-vsckb-theme] .CodeMirror-gutter-filler {
-    background: transparent;
-}
-
-/*
- * The markdown mode paints headings, links and emphasis. Its default palette is
- * chosen against white, so each colour is restated against the surface in
- * force; the accent carries what the mode calls structure.
- */
-[data-vsckb-theme] .cm-s-default .cm-header,
-[data-vsckb-theme] .cm-s-default .cm-variable-2 {
-    color: var(--vsckb-accent);
-}
-
-[data-vsckb-theme] .cm-s-default .cm-link,
-[data-vsckb-theme] .cm-s-default .cm-url {
-    color: var(--vsckb-accent);
-}
-
-[data-vsckb-theme] .cm-s-default .cm-quote,
-[data-vsckb-theme] .cm-s-default .cm-comment {
-    color: var(--vsckb-text-muted);
-}
-
-[data-vsckb-theme] .cm-s-default .cm-string,
-[data-vsckb-theme] .cm-s-default .cm-string-2,
-[data-vsckb-theme] .cm-s-default .cm-keyword {
-    color: var(--vsckb-text);
-}
-
-/* the four columns need room; below it, one column at a time is panned to */
 @media (max-width: 800px) {
-    .vsckb-column {
+    [data-vsckb="columns"] {
+        overflow-x: auto;
+    }
+
+    [data-vsckb="column"]:not([data-vsckb-collapsed]) {
         flex: 0 0 260px;
     }
 }

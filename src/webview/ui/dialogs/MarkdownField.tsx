@@ -6,6 +6,7 @@
  * is why the value is held here and not inside the editor.
  */
 
+import { FormControl, Textarea } from '@primer/react';
 import { useEffect, useRef, useState } from 'react';
 
 import { CodeEditor, createCodeMirrorEditor } from '../../adapters/code-editor';
@@ -68,20 +69,23 @@ export function MarkdownField(props: {
     }, [editor]);
 
     return (
-        <div className="vsckb-field">
-            <label className="vsckb-field-label" htmlFor={ props.id }>
-                { props.label }
-            </label>
+        // the field control of the design system carries the label and the
+        // description; the text area inside it is a real one, which is what
+        // the editor opens over. Nothing of the adapter changes: it still
+        // receives an element and knows nothing of forms
+        <FormControl id={ props.id } className="vsckb-field">
+            <FormControl.Label>{ props.label }</FormControl.Label>
 
-            <textarea
+            <Textarea
                 ref={ AREA }
-                id={ props.id }
-                className="vsckb-field-input vsckb-markdown-editor"
+                block
+                resize="vertical"
+                className="vsckb-markdown-editor"
                 rows={ props.rows }
                 maxLength={ props.maxLength }
                 defaultValue={ props.value }
                 onChange={ e => props.onChange(e.target.value) }
             />
-        </div>
+        </FormControl>
     );
 }

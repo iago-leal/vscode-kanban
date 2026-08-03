@@ -13,14 +13,79 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 
+import { AnchorName, anchored } from './anchors';
+import { EffectiveTheme } from '../domain/types';
 import { HREF_ATTRIBUTE, TEXT_ATTRIBUTE } from '../adapters/markdown';
 import { useServices } from './services';
 import { useTheme } from '../theme/theme-provider';
 
 /**
+ * The stylesheets the extension serves for highlighted code, one per colour
+ * mode.
+ *
+ * The board used to be served the dark one alone, whatever it was showing,
+ * which is why a code block on a light board came out dark text on dark
+ * ground. Both are served now (action T043), and the one not in force is
+ * switched off here (decision D-26).
+ */
+const HIGHLIGHT_STYLESHEETS: { [mode in EffectiveTheme]: string } = {
+    'light': 'vsckb-highlight-light',
+    'dark': 'vsckb-highlight-dark',
+};
+
+/**
+ * Which mode the stylesheets were last put into.
+ *
+ * Kept at the module level on purpose: a board of a hundred cards has a
+ * hundred of these components, and the stylesheets are one pair for the whole
+ * document. Without this, every card would write the same thing on every
+ * render.
+ */
+let appliedMode: EffectiveTheme | undefined;
+
+/**
+ * Switches the highlighting to the colour mode in force.
+ *
+ * The adapter is untouched by this, and deliberately: it still receives the
+ * theme it needs by parameter and still knows nothing about documents. What
+ * changes is which of the two stylesheets the document lets through.
+ *
+ * @param {EffectiveTheme} mode The mode being painted.
+ */
+export function applyHighlightTheme(mode: EffectiveTheme): void {
+    if (mode === appliedMode || 'undefined' === typeof document) {
+        return;
+    }
+
+    let applied = false;
+
+    for (const CANDIDATE of Object.keys(HIGHLIGHT_STYLESHEETS) as EffectiveTheme[]) {
+        const SHEET = document.getElementById(
+            HIGHLIGHT_STYLESHEETS[CANDIDATE]
+        ) as HTMLLinkElement | null;
+
+        if (SHEET) {
+            SHEET.disabled = CANDIDATE !== mode;
+
+            applied = true;
+        }
+    }
+
+    // an older document serving one fixed stylesheet has neither of the two,
+    // and there is nothing to switch: highlighting keeps whatever it had
+    if (applied) {
+        appliedMode = mode;
+    }
+}
+
+/**
  * Renders Markdown, with its diagrams and its highlighted code.
  */
-export function Markdown(props: { source: unknown; className?: string }) {
+export function Markdown(props: {
+    source: unknown;
+    anchor?: AnchorName;
+    className?: string;
+}) {
     const { bridge, diagrams, highlight, markdown } = useServices();
     const THEME = useTheme();
 
@@ -37,6 +102,8 @@ export function Markdown(props: { source: unknown; className?: string }) {
         if (!ELEMENT) {
             return;
         }
+
+        applyHighlightTheme(THEME.effective);
 
         diagrams.render(ELEMENT, THEME.effective);
         highlight.apply(ELEMENT);
@@ -67,8 +134,11 @@ export function Markdown(props: { source: unknown; className?: string }) {
 
     return (
         <div
+            { ...anchored({
+                anchor: props.anchor,
+                className: `vsckb-markdown-body ${ props.className || '' }`.trim(),
+            }) }
             ref={ HOLDER }
-            className={ `vsckb-markdown-body ${ props.className || '' }`.trim() }
             onClick={ OPEN_LINK }
             dangerouslySetInnerHTML={ { __html: HTML } }
         />

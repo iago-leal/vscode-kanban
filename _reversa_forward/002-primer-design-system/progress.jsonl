@@ -1,0 +1,73 @@
+{"ts":"2026-08-03T13:00:35Z","action":"T001","status":"failed","files":[],"reason":"referencia da 1.33.1 inobtenivel: repositorio sem etiqueta (git tag vazio), commit a296990 com devDependency 'vscode' 1.1.37 que trava o npm install (cartao [3]), e a versao publicada serve recursos por 'vscode-resource' (a296990:src/boards.ts:952), esquema que o editor atual nao serve (cartao [38], sonda em 1.131.0). Os dois caminhos oferecidos pela acao estao fechados"}
+{"ts":"2026-08-03T13:00:35Z","action":"T002","status":"done","files":["package.json"]}
+{"ts":"2026-08-03T13:00:35Z","action":"T003","status":"done","files":["scripts/build-webview.js"]}
+{"ts":"2026-08-03T13:00:35Z","action":"T004","status":"done","files":["package.json","package-lock.json"],"note":"par 'react-is' resolveu para 19.2.8 e nao reconhece elementos do React 18 (isElement falso); fixado em 18.3.1 exato"}
+{"ts":"2026-08-03T13:00:35Z","action":"T005","status":"done","files":["scripts/build-webview.js"],"note":"o carregador de .css ja resolve as folhas importadas de modulo: os pacotes distribuem CSS compilado, nao CSS modules. Verificado por sonda de empacotamento"}
+{"ts":"2026-08-03T13:00:35Z","action":"T006","status":"done","files":["src/webview/theme/primer-themes.ts"]}
+{"ts":"2026-08-03T13:00:35Z","action":"T007","status":"failed","files":[],"reason":"defeito de contrato: nenhuma folha CSS gerada faz um seletor antigo da folha do usuario alcancar elemento que nao carrega a classe antiga. CSS nao tem aliasing de seletor. Exige decisao sobre D-22"}
+{"ts":"2026-08-03T13:56:35Z","action":"T008","status":"done","files":["src/test/view-state.unit.test.ts"],"note":"asserção do ciclo passa a ler o número de estados de THEME_CYCLE, em vez de fixar três"}
+{"ts":"2026-08-03T13:56:35Z","action":"T009","status":"done","files":["src/test/view-state.unit.test.ts"],"note":"resolução de 'high-contrast', regra de não-dedução pelo editor e conversão de entrada de valor gravado desconhecido"}
+{"ts":"2026-08-03T13:56:35Z","action":"T015","status":"done","files":["src/webview/domain/types.ts"]}
+{"ts":"2026-08-03T13:56:35Z","action":"T016","status":"done","files":["src/webview/domain/view-state.ts"],"note":"THEME_CYCLE com quatro estados, isHighContrast como eixo separado, guarda de tipo derivado do ciclo"}
+{"ts":"2026-08-03T13:56:35Z","action":"T010","status":"done","files":["src/test/source-limits.unit.test.ts","src/test/sources.ts"],"note":"teste criado e VERMELHO: board.css com 686 linhas; fecha em T040"}
+{"ts":"2026-08-03T13:56:35Z","action":"T011","status":"done","files":["src/test/visual-literals.unit.test.ts"],"note":"teste criado e VERMELHO: 121 declarações que pintam em board.css; ui/ já está limpo; fecha em T040"}
+{"ts":"2026-08-03T13:56:35Z","action":"T012","status":"done","files":["src/test/layer-boundaries.unit.test.ts"],"note":"verde: nenhuma importação do sistema de design em domain/, adapters/ ou bridge/"}
+{"ts":"2026-08-03T13:56:35Z","action":"T014","status":"done","files":["src/test/primer-themes.unit.test.ts"],"note":"quatro conjuntos oferecidos, comparados nos dois sentidos com os importados; módulo carregado por require tardio sob hook de .css"}
+{"ts":"2026-08-03T13:56:35Z","action":"T059","status":"done","files":["src/test/no-font-assets.unit.test.ts"],"note":"verifica fonte no pacote e, sobretudo, que o empacotador não declara carregador de fonte, de modo que um import de fonte reprova o build"}
+{"ts":"2026-08-03T13:56:35Z","action":"T065","status":"done","files":["src/test/sanitizer-surface.unit.test.ts"],"note":"verificação estrutural: a suíte de unidade não tem DOM para exercitar o sanitizador"}
+{"ts":"2026-08-03T13:56:35Z","action":"T068","status":"done","files":["src/test/empty-states.unit.test.ts"]}
+{"ts":"2026-08-03T13:56:35Z","action":"T015","status":"corrected","files":["src/view-preferences.ts","src/webview/ui/TopBar.tsx","src/webview/ui/icons.tsx","src/test/view-preferences.unit.test.ts"],"note":"cola exigida pelo tipo novo: segunda declaração de ThemePreference no lado da extensão descartava 'high-contrast' ao gravar; mapa exaustivo de TopBar e ícone provisório theme-contrast até T021"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T007", "status": "done", "files": ["scripts/generate-legacy-compat.js"], "note": "gerador emite modulo, nao folha: CSS nao tem aliasing de seletor (D-22 reconciliado)"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T013", "status": "done", "files": ["src/test/legacy-compat.unit.test.ts"], "note": "39 nomes conferidos nas duas direcoes contra o mapa e contra as ancoras declaradas"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T015", "status": "corrected", "files": ["src/webview/theme/primer-themes.ts"], "note": "faltava importar primitives.css: sem ele os componentes resolvem medidas para nada"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T017", "status": "done", "files": ["src/webview/theme/theme-provider.tsx", "scripts/theme-tokens.js", "scripts/build-webview.js"], "note": "atributos na raiz do documento; conjuntos podados aos tokens usados"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T018", "status": "done", "files": ["src/webview/theme/tokens.css"], "note": "extinto"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T019", "status": "done", "files": ["src/webview/main.tsx", "src/webview/theme/theme-provider.tsx"], "note": "BaseStyles na raiz; provedor do sistema em modo apenas contexto, alimentado pelo ViewState"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T020", "status": "done", "files": ["src/webview/ui/TopBar.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T021", "status": "done", "files": ["src/webview/ui/icons.tsx"], "note": "octicons nomeados um a um; alto contraste segue desenhado, o conjunto nao tem"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T022", "status": "done", "files": ["src/webview/ui/Card.tsx", "src/webview/ui/IconButton.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T023", "status": "done", "files": ["src/webview/ui/Card.tsx"], "note": "rotulo textual do tipo"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T024", "status": "done", "files": ["src/webview/ui/Card.tsx"], "note": "menu de destinos no lugar da fileira de icones"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T025", "status": "done", "files": ["src/webview/ui/Column.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T026", "status": "done", "files": ["src/webview/ui/dialogs/Dialog.tsx"], "note": "foco, escape e devolucao passam a ser do sistema"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T027", "status": "done", "files": ["src/webview/ui/dialogs/ConfirmDialog.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T028", "status": "done", "files": ["src/webview/ui/dialogs/CardForm.tsx"], "note": "limite de 255 preservado"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T029", "status": "done", "files": ["src/webview/ui/dialogs/AddCardDialog.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T030", "status": "done", "files": ["src/webview/ui/dialogs/EditCardDialog.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T031", "status": "done", "files": ["src/webview/ui/dialogs/CardDetailsDialog.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T032", "status": "done", "files": ["src/webview/ui/dialogs/MarkdownField.tsx"], "note": "adaptador intocado"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T033", "status": "done", "files": ["src/webview/ui/ColumnsView.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T034", "status": "done", "files": ["src/webview/ui/ListView.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T035", "status": "done", "files": ["src/webview/ui/Markdown.tsx"], "note": "troca guardada em modulo: uma vez por mudanca de modo, nao por cartao"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T036", "status": "done", "files": ["src/webview/ui/App.tsx", "src/webview/ui/anchors.ts"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T037", "status": "done", "files": ["src/webview/ui/Column.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T038", "status": "done", "files": ["src/webview/ui/Card.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T039", "status": "done", "files": ["src/webview/ui/dialogs/Dialog.tsx"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T057", "status": "done", "files": ["src/webview/ui/TopBar.tsx"], "note": "action-save sem elemento: nao ha botao de gravar desde a feature 001"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T040", "status": "done", "files": ["src/webview/theme/board.css"], "note": "686 para 382 linhas, zero declaracao que pinta"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T041", "status": "done", "files": ["src/webview/theme/legacy-compat.ts"], "note": "modulo versionado, com --check no gerador"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T042", "status": "done", "files": ["src/html.ts"], "note": "politica declarada; 'unsafe-eval' e divida de filtrex.js:57, nao do sistema de design"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T043", "status": "done", "files": ["src/html.ts", "src/res/css/hljs-atom-one-light.css"], "note": "conjunto claro escrito, o projeto so tinha o escuro"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T044", "status": "done", "files": ["src/html.ts"], "note": "cascata com dois niveis: a compatibilidade saiu da cascata"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T045", "status": "done", "files": ["src/boards.ts"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T046", "status": "done", "files": ["src/html.ts"], "note": "aviso no ponto de montagem, substituido pela interface ao renderizar"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T047", "status": "done", "files": ["src/res/VENDORED.md"], "note": "cinco versoes apuradas; filtrex nao declara nenhuma, identificada por SHA-256"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T048", "status": "done", "files": ["CHANGELOG.md"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T049", "status": "done", "files": ["README.md"], "note": "ancoras de estilo e secao de migracao"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T051", "status": "done", "files": ["_reversa_forward/002-primer-design-system/actions.md"], "note": "main.js 756193 B de 900 KB; main.css 131332 B de 400 KB"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T052", "status": "done", "files": ["src/test/visual-literals.unit.test.ts"], "note": "prova por construcao: board.css nao tem outra origem de cor"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T053", "status": "done", "files": ["src/test/document-shape.unit.test.ts"], "note": "resta o console de um painel vivo"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T054", "status": "done", "files": ["src/test/document-shape.unit.test.ts"], "note": "resta a conferencia visual"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T058", "status": "done", "files": ["src/test/legacy-board-file.unit.test.ts"], "note": "ida e volta byte a byte de um cartao da 1.33.1"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T060", "status": "done", "files": ["src/test/theme-contrast.unit.test.ts"], "note": "razoes medidas pela formula da WCAG 2.1 nos quatro conjuntos"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T064", "status": "done", "files": ["src/test/bridge-protocol.unit.test.ts"], "note": "dezesseis comandos nas duas direcoes"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T066", "status": "done", "files": ["src/test/view-preferences.unit.test.ts"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T069", "status": "done", "files": ["src/test/view-parity.unit.test.ts"]}
+{"ts": "2026-08-03T15:40:00Z", "action": "T001", "status": "failed", "files": [], "note": "inexequivel neste ambiente: sem etiqueta, commit nao compila, versao publicada abre em branco"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T050", "status": "failed", "files": [], "note": "capturas de tela exigem editor rodando"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T055", "status": "failed", "files": [], "note": "bloqueada por T001"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T056", "status": "failed", "files": [], "note": "exige o editor da versao do piso"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T061", "status": "failed", "files": [], "note": "teclado, arrastar e escala de cinza exigem editor rodando"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T062", "status": "failed", "files": [], "note": "exige editor rodando"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T063", "status": "failed", "files": [], "note": "exige leitor de tela"}
+{"ts": "2026-08-03T15:40:00Z", "action": "T067", "status": "failed", "files": [], "note": "exige cronometragem em painel vivo"}

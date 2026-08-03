@@ -453,7 +453,21 @@ export class KanbanBoard extends vscode_helpers.DisposableBase {
         // stylesheet, '.vscode/vscode-kanban.css'.
         //
         return vsckb_html.generateHtmlDocument({
+            // What the Webview accepts as the origin of its own resources.
+            // Without it 'html.ts' declares no policy at all, which is what a
+            // caller that has no Webview to ask gets.
+            cspSource: webview ? webview.cspSource : undefined,
             getFooter: () => {
+                //
+                // The stylesheet of the user is emitted HERE, at the end of
+                // the document, and that position is a promise:
+                // 'interfaces/style-anchors.md' §8 says it is always the last
+                // one injected and therefore wins on equal specificity. The
+                // compatibility layer with version 1.33.1 used to be planned
+                // as a stylesheet between this one and the interface; it is a
+                // module now, applying the old names to the elements, so
+                // nothing sits between them any more.
+                //
                 const CUSTOM_STYLE_FILE = GET_RES_URI('vscode-kanban.css');
 
                 return CUSTOM_STYLE_FILE

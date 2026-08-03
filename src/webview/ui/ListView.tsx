@@ -10,9 +10,12 @@
  * 320 px, while four side by side need eight hundred.
  */
 
+import { Button } from '@primer/react';
+
 import { BoardSettings, ColumnKey } from '../domain/types';
 import { Card, CardActions } from './Card';
 import { VisibleBoard } from '../domain/visibility';
+import { anchored } from './anchors';
 import { keyOf } from './Column';
 import { namedColumns } from '../domain/columns';
 
@@ -28,17 +31,17 @@ export function ListView(props: {
     const COLLAPSED = props.board.columns.filter(c => c.collapsed);
 
     return (
-        <div className="vsckb-list">
+        <div { ...anchored({ anchor: 'list', className: 'vsckb-list' }) }>
             <div className="vsckb-list-toolbar">
                 { namedColumns(props.settings).map(column => (
-                    <button
+                    <Button
+                        { ...anchored({ anchor: 'action-add', className: 'vsckb-list-add' }) }
                         key={ column.key }
-                        type="button"
-                        className="vsckb-list-add"
+                        size="small"
                         onClick={ () => props.onAddCard(column.key) }
                     >
                         { `Add to '${ column.name }'` }
-                    </button>
+                    </Button>
                 )) }
             </div>
 

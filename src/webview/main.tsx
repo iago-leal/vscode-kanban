@@ -7,6 +7,7 @@
  * without touching a component.
  */
 
+import { BaseStyles } from '@primer/react';
 import { createRoot } from 'react-dom/client';
 
 import { App } from './ui/App';
@@ -71,7 +72,16 @@ function mount(): void {
     }
 
     try {
-        createRoot(ELEMENT).render(<App services={ SERVICES } />);
+        // The base of the design system: type stack, line height and the
+        // default foreground, all read from the tokens the theme provider
+        // writes on the root of the document. It brings no preference of its
+        // own -- what colour set is in force stays a question only the view
+        // state answers (D-20).
+        createRoot(ELEMENT).render(
+            <BaseStyles className="vsckb-base">
+                <App services={ SERVICES } />
+            </BaseStyles>
+        );
     } catch (e) {
         SERVICES.bridge.log(`main.mount().error: ${ String(e) }`);
     }
