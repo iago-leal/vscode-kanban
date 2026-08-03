@@ -192,3 +192,121 @@ que a inspeção única prevista no roteiro, porque roda a cada execução da su
 - `_reversa_forward/002-primer-design-system/progress.jsonl`
 - `_reversa_forward/002-primer-design-system/interfaces/style-anchors.md`
 - `_reversa_forward/002-primer-design-system/interfaces/legacy-class-map.md`
+
+## Atualização 2026-08-03 — reconciliação pós-entrega (cartão `[45]`)
+
+Esta seção **não** é uma quarta rodada de `/reversa-coding`. É a reconciliação de três frentes em
+que o código andou e a spec ficou parada — o que o Princípio nº 6 do projeto proíbe, porque quebra
+em silêncio a relação entre fonte de verdade e projeção. As três têm a mesma origem: correção
+entregue sob pressão de tela, spec deixada para depois.
+
+### Frente 1 — as medições registradas eram de um pacote quebrado
+
+A terceira rodada fixou `main.css` em **131.332 B** como patamar da feature. O número foi medido
+enquanto a poda de folhas descartava as dos oitenta e dois componentes: mediu, portanto, **um pacote
+sem estilo algum**, e o relatório de economia ficava mais impressionante quanto mais quebrado
+estivesse. O defeito e sua correção estão no cartão `[43]` do quadro; a medição, não, e daí esta
+frente.
+
+Números apurados hoje, com o empacotador de produção:
+
+| O que | Medida | Teto | Ocupação |
+|---|---|---|---|
+| `main.css`, com as duas podas | **317.810 B** | 400 KB | 78% |
+| `main.css`, sem poda nenhuma | **637.169 B** | 400 KB | 156% — reprova |
+| `main.js` | **756.485 B** | 900 KB | 82% |
+
+O item `W013` do `regression-watch.md` afirmava "de 131 KB para 439 KB" e **nenhum dos dois números
+se sustenta**: o primeiro é o do pacote quebrado, e o segundo não corresponde a medição possível
+hoje. O item continua correto no princípio — as duas podas devem permanecer —, e o que se corrige
+são os bytes com que ele descreve a violação. A lição que o `[43]` deixou fica anexada a ele: uma
+poda que descarta tudo não é uma poda eficiente, e o relatório de economia só se lê junto com a
+contagem do que sobreviveu, que é o que a guarda de `scripts/theme-tokens.js` passou a exigir.
+
+Reconciliado também: `theme/board.css` tem **396** linhas e não 382, e a suíte está em **231**
+testes e não 216.
+
+### Frente 2 — os controles da barra superior nomeiam a ação, não o estado
+
+A pedido do dono do projeto, o controle de tema diz `Dark` em quadro claro, o de exibição diz `List`
+em colunas, e o de finalizados diz `Show finished (8)` quando estão ocultos. **`aria-pressed` saiu
+dos três**, e o estado passou a viajar inteiro no nome acessível — "Theme: light. Press for dark".
+
+RF-14 não afrouxou, e a razão precisa ficar registrada porque a leitura apressada do requisito leva
+a repor o atributo: um botão rotulado com a ação não tem estado pressionado a relatar.
+`aria-pressed="false"` sobre um botão que diz `Dark` anuncia que o modo escuro está desligado — o
+que é verdade sobre o quadro e falso sobre o botão, e o leitor de tela lê a segunda coisa.
+`ui/IconButton.tsx` conserva a propriedade `pressed` para o caso de um controle de alternância cujo
+rótulo não mude; nenhum dos três é desses hoje.
+
+### Frente 3 — a folha de estilo virou um par
+
+Entregue com os cartões `[41]`, `[42]` e `[46]`, e **não prevista por nenhuma spec desta feature**.
+
+D-21 mandou encolher `theme/board.css` à geometria, e a prova de RN-07 era a **ausência**: uma folha
+só, proibida de declarar cor por qualquer meio. A decisão cumpriu o que prometia e produziu um
+efeito que ninguém antecipou — sem lugar legítimo onde nomear token, o quadro ficou **de fato** sem
+cor semântica. `ui/Card.tsx` escrevia `data-vsckb-group` no elemento e nada lia o atributo; um `bug`
+e uma anotação chegavam ao olho iguais.
+
+A prova passou a ser por **token**, e a folha, a duas:
+
+- `theme/board.css` declara geometria e nada que pinte, como antes;
+- `theme/appearance.css` **só** pinta, e só nomeando `var(--token)` do sistema de design.
+
+A promessa é a mesma — desligado o sistema, o quadro sai despintado —, agora porque cada declaração
+resolve para nada, e não porque não existe declaração. É o argumento que `ui/App.tsx` já invocava
+para os dois tokens da casca, generalizado. Registrada como D-21.1 no `roadmap.md`.
+
+A alternativa descartada importa para quem reler: espalhar `sx` pelos componentes. Foi recusada por
+coesão — a pergunta "que cor é um bug" passaria a ter uma resposta por arquivo, e o projeto acabou
+de sair de um vocabulário visual disperso.
+
+### Impacto por artefato da extração
+
+| Artefato | Seção | Tipo de impacto | Delta |
+|---|---|---|---|
+| `_reversa_sdd/architecture.md` | `#4` — Componentes e responsabilidades | componente-novo | `src/webview/theme/appearance.css`, a única folha do projeto que pinta, e apenas por token do sistema de design. Uma extração que encontre duas folhas em `theme/` não deve lê-las como duplicação: a divisão é a prova de RN-07, e cada metade tem um teste próprio em `src/test/visual-literals.unit.test.ts` — a primeira não pode pintar, a segunda não pode escrever valor, e um terceiro teste garante que a segunda continua importada, porque uma folha que ninguém importa passaria nas outras duas pintando nada |
+| `_reversa_sdd/architecture.md` | `#8` — Qualidades do sistema | regra-alterada | **Corrige o que a terceira rodada registrou.** Ali se leu "sem as duas podas, 439 KB contra teto de 400; com elas, 131 KB". Os números eram de um pacote sem estilo algum. Medido: 637.169 B sem poda, 317.810 B com as duas, contra teto de 400 KB; o código em 756.485 B de um teto de 900 KB |
+| `_reversa_sdd/architecture.md` | `#4` — Componentes e responsabilidades | regra-nova | O tema do editor de Markdown vendorizado vive em `appearance.css` e depende de nomes de classe da biblioteca (`.CodeMirror`, `.CodeMirror-gutters`, `.cm-header` e os demais tokens do modo markdown). É acoplamento a artefato de terceiro que nenhuma spec registrava, e que **já se perdeu uma vez**: as regras equivalentes viviam em `board.css` sobre tokens autorais, e esta feature levou as duas coisas sem substituí-las. Vigiado por `W018` |
+| `_reversa_sdd/architecture.md` | `#5.1` — Abertura do quadro | regra-nova | A cor voltou a ter semântica, e os dois eixos foram separados de propósito para não competirem: o **tipo** do cartão ganha tarja vertical à esquerda e variante de rótulo (`danger`, `attention`, `secondary`); a **coluna**, uma régua discreta acima do cabeçalho. O rótulo textual de D-24 permanece, porque a cor acrescenta e não substitui — verificado em escala de cinza, onde os três níveis se separam por luminância e não por matiz |
+| `_reversa_forward/002-primer-design-system/interfaces/style-anchors.md` | `#8.1` (nova) | delta-de-contrato-externo | As âncoras passaram a ser usadas para **desempate de especificidade dentro do projeto**, e não só como promessa ao usuário. O contrato não promete mais nada com isso; o que muda é quem depende dele — remover uma âncora deixou de ser apenas quebra externa e passa a quebrar a tipografia do quadro no mesmo ato |
+| `_reversa_sdd/domain.md` | `#3.1` a `#3.8` — Regras de domínio | — (sem impacto) | Nenhuma regra tocada. A divisão das folhas é de apresentação; `domain/card-taxonomy.ts` segue decidindo o agrupamento de cor, e o mapa de grupo para variante do sistema de design fica em `ui/Card.tsx`, que é onde apresentação pode decidir |
+
+Contagem nesta atualização: **3** `regra-nova`, **1** `componente-novo`, **1** `regra-alterada`,
+**1** `delta-de-contrato-externo`.
+
+**Somando as quatro seções**, o adendo registra 22 impactos: 10 `regra-nova`, 4
+`delta-de-contrato-externo`, 4 `componente-novo`, 2 `regra-alterada`, 1 `componente-extinto` e
+1 `delta-de-dados`.
+
+### Regras sob vigilância
+
+Acrescentados nesta rodada: `W017`, `W018` e `W019`. Com os anteriores, dezenove ao todo.
+
+Duas correções nos existentes, ambas em `regression-watch.md` §2: `W013` mantém o princípio e perde
+os números, substituídos pela tabela de medições; `W009` continua válido palavra por palavra sobre
+`board.css`, mas **deixou de ser "a única prova"** — lê-se junto com `W017`, sob pena de quem o
+leia isolado concluir que qualquer cor no projeto é violação e fechar a porta que os três cartões
+abriram.
+
+### O que continua devendo
+
+As oito ações de verificação com editor rodando seguem abertas, e a esta altura acumulam também os
+cartões `[41]`, `[42]` e `[46]`, todos em `testing` pelo mesmo motivo: a verificação foi feita com o
+pacote real carregado num navegador, com um `acquireVsCodeApi` de mentira, e não dentro do editor.
+Vale registrar que **foi esse método, e não a suíte, que revelou os três defeitos** — e o do cartão
+`[36]` antes deles. Uma suíte de 231 testes verdes conviveu com um retângulo branco no meio de um
+diálogo escuro.
+
+Continua sem base de comparação a paridade com a versão 1.33.1, pelo impedimento registrado na
+terceira rodada.
+
+### Fontes
+
+- `_reversa_forward/002-primer-design-system/requirements.md` (RN-07, RF-14, RF-24 e a nota de 2026-08-03)
+- `_reversa_forward/002-primer-design-system/roadmap.md` (D-21.1)
+- `_reversa_forward/002-primer-design-system/regression-watch.md` (§1 quarta rodada, §2 e §4)
+- `_reversa_forward/002-primer-design-system/interfaces/style-anchors.md` §8.1
+- `src/test/visual-literals.unit.test.ts`
+- Cartões `[41]`, `[42]`, `[43]`, `[45]` e `[46]` do quadro do projeto

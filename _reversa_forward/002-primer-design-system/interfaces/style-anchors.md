@@ -164,6 +164,27 @@ A ordem de injeção no documento é, e permanece:
 A folha do usuário é sempre a última e, em igualdade de especificidade, vence. Isso está verificado
 pelo cenário de aceitação correspondente e pela seção 9 do `onboarding.md`.
 
+### 8.1 As âncoras também desempatam especificidade dentro do projeto
+
+Acrescentado em 2026-08-03, na reconciliação do cartão `[45]`, porque é um uso que este contrato não
+previa e do qual o projeto passou a depender.
+
+`theme/appearance.css` qualifica pela âncora toda regra que dispute propriedade com um componente do
+sistema de design — `[data-vsckb="column-header"] .vsckb-column-name`, e não `.vsckb-column-name`
+sozinho. A razão é aritmética: um seletor de classe simples **empata** com a classe que o componente
+traz, e num empate vence a última declarada, isto é, quem o empacotador emitiu por último. A
+diagramação sairia certa ou errada por acidente de ordem de import, e mudaria sem que ninguém
+tocasse no estilo.
+
+Isso não amplia o que o contrato promete ao usuário: uma âncora continua sendo apenas um seletor que
+não muda de significado enquanto existir. **Amplia quem depende dela.** Antes só a folha do usuário
+dependia; agora o próprio projeto também, e remover uma âncora deixou de ser somente uma quebra de
+contrato externo — passa a quebrar a tipografia do quadro no mesmo ato. O gatilho de versionamento
+da seção 9 não muda; o que muda é que a verificação de uma remoção tem de olhar para dentro também.
+
+Alternativa descartada: `!important`, que venceria o empate sem declarar por quê e transferiria o
+problema para a folha do usuário, que é justamente quem este contrato existe para proteger.
+
 ## 9. Versionamento do contrato
 
 Acrescentar âncora é mudança compatível e entra em versão de funcionalidade. Remover ou renomear

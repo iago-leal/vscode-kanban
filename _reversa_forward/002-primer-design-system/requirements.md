@@ -119,6 +119,20 @@ prontos, entre eles quatro de alto contraste e seis para tipos de daltonismo.
      domínio do quadro, sem correspondência em vocabulário de interface genérico
    - Tipo: nova. Delimita o que RN-01 alcança e o que fica de fora, evitando que "adotar o sistema"
      seja lido como "reescrever o quadro inteiro".
+   - **Emenda de 2026-08-03, depois da entrega.** O enunciado não muda; muda como ele é provado.
+     A prova era a **ausência**: uma folha só, `theme/board.css`, proibida de declarar cor por
+     qualquer meio. Isso deixou o quadro sem lugar legítimo onde nomear token, e o resultado foi
+     um quadro que perdeu a cor de fato — o tipo do cartão e a coluna chegando ao olho na mesma
+     paleta neutra (cartões `[41]`, `[42]` e `[46]` do quadro do projeto).
+     A prova passou a ser por **token**, e a folha, a duas:
+     `theme/board.css` declara geometria e nada que pinte, como antes;
+     `theme/appearance.css` só pinta, e só nomeando `var(--token)` do sistema.
+     A promessa continua a mesma — desligado o sistema de design, o quadro sai despintado —,
+     agora porque cada declaração resolve para nada, e não porque não existe declaração. É o
+     mesmo argumento que `ui/App.tsx` já invocava para os dois tokens da casca, generalizado.
+     `src/test/visual-literals.unit.test.ts` verifica as duas metades: a proibição de pintar na
+     primeira folha, e a proibição de literal na segunda, mais a garantia de que a segunda
+     continua importada — uma folha que ninguém importa passaria em todas as regras pintando nada.
 
 ## 5. Requisitos Funcionais
 
@@ -137,7 +151,7 @@ prontos, entre eles quatro de alto contraste e seis para tipos de daltonismo.
 | RF-11 | O quadro declara as âncoras de estilo que a folha do usuário pode alcançar, e essas âncoras não mudam entre versões de correção nem de funcionalidade | Must | Existe uma lista documentada de seletores estáveis; uma folha de usuário escrita contra ela continua funcionando após a atualização | 🟢 |
 | RF-12 | A atualização avisa o usuário de folha própria de que a superfície de estilo mudou, antes que ele abra o quadro e a encontre quebrada | Must | O `CHANGELOG.md` traz a nota de alteração incompatível e o `README.md` traz a seção de migração com o mapa entre a superfície antiga e a nova | 🟢 |
 | RF-13 | Todo elemento interativo é alcançável e acionável por teclado, com foco sempre visível | Must | Percorrendo o quadro apenas por teclado, cada controle recebe foco visível e é acionável, e nenhuma armadilha de foco existe nas caixas de diálogo | 🟢 |
-| RF-14 | Todo elemento interativo expõe nome acessível e estado a tecnologias assistivas | Must | Cada botão da barra superior e cada ação de cartão tem nome acessível não vazio; controles de estado expõem o estado corrente | 🟢 |
+| RF-14 | Todo elemento interativo expõe nome acessível e estado a tecnologias assistivas | Must | Cada botão da barra superior e cada ação de cartão tem nome acessível não vazio; controles de estado expõem o estado corrente. **Emenda de 2026-08-03:** o estado dos três controles da barra superior é exposto pelo **nome acessível**, e não por `aria-pressed`, que saiu deles — ver a nota abaixo da tabela | 🟢 |
 | RF-15 | A movimentação de cartão por arrastar e soltar é preservada, e existe caminho equivalente por teclado | Must | Um cartão pode ir de `todo` a `in progress` tanto pelo ponteiro quanto exclusivamente pelo teclado, com o mesmo resultado gravado | 🟡 |
 | RF-16 | A renderização de Markdown, de diagramas e de código realçado é preservada, e o tema desses conteúdos acompanha o tema do quadro | Must | Um cartão com Markdown, diagrama e bloco de código renderiza os três; alternar o tema muda a aparência dos três sem recarregar o painel | 🟢 |
 | RF-17 | A barreira de sanitização do conteúdo Markdown é preservada ou tornada mais estrita, nunca menos | Must | Um cartão cuja descrição contenha marcação de script não a executa, e o conjunto de elementos permitidos não cresce em relação ao vigente | 🟢 |
@@ -147,11 +161,39 @@ prontos, entre eles quatro de alto contraste e seis para tipos de daltonismo.
 | RF-21 | O piso de versão do editor é declarado e verificado, e o alvo de compilação do empacotador acompanha esse piso | Must | O campo `engines.vscode` traz o piso definido em RN-05; o alvo declarado em `scripts/build-webview.js` corresponde ao motor de renderização dessa versão; e o quadro abre e renderiza corretamente na versão do piso, com o seletor relacional e as consultas de contêiner surtindo efeito | 🟢 |
 | RF-22 | As bibliotecas vendorizadas cuja função o sistema de design adotado absorve são removidas do projeto | Should | Nenhuma cópia sem número de versão permanece em `src/res/` para função que o sistema adotado já cumpre; as que permanecem estão listadas com versão declarada | 🟢 |
 | RF-23 | Nenhum arquivo de interface ultrapassa quatrocentas linhas | Should | A contagem de linhas de todo arquivo sob `src/webview/` fica igual ou abaixo de quatrocentas | 🟢 |
-| RF-24 | O cartão, a coluna e a área de arrastar permanecem componentes do projeto, pintados exclusivamente com as variáveis do sistema adotado | Must | Os arquivos de cartão e de coluna não declaram nenhum valor visual literal; retirada a folha do sistema adotado, esses elementos ficam sem cor, o que prova que nada foi redeclarado localmente | 🟢 |
+| RF-24 | O cartão, a coluna e a área de arrastar permanecem componentes do projeto, pintados exclusivamente com as variáveis do sistema adotado | Must | Os arquivos de cartão e de coluna não declaram nenhum valor visual literal; retirada a folha do sistema adotado, esses elementos ficam sem cor, o que prova que nada foi redeclarado localmente. **Emenda de 2026-08-03:** onde a composição do projeto nomeia essas variáveis é `theme/appearance.css`, e apenas ali — a resposta a "que cor é um bug" fica em um lugar, em vez de um `sx` por componente (ver RN-07) | 🟢 |
 | RF-25 | Os ícones do quadro passam a vir do conjunto de ícones do sistema de design adotado, empacotados com a extensão | Must | Nenhum ícone permanece desenhado à mão no projeto para função que o conjunto adotado cobre, e o quadro renderiza todos os ícones sem rede | 🟢 |
 | RF-26 | A tipografia do quadro segue a escala do sistema de design adotado, resolvida pela pilha de fontes do sistema operacional | Must | Nenhum arquivo de fonte é empacotado nem transferido, e os tamanhos e pesos de texto do quadro correspondem aos da escala do sistema adotado | 🟢 |
 | RF-27 | A referência de comportamento da versão 1.33.1 é capturada antes de qualquer alteração desta feature | Must | Existem, na pasta de referência da feature `001`, o registro de eventos e o arquivo de quadro produzidos pelo roteiro de doze passos executado sobre a versão 1.33.1 | 🟢 |
 | RF-28 | Os nomes de classe da versão 1.33.1 continuam alcançando os elementos equivalentes do quadro, por camada de compatibilidade | Must | Uma folha de estilo escrita contra a interface da versão 1.33.1 continua sendo aplicada, sem edição, na versão desta feature | 🟢 |
+
+### Nota de 2026-08-03 — como os três controles da barra superior expõem estado
+
+A pedido do dono do projeto, os controles de tema, de exibição e de cartões finalizados passaram a
+nomear a **ação**, e não o estado: em quadro claro o botão diz `Dark`, em colunas diz `List`, e o
+dos finalizados diz `Show finished (8)` quando estão ocultos. `aria-pressed` **saiu dos três**.
+
+Isso não afrouxa RF-14, e a razão merece ficar escrita, porque a leitura apressada do requisito
+levaria a repor o atributo. Um botão rotulado com a ação **não tem estado pressionado a relatar**:
+`aria-pressed="false"` sobre um botão que diz `Dark` anuncia que o modo escuro está desligado, o que
+é verdade sobre o quadro e falso sobre o botão, e um leitor de tela lê a segunda coisa. O estado
+passou a viajar inteiro no nome acessível, junto com a ação — "Theme: light. Press for dark",
+"Layout: four columns. Press to show a single list", "Finished cards are hidden, 8 of them. Press to
+show them" (`ui/TopBar.tsx`, `THEME_LABELS` e `hideDoneLabel`).
+
+O critério de aceite de RF-14 continua sendo verificado como está redigido: os controles de estado
+expõem o estado corrente. O que mudou é o veículo. `IconButton.tsx` conserva a propriedade
+`pressed`, e com ela `aria-pressed`, para o caso de um controle de alternância cujo rótulo **não**
+mude — nenhum dos três da barra superior é desses hoje.
+
+**RF-13 não foi afetado** e não precisou de emenda, embora o cartão `[45]` do quadro nomeasse os
+dois. Alcance por teclado, acionamento e visibilidade do foco não dependem do rótulo nem de
+`aria-pressed`: os três controles continuam sendo botões do sistema de design, na mesma ordem de
+tabulação e com o mesmo anel de foco. Quem vier conferir a divergência procurando por ela em RF-13
+não a encontrará, e é para isso que esta frase existe.
+
+A mudança é observável por quem usa leitor de tela, o que a põe no alcance de `T063` — uma das oito
+verificações manuais ainda abertas desta feature.
 
 ## 6. Requisitos Não Funcionais
 
@@ -515,6 +557,7 @@ se encaixavam. O relatório está em `audit/cross-check.md`, achados A001 e A002
 | 2026-08-03 | RF-07 e seu cenário reconciliados por `/reversa-plan`: o ciclo do controle de tema deixa de fixar três acionamentos, porque o alto contraste de RF-09 acrescenta um quarto estado. Registrado em `data-delta.md` §3.1 | reversa |
 | 2026-08-03 | Cinco dúvidas resolvidas por `/reversa-clarify`. Acrescentados RN-07 e RF-24 a RF-28; RN-01, RN-04, RN-05, RN-06, RF-21 e o escopo negativo reescritos; acrescentada a subseção de herança da feature `001` | reversa |
 | 2026-08-03 | Duas decisões registradas após `/reversa-audit` (A001 e A002): as âncoras de compatibilidade ganham nível próprio no contrato, e o modal de filtro sai do mapa da versão 1.33.1. RN-04 estreitado para distinguir os dois níveis de promessa | iago |
+| 2026-08-03 | Reconciliação pós-entrega, cartão `[45]` do quadro. RN-07 emendado: a prova de que o quadro sai despintado passa de ausência de declaração para declaração por token, e a folha vira um par (`board.css` geometria, `appearance.css` pintura). RF-24 diz onde a composição nomeia as variáveis. RF-14 e nota nova registram que o estado dos três controles da barra superior viaja no nome acessível, e não em `aria-pressed` | iago |
 
 ## Pendências de Qualidade
 

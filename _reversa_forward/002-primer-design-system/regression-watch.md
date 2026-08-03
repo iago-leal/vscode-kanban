@@ -40,6 +40,14 @@ Acrescentados na terceira rodada, 2026-08-03, derivados da seção "Modificadas"
 | W015 | `src/html.ts` · RF-19, cartão `[7]` | A política de segurança de conteúdo é declarada, recusa o que não nomeia e proíbe conexão. `'unsafe-eval'` é dívida do avaliador de filtro, e some quando ele for substituído | presença | A política sumir, ou `'unsafe-inline'` aparecer em `style-src` — o que é diferente de `style-src-attr`, e muito mais largo. Acrescentar cláusula para acomodar o sistema de design é o que o requisito não funcional proíbe, e não foi preciso |
 | W016 | `src/res/VENDORED.md` · dívida D7 | As seis bibliotecas vendorizadas continuam declarando versão e impressão digital, e um arquivo trocado leva a linha correspondente junto | redação | Um arquivo de `src/res/js/` mudar sem a impressão digital mudar. A dívida D7 volta ao estado em que estava: nomes sem identidade, e nenhuma pergunta sobre vulnerabilidade respondível |
 
+Acrescentados na quarta rodada, 2026-08-03, na reconciliação pós-entrega do cartão `[45]`:
+
+| ID | Origem (arquivo, seção) | Regra esperada após mudança | Tipo de verificação | Sinal de violação |
+|----|--------------------------|------------------------------|---------------------|-------------------|
+| W017 | `src/webview/theme/appearance.css` · RN-07, RF-24, D-21.1 | A folha de aparência **só pinta, e só por token**: toda declaração de cor, raio, sombra ou tamanho de fonte nomeia `var(--…)` do sistema de design, nenhuma escreve valor. E ela continua **importada** por `ui/App.tsx` | ausência | Um literal aparecer ali — hexadecimal, comprimento ou nome de cor de CSS —, o que restaura a segunda origem de cor que RN-07 proíbe e faz a prova por token deixar de valer em silêncio, porque o quadro continua bonito. Ou o import sumir: a folha então passa em todas as regras pintando nada, e o quadro volta ao estado sem cor semântica dos cartões `[41]` e `[46]`. `visual-literals.unit.test.ts` reprova os dois, e o segundo teste existe **porque** o primeiro sozinho não o pegaria |
+| W018 | `src/webview/theme/appearance.css`, bloco do editor · cartão `[39]` | O tema do editor de Markdown vive junto do resto da aparência e nomeia os mesmos tokens: fundo, primeiro plano, medianiz, cursor, seleção e os tokens de sintaxe do modo markdown | presença | O bloco sumir numa reorganização de folhas. **Já aconteceu uma vez**: as regras equivalentes viviam em `theme/board.css` sobre tokens autorais, e a feature `002` levou as duas coisas embora sem que nada as substituísse. O sintoma é uma página branca de biblioteca dentro de um diálogo escuro — o objeto mais visível da tela —, e nenhum dos 231 testes o viu, nem da primeira nem da segunda vez. Enquanto não houver teste, este item é a única guarda |
+| W019 | `src/webview/theme/appearance.css`, regras de tipografia · `interfaces/style-anchors.md` | Toda regra que disputa propriedade com um componente do sistema de design é qualificada pela **âncora de estilo** do elemento, e não por classe simples | redação | A qualificação cair, por parecer verbosa. Um seletor de classe simples empata em especificidade com a classe que o componente traz, e quem vence passa a depender de qual import o empacotador emitiu primeiro: a diagramação fica certa ou errada por acidente de ordem, e muda sem que ninguém toque no estilo |
+
 ## 2. Observações, sem peso de regressão
 
 Itens que ainda não são regra confirmada: ou tratam de código que a feature vai mexer nas fases
@@ -100,6 +108,59 @@ Acrescentadas na terceira rodada, 2026-08-03:
   idênticos; a afordância mudou. Uma extração que compare capturas de tela com a feature `001` verá
   diferença aqui, e ela é deliberada (`T024`, RF-15).
 
+Acrescentadas na quarta rodada, 2026-08-03, na reconciliação pós-entrega do cartão `[45]`:
+
+- **As medições da terceira rodada foram tiradas de um pacote quebrado, e a correção nunca voltou
+  para cá.** Onde se lê `main.css` em **131.332 B**, o número foi medido enquanto a poda descartava
+  as folhas dos oitenta e dois componentes — isto é, mediu um pacote **sem estilo algum**, e o
+  relatório de economia ficava mais impressionante quanto mais quebrado estava. O defeito e a
+  correção estão no cartão `[43]` do quadro; a medição, não. Os números apurados hoje, com o
+  empacotador de produção:
+
+  | O que | Medida | Teto | Ocupação |
+  |---|---|---|---|
+  | `main.css`, com as duas podas | **317.810 B** | 400 KB | 78% |
+  | `main.css`, sem poda nenhuma | **637.169 B** | 400 KB | 156% — reprova |
+  | `main.js` | **756.485 B** | 900 KB | 82% |
+
+  Os 317.810 B já incluem `theme/appearance.css`, que custou cerca de 5,5 KB — a folha em si é
+  pequena, e o que ela acrescenta ao pacote são sobretudo os tokens que passou a nomear e que a
+  poda, por isso, deixou de descartar. É o mecanismo funcionando: a poda serve o que a interface
+  pede, e pedir mais custa mais.
+
+- **`W013` afirmava "de 131 KB para 439 KB", e nenhum dos dois números se sustenta.** O primeiro é
+  a medição do pacote quebrado, acima; o segundo não corresponde a nada que se possa medir hoje —
+  sem as duas podas o pacote dá **637.169 B**, e não 439 KB. O item continua **correto no
+  princípio**, e as duas podas devem permanecer; o que se corrige aqui são os números com que ele
+  descreve a violação. Leia `W013` com a tabela acima no lugar deles.
+
+  O `[43]` deixou uma lição que vale anexada a `W013`: **uma poda que descarta tudo não é uma poda
+  eficiente**. O relatório de economia precisa ser lido junto com a contagem do que sobreviveu, que
+  é o que a guarda em `theme-tokens.js` passou a exigir — se nenhuma folha de componente sobrevive,
+  a construção falha em vez de anunciar o recorde.
+
+- **`W009` descreve `theme/board.css` como "a única prova", e deixou de ser.** A prova virou par
+  com `W017`: a primeira folha não pinta, a segunda só pinta por token. `W009` continua válido
+  palavra por palavra sobre o arquivo que nomeia — nada mudou em `board.css` —, mas quem o ler
+  isoladamente concluirá que qualquer cor no projeto é violação, e fechará a porta que os cartões
+  `[41]`, `[42]` e `[46]` abriram. Os dois se leem juntos.
+
+- **`theme/board.css` tem 396 linhas, e não 382.** A observação da terceira rodada registrava o
+  número anterior. O teto de quatrocentas continua respeitado, agora com quatro linhas de folga —
+  estreito o bastante para que a próxima emenda de geometria precise cortar comentário antes de
+  acrescentar regra, o que já aconteceu uma vez nesta reconciliação. `theme/appearance.css` tem 308.
+
+- **O estado esperado da suíte passou de 216 para 231 testes, todos passando.** Os quinze novos são
+  da entrega dos cartões `[41]`, `[42]` e `[46]`, e dois deles são os de `W017`. Qualquer falha
+  continua sendo regressão de verdade.
+
+- **Os três controles da barra superior nomeiam a ação, e não o estado.** Em quadro claro o botão
+  diz `Dark`; em colunas, `List`; o dos finalizados, `Show finished (8)` quando estão ocultos.
+  `aria-pressed` saiu dos três, e o estado passou a viajar no nome acessível. Uma extração que
+  compare com a redação original de RF-14 verá divergência aparente; a razão está na nota de
+  2026-08-03 do `requirements.md`, e repor o atributo seria o erro — `aria-pressed="false"` sobre um
+  botão que diz `Dark` é verdade sobre o quadro e mentira sobre o botão.
+
 ## 3. Histórico de re-extrações
 
 <!-- Preenchido pelo agente reverso quando /reversa rodar de novo. -->
@@ -118,3 +179,6 @@ Acrescentadas na terceira rodada, 2026-08-03:
 | 2026-08-03 | Observação "o teto de folha do RNF de desempenho está prestes a ser rompido" | Resolvida por `scripts/theme-tokens.js`. Substituída por `W013`, que vigia a solução em vez do sintoma |
 | 2026-08-03 | Observação "a folha de compatibilidade não existe" | Resolvida: a compatibilidade deixou de ser folha. Substituída por `W011` e `W012` |
 | 2026-08-03 | Observação "dois testes estão vermelhos de propósito" | Cumprida em `T040`. O estado esperado passou a ser 216 testes passando e nenhuma falha |
+| 2026-08-03 | Observação da terceira rodada "a medição do pacote mudou de patamar", nos números | Medida sobre o pacote quebrado do cartão `[43]`. Substituída pela tabela de medições da quarta rodada em §2. O **patamar** que ela anunciava continua certo; os bytes, não |
+| 2026-08-03 | Observação da terceira rodada "`theme/board.css` tem 382 linhas" | Superada: são 396 depois da divisão das folhas. Substituída na quarta rodada |
+| 2026-08-03 | Observação da terceira rodada "a suíte está em 216 testes" | Superada: 231 depois dos cartões `[41]`, `[42]` e `[46]`. Substituída na quarta rodada |
