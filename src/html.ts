@@ -104,11 +104,18 @@ export function createNonce(): string {
 }
 
 /**
- * Function to generate (additional) footer content.
+ * Function to generate (additional) content for the document.
+ *
+ * The nonce of the document is handed over, because the policy declared above
+ * admits a script by nonce and by nothing else: a caller that contributes
+ * markup with a script in it cannot mint its own, and one that contributes only
+ * a stylesheet simply ignores the argument.
+ *
+ * @param {string} nonce The nonce every script tag of the document carries.
  *
  * @return {string} The generated HTML code.
  */
-export type GetFooterFunction = () => string;
+export type GetFooterFunction = (nonce: string) => string;
 
 /**
  * Options for 'generateFooter()' function.
@@ -160,9 +167,14 @@ export interface GenerateHtmlDocumentOptions extends ResourceUriResolver, WithTi
     /**
      * The function that generates the (body) content.
      *
+     * It runs BEFORE the bundle is emitted, which is the only place a script
+     * that the interface has to find already in place can go.
+     *
+     * @param {string} nonce The nonce every script tag of the document carries.
+     *
      * @return {string} The content.
      */
-    getContent?: () => string;
+    getContent?: GetFooterFunction;
     /**
      * The function that generates additional footer content.
      */
@@ -303,7 +315,7 @@ export function generateFooter(opts: GenerateFooterOptions) {
 
     return `${ BUNDLE }
 
-${ opts.getFooter ? opts.getFooter() : '' }
+${ opts.getFooter ? opts.getFooter(NONCE) : '' }
 
   </body>
 </html>`;
@@ -395,7 +407,7 @@ export function generateHtmlDocument(opts: GenerateHtmlDocumentOptions) {
     title: opts.title,
 }) }
 
-${ opts.getContent ? opts.getContent() : '' }
+${ opts.getContent ? opts.getContent(NONCE) : '' }
 
 ${ generateFooter({
     bundleFile: opts.bundleFile,

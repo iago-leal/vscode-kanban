@@ -177,6 +177,8 @@
         "lint": "tslint -p ./",
         "watch": "tsc -watch -p ./",
         "watch:webview": "node ./scripts/build-webview.js --watch",
+        "prepreview": "npm run compile",
+        "preview": "node ./scripts/preview.js",
         "pretest": "npm run build",
         "test": "node ./out/test/runTest.js",
         "pretest:unit": "npm run compile",

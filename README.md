@@ -38,6 +38,7 @@
      * [Migrating a custom stylesheet](#migrating-a-custom-stylesheet-)
 4. [Logs](#logs-)
 5. [Support and contribute](#support-and-contribute-)
+   * [Looking at the board without the editor](#looking-at-the-board-without-the-editor-)
    * [Contributors](#contributors-)
 6. [Related projects](#related-projects-)
    * [vscode-helpers](#vscode-helpers-)
@@ -542,6 +543,46 @@ To work with the code:
 * make a [pull request](https://github.com/mkloubert/vscode-kanban/pulls)
 
 The complete API documentation can be found [here](https://mkloubert.github.io/vscode-kanban/).
+
+### Looking at the board without the editor [[&uarr;](#support-and-contribute-)]
+
+```bash
+npm run preview
+```
+
+This builds the Webview and serves the board of this workspace at
+`http://127.0.0.1:8777`, in an ordinary browser tab. It exists because looking
+at the board is the only way some defects are ever found: a column that crushed
+its cards to a 28 px strip, a board served with no styling at all, and a board
+whose colours had stopped meaning anything all shipped past a green test suite
+and were caught in a screenshot.
+
+The page is **not** assembled by the preview. It is built by `src/html.ts`, the
+same function the extension calls to serve the panel, so what you are looking at
+carries the same stylesheets, the same vendored scripts, the same cascade —
+including your own `.vscode/vscode-kanban.css`, still last — and the same
+content security policy the editor serves. Only three things are pretended: the
+address of each resource, the host the interface talks to, and the delivery of
+the board.
+
+| Option | What it does |
+|---|---|
+| `--board <file>` | Show another board file |
+| `--sandbox` | Show the fixture built to be abused: raw-string description, dirty priority, Mermaid diagram, part-done task list |
+| `--port <n>` | Serve somewhere else than 8777 |
+| `--theme <name>` | Pretend the editor is showing `light`, `dark`, `high-contrast` or `high-contrast-light` |
+| `--no-build` | Serve what is already built, without rebuilding first |
+
+Pass them after `--`, as npm requires: `npm run preview -- --sandbox --theme light`.
+
+Nothing is ever written back. Everything the board sends to its host is recorded
+in `window.__preview.posted` and acted upon by nobody, so a preview cannot alter
+the file it is showing — which is what makes it safe to point at a real board.
+
+**It is a browser, not the editor.** The panel lifecycle, the real bridge and
+anything touching the file system are outside what it can tell you. Evidence
+gathered here is enough to move a card to `testing`, and never enough to move
+one to `done`.
 
 ### Contributors [[&uarr;](#support-and-contribute-)]
 
