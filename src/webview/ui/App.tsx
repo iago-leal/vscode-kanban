@@ -16,7 +16,7 @@ import { ReactNode, useCallback, useMemo, useState } from 'react';
 import { BaseStyles } from '@primer/react';
 
 import { AddCardDialog } from './dialogs/AddCardDialog';
-import { BoardCard, ColumnKey } from '../domain/types';
+import { Board, BoardCard, ColumnKey } from '../domain/types';
 import { CardActions } from './Card';
 import { CardDetailsDialog } from './dialogs/CardDetailsDialog';
 import { ColumnsView } from './ColumnsView';
@@ -26,7 +26,7 @@ import { ListView } from './ListView';
 import { Services, ServicesProvider } from './services';
 import { ThemeProvider } from '../theme/theme-provider';
 import { TopBar } from './TopBar';
-import { addCard, removeCard, updateCard } from '../domain/board-operations';
+import { addCard, findCard, removeCard, toggleCardTask, updateCard } from '../domain/board-operations';
 import { anchored } from './anchors';
 import { columnName } from '../domain/columns';
 import { computeVisibleBoard } from '../domain/visibility';
@@ -40,6 +40,7 @@ import { useBoard } from './use-board';
 import { useViewState } from './use-view-state';
 
 import '../theme/board.css';
+import '../theme/dialogs.css';
 import '../theme/appearance.css';
 
 /**
@@ -113,6 +114,34 @@ export function App(props: { services: Services }) {
                 },
             })
         ),
+
+        // Ticking a box IS an edit, and is announced as one: the script of the
+        // user gets 'card_updated' with the payload the edit dialog produces.
+        // Writing the file without raising the event would be a change the
+        // automation of the user cannot see, and those events are a contract.
+        onToggleTask: (card, column, field, index) => {
+            const NEXT = toggleCardTask(card, field, index);
+
+            // an index matching no task leaves the card as it was, and a board
+            // that did not change must not be written: saving would touch the
+            // file and raise an event for nothing
+            if (NEXT === card) {
+                return;
+            }
+
+            BOARD.mutate(
+                current => updateCard(current, toStringSafe(card.__uid), () => NEXT),
+                next => ({
+                    name: 'card_updated',
+                    data: {
+                        card: NEXT,
+                        column: column,
+                        oldCard: card,
+                        others: otherCards(next, NEXT),
+                    },
+                })
+            );
+        },
 
         // neither of these changes the board, so neither saves it
         onExecute: (card, column) => RAISE_ON_CARD('execute_card', card, column),
@@ -210,9 +239,13 @@ export function App(props: { services: Services }) {
 
                 { 'details' === dialog?.kind ? (
                     <CardDetailsDialog
-                        card={ dialog.card }
+                        card={ currentCard(BOARD.board, dialog.card) }
                         columnLabel={ columnName(dialog.column, BOARD.settings) }
                         onClose={ CLOSE }
+                        onToggleTask={ (field, index) => ACTIONS.onToggleTask(
+                            currentCard(BOARD.board, dialog.card),
+                            dialog.column, field, index
+                        ) }
                     />
                 ) : null }
 
@@ -350,3 +383,18 @@ function ThemedShell(props: {
     );
 }
 
+
+/**
+ * The card as the board has it NOW, rather than as a dialog remembers it.
+ *
+ * Ticking a task changes the card while the dialog showing it is open. Reading
+ * the card the dialog was opened with would leave the box the user just ticked
+ * drawn in its old state, and the click after that would count tasks in the old
+ * text -- writing to a line nobody pointed at.
+ *
+ * The remembered card is the fallback for the one case where the board no
+ * longer has it: a card removed underneath by a change of the file on disk.
+ */
+function currentCard(board: Board, remembered: BoardCard): BoardCard {
+    return findCard(board, toStringSafe(remembered.__uid)) || remembered;
+}

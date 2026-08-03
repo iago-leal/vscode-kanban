@@ -11,8 +11,52 @@
  * by the caller, in one place, and stays in the order the extraction recorded.
  */
 
-import { Board, BoardCard, COLUMN_KEYS, ColumnKey } from './types';
+import { Board, BoardCard, COLUMN_KEYS, ColumnKey, contentOf } from './types';
 import { columnOf } from './sorting';
+import { toggleTaskAt } from './task-progress';
+
+/**
+ * The two fields of a card that hold Markdown, and therefore task lists.
+ */
+export type CardTextField = 'description' | 'details';
+
+/**
+ * Ticks or unticks one task of one of the two texts of a card.
+ *
+ * The card comes back new, and only that one marker moved. A field with no
+ * such task comes back untouched -- and untouched includes its SHAPE: a
+ * description that arrived from the file as a plain string is not turned into
+ * an object just because someone clicked a box in the other field.
+ *
+ * When the field does change, it is written as '{ content, mime }' whatever it
+ * was before, which is what saving a card has always done to these two fields
+ * ('board.js:423', reproduced in 'CardForm.tsx'). Ticking a box is a save like
+ * any other, and inventing a second rule for it would make the file depend on
+ * which control the user happened to use.
+ *
+ * @param {BoardCard} card The card.
+ * @param {CardTextField} field Which of the two texts.
+ * @param {number} index Which task of it, counting from zero.
+ *
+ * @return {BoardCard} The new card.
+ */
+export function toggleCardTask(
+    card: BoardCard,
+    field: CardTextField,
+    index: number,
+): BoardCard {
+    const BEFORE = contentOf(card[field]);
+    const AFTER = toggleTaskAt(BEFORE, index);
+
+    if (AFTER === BEFORE) {
+        return card;
+    }
+
+    return {
+        ...card,
+        [field]: { content: AFTER, mime: 'text/markdown' },
+    };
+}
 
 /**
  * Adds a card to a column.

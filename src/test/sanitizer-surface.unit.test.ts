@@ -135,13 +135,76 @@ suite('The barrier around the content of a card', function () {
         );
     });
 
-    test('still drops every attribute that carries code', function () {
+test('still drops every attribute that carries code', function () {
         // the rule is written as a prefix rather than a list, and it is the
         // one that answers for 'onclick', 'onerror' and the sixty others
         assert.ok(
             /indexOf\s*\(\s*['"]on['"]\s*\)/.test(withoutComments(SOURCE!.text)),
             'The rule that drops the event handler attributes is gone from' +
             ` ${ SANITIZER }`
+        );
+    });
+});
+
+/**
+ * Where the barrier sits in the order of the conversion.
+ *
+ * A rule about WHAT may survive is only half of a barrier; the other half is
+ * WHEN it is applied, and the second half has no list to compare against.
+ *
+ * This project got that half wrong once, in a way worth pinning. The task
+ * lists were rewritten AFTER the sanitising, and the sanitiser removes every
+ * 'input' -- so the rewriting looked for the checkbox Showdown emits, found it
+ * already gone, and did nothing at all. It was dead code, and the symptom was
+ * not an error: a checklist rendered as loose lines of text with no boxes, and
+ * with no way to tell a done item from a pending one. Nobody noticed for two
+ * features.
+ *
+ * The fix was to rewrite BEFORE sanitising, which is only safe because what
+ * comes out of the rewriting carries no input either -- the state moves onto a
+ * span the sanitiser is then free to inspect like anything else. Both halves of
+ * that are checked here: the order, and the absence of an exception for the
+ * element that made the order matter.
+ */
+suite('Where the barrier sits in the conversion', function () {
+    const CONVERTER = 'src/webview/adapters/markdown.ts';
+
+    const TEXT = withoutComments(sourceOf(CONVERTER)!.text);
+
+    test('rewrites the task lists before sanitising', function () {
+        const DECORATE = TEXT.indexOf('decorateTaskLists(CONTENT)');
+        const SANITIZE = TEXT.indexOf('sanitizeTree(CONTENT)');
+
+        assert.ok(DECORATE > -1, `decorateTaskLists is not called in ${ CONVERTER }`);
+        assert.ok(SANITIZE > -1, `sanitizeTree is not called in ${ CONVERTER }`);
+
+        assert.ok(
+            DECORATE < SANITIZE,
+            'The task lists are rewritten after the sanitising again. The' +
+            ' checkboxes are removed before the rewriting can read them, so it' +
+            ' matches nothing and the board renders a checklist as plain lines' +
+            ' -- silently, and with no error anywhere'
+        );
+    });
+
+    test('puts no input into what it produces', function () {
+        //
+        // The box of a task is a span carrying the ARIA role of a checkbox,
+        // and not an input, precisely so that the order above stays safe and
+        // the forbidden list above stays untouched. An input here would mean
+        // one of the two had to give.
+        //
+        assert.ok(
+            /createElement\(\s*['"]span['"]\s*\)/.test(TEXT),
+            `The task box is no longer built as a span in ${ CONVERTER }`
+        );
+
+        assert.ok(
+            TEXT.indexOf("createElement('input')") < 0 &&
+            TEXT.indexOf('createElement("input")') < 0,
+            'An input is being built for the rendered Markdown. The sanitiser' +
+            ' removes it, so either it is dead code or the forbidden list was' +
+            ' widened to let it through -- and RF-17 forbids the second'
         );
     });
 });

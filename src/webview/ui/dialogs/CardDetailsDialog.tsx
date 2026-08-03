@@ -1,14 +1,21 @@
 /**
- * The details of a card, read only.
+ * The details of a card.
  *
  * Both text fields are rendered by the same path the card itself uses, so the
  * Markdown, the diagrams and the highlighted code look the same here as they
  * do on the board, and the sanitising barrier is the same one.
+ *
+ * It was read only, and is no longer, in exactly one respect: a task can be
+ * ticked here. This is where the details field is READ -- the card on the board
+ * shows the description alone -- so a checklist that lives in the details had
+ * nowhere at all to be ticked, and the only way to record that one item got
+ * done was to open the edit dialog and change the text by hand.
  */
 
 import { Button } from '@primer/react';
 
 import { BoardCard, contentOf } from '../../domain/types';
+import type { CardTextField } from '../../domain/board-operations';
 import { Dialog } from './Dialog';
 import { Markdown } from '../Markdown';
 import { anchored } from '../anchors';
@@ -22,6 +29,11 @@ export function CardDetailsDialog(props: {
     card: BoardCard;
     columnLabel: string;
     onClose(): void;
+    /**
+     * Ticks one task of one of the two texts. Without it the boxes are drawn
+     * and announced as disabled, which is what the dialog showed before.
+     */
+    onToggleTask?(field: CardTextField, index: number): void;
 }) {
     const { time } = useServices();
 
@@ -31,6 +43,15 @@ export function CardDetailsDialog(props: {
     const DETAILS = contentOf(CARD.details);
 
     const CREATED = toStringSafe(CARD.creation_time).trim();
+
+    // one field at a time, so that the index a box reports is counted within
+    // the text that box belongs to
+    const TOGGLE = (field: CardTextField) => {
+        const HANDLER = props.onToggleTask;
+
+        return HANDLER ? (index: number) => HANDLER(field, index)
+                       : undefined;
+    };
 
     return (
         <Dialog
@@ -70,14 +91,20 @@ export function CardDetailsDialog(props: {
             { '' === DESCRIPTION ? null : (
                 <section className="vsckb-details-section">
                     <h3>Description</h3>
-                    <Markdown source={ DESCRIPTION } />
+                    <Markdown
+                        source={ DESCRIPTION }
+                        onToggleTask={ TOGGLE('description') }
+                    />
                 </section>
             ) }
 
             { '' === DETAILS ? null : (
                 <section className="vsckb-details-section">
                     <h3>Details</h3>
-                    <Markdown source={ DETAILS } />
+                    <Markdown
+                        source={ DETAILS }
+                        onToggleTask={ TOGGLE('details') }
+                    />
                 </section>
             ) }
         </Dialog>

@@ -205,6 +205,76 @@
     background-color: var(--bgColor-muted);
 }
 
+/*
+ * The box of a task, drawn rather than borrowed.
+ *
+ * It has to be drawn because it is not an 'input': the sanitising barrier
+ * removes every input that comes out of Markdown, and this project chose to
+ * keep that rule intact rather than carve an exception for its own checkbox
+ * (RF-17). What is left is a span with the role of a checkbox -- announced,
+ * focused and operated as one -- and an appearance this file supplies.
+ *
+ * The tick is a border on two sides of an empty box, rotated. It is drawn with
+ * geometry the design system has no token for, which is why the numbers are
+ * written out: a glyph would depend on a font the extension does not ship
+ * (RF-26), and an image would be a resource the policy has to admit.
+ */
+.vsckb-markdown-body .vsckb-task-check {
+    border: var(--borderWidth-thin) solid var(--borderColor-emphasis);
+    border-radius: var(--borderRadius-small);
+    background-color: var(--bgColor-default);
+}
+
+.vsckb-markdown-body .vsckb-task-check[aria-checked="true"] {
+    border-color: var(--borderColor-success-emphasis);
+    background-color: var(--bgColor-success-emphasis);
+}
+
+.vsckb-markdown-body .vsckb-task-check[aria-checked="true"]::after {
+    content: "";
+    position: absolute;
+    left: 0.3em;
+    top: 0.1em;
+    width: 0.25em;
+    height: 0.5em;
+    border: solid var(--fgColor-onEmphasis);
+    border-width: 0 0.15em 0.15em 0;
+    transform: rotate(45deg);
+}
+
+/*
+ * A box that can be ticked says so by answering to the pointer and to the
+ * focus ring; one that cannot is dimmed and keeps the cursor of text. The
+ * difference is stated rather than left to be discovered by clicking.
+ */
+.vsckb-markdown-body .vsckb-task-check[tabindex] {
+    cursor: pointer;
+}
+
+.vsckb-markdown-body .vsckb-task-check[tabindex]:hover {
+    border-color: var(--borderColor-accent-emphasis);
+}
+
+.vsckb-markdown-body .vsckb-task-check:focus-visible {
+    outline: var(--focus-outline-width) solid var(--focus-outlineColor);
+    outline-offset: var(--focus-outline-offset);
+}
+
+.vsckb-markdown-body .vsckb-task-check[aria-disabled="true"] {
+    border-color: var(--borderColor-muted);
+}
+
+/*
+ * A finished task is struck through and attenuated. It is the second channel
+ * the state travels on, beside the colour of the box, and it is the one that
+ * survives a screen in greyscale -- the same requirement RN-03 puts on the type
+ * of a card.
+ */
+.vsckb-markdown-body .vsckb-task-check[aria-checked="true"] ~ .vsckb-task-label {
+    color: var(--fgColor-muted);
+    text-decoration: line-through;
+}
+
 /* -------------------------------------------------------- embedded editor */
 
 /*

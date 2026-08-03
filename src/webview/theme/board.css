@@ -2,25 +2,20 @@
  * The geometry of the board.
  *
  * What is left here after the design system was adopted is placement and
- * nothing else: how wide a column lane is, how the cards stack inside it, how
- * a collapsed column becomes a strip, and how the whole thing rearranges when
- * the panel is narrow. Colour, radius, shadow and type size are the business
- * of the design system, and this sheet declares none of them (D-21, RF-24,
- * RN-07).
+ * nothing else: how wide a lane is, how cards stack, how a collapsed column
+ * becomes a strip, how it all rearranges when the panel is narrow. Colour,
+ * radius, shadow and type size are declared nowhere in it (D-21, RF-24, RN-07).
  *
- * That is not a preference of style but the proof of a promise. With the
- * stylesheet of the design system switched off, the board has to come out
- * unpainted -- and it cannot, if a second stylesheet is quietly redeclaring
- * the colours. A test reads this file and fails on any property that paints.
- * What paints lives in 'appearance.css', which may paint only by naming a
- * token; the same test forbids literals there.
+ * That is the proof of a promise, not a taste: with the stylesheet of the
+ * design system switched off the board has to come out unpainted, and it cannot
+ * if a second sheet quietly redeclares the colours. A test reads this file and
+ * fails on any property that paints. What paints lives in 'appearance.css',
+ * which may paint only by naming a token; the same test forbids literals there.
  *
  * The spacing below is written as lengths because it is length: a gap is not a
  * colour, and naming a token for it would move the number without making it
- * anyone else's decision.
- *
- * Two widths matter. Below 800 px four columns stop being readable, so the
- * columns layout falls back to a single scrolling row the user pans through;
+ * anyone else's decision. Two widths matter: below 800 px four columns stop
+ * being readable and the columns layout falls back to one scrolling row, while
  * the list layout stays usable down to 320 px, which is why it exists.
  *
  * Selectors use the style anchors of 'interfaces/style-anchors.md' wherever
@@ -102,11 +97,8 @@
     overflow: hidden;
 }
 
-/*
- * The room a collapsed column gives up goes to the ones still open, instead of
- * being left as a gap. With a fixed quarter each, collapsing would hide cards
- * without ever making the remaining ones easier to read.
- */
+/* the room a collapsed column gives up goes to the ones still open: with a
+   fixed quarter each, collapsing would hide cards and help nobody read */
 [data-vsckb="column"][data-vsckb-collapsed] {
     flex: 0 0 auto;
     min-width: 0;
@@ -306,81 +298,18 @@
     gap: 6px;
 }
 
-/* ---------------------------------------------------------------- dialogs */
-
-.vsckb-dialog-body {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+/* the box is a span, so its size is ours; in 'em' because the card body and
+   the details dialog set different text sizes and it has to follow both */
+.vsckb-task-check {
+    flex: 0 0 auto;
+    position: relative;
+    width: 1em;
+    height: 1em;
+    align-self: center;
 }
 
-.vsckb-dialog-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
-.vsckb-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.vsckb-field-row {
-    display: flex;
-    gap: 10px;
-}
-
-.vsckb-field-row > .vsckb-field {
-    flex: 1 1 0;
+.vsckb-task-label {
     min-width: 0;
-}
-
-.vsckb-markdown-editor {
-    width: 100%;
-}
-
-.vsckb-details-facts {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 4px 12px;
-    margin: 0;
-}
-
-.vsckb-details-facts dt {
-    margin: 0;
-}
-
-.vsckb-details-facts dd {
-    margin: 0;
-    overflow-wrap: anywhere;
-}
-
-.vsckb-details-section h3 {
-    margin: 0 0 6px;
-}
-
-/* -------------------------------------------------------- embedded editor */
-
-/*
- * The editor of Markdown is a vendored library that measures itself, and a
- * height it is never given is a height it reports as zero. It is given a FIXED
- * one, because 'height: auto' let the editor grow with its text: a long
- * description pushed the details field off the bottom of the dialog and the
- * two fields never had the same size twice. The field asks for as many lines
- * as the form asked the text area for, and anything longer scrolls inside the
- * editor instead of resizing the dialog.
- *
- * The editor is a DESCENDANT of the field and not its sibling: the class of the
- * component lands on the wrapper the design system draws around a text area,
- * and CodeMirror inserts itself inside that wrapper. A sibling selector matched
- * nothing, and matching nothing is how the editor kept the three hundred pixels
- * its own stylesheet gives it by default. The scroller is left alone: the
- * library already gives it the full height, and the floor this sheet used to
- * declare for it was what made a field ignore the size it was asked for.
- */
-.vsckb-markdown-editor .CodeMirror {
-    height: calc(var(--vsckb-editor-rows, 5) * 1.5em + 16px);
 }
 
 /* ----------------------------------------------------------------- narrow */

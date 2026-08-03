@@ -104,11 +104,29 @@ function decorate(html: string): string {
     CONTENT.className = 'vsckb-markdown';
     CONTENT.innerHTML = html;
 
+    //
+    // The task lists are rewritten BEFORE the sanitising, and the order is the
+    // whole of the fix.
+    //
+    // 'input' is on the list of elements that never survive, and the checkbox
+    // Showdown emits for a task item is an input. Sanitising first therefore
+    // removed every box, and the rewriting that ran afterwards looked for
+    // 'li.task-list-item input[type="checkbox"]' and found nothing: it was dead
+    // code, and the board rendered a task list as three lines of loose text
+    // with no box and no way to tell a done item from a pending one.
+    //
+    // Running first is not a hole in the barrier. What comes out of the
+    // rewriting carries no input at all -- the state moves onto a 'span' that
+    // the sanitiser is then free to inspect like any other element, and does.
+    // Nothing was added to what may survive, which is what RF-17 requires: the
+    // barrier may be made stricter, never weaker.
+    //
+    decorateTaskLists(CONTENT);
+
     sanitizeTree(CONTENT);
 
     decorateTables(CONTENT);
     decorateImages(CONTENT);
-    decorateTaskLists(CONTENT);
     decorateLinks(CONTENT);
 
     return CONTENT.innerHTML;
@@ -131,10 +149,28 @@ function decorateImages(root: Element): void {
 }
 
 /**
- * Turns the checkboxes of a task list into ones that cannot be ticked.
+ * The attribute a task box carries its position in.
  *
- * They were already disabled before: the state of a task list is part of the
- * text of the card, and is changed by editing the card.
+ * The position, and not the text: it is what 'toggleTaskAt' counts by, so the
+ * box the user clicks and the line that gets rewritten are the same item even
+ * when two items read alike -- which in a checklist they very often do.
+ */
+export const TASK_ATTRIBUTE = 'data-vsckb-task';
+
+/**
+ * Gives every item of a task list a box that says what it is and can be
+ * operated.
+ *
+ * It is a 'span' and not an 'input', and that is not a preference. An input is
+ * removed by the sanitiser, always, and adding an exception for this one would
+ * widen the barrier by exactly one element -- the kind of exception that is
+ * argued for once and never argued away again. A span carrying the ARIA role
+ * of a checkbox is announced as a checkbox, focused as one and operated as one,
+ * and needs no exception at all.
+ *
+ * Whether it can actually be ticked is decided elsewhere ('ui/Markdown.tsx'):
+ * this only states the position and the state, and the interface decides
+ * whether anything listens.
  */
 function decorateTaskLists(root: Element): void {
     const BOXES = root.querySelectorAll('li.task-list-item input[type="checkbox"]');
@@ -154,23 +190,31 @@ function decorateTaskLists(root: Element): void {
         }
 
         const CHECKED = BOX.checked || BOX.hasAttribute('checked');
-        const LABEL = toStringSafe(ITEM.textContent).trim();
 
+        // Showdown writes the bullet away with an inline style, and the box
+        // takes its place; the list itself is styled by its class
         ITEM.removeAttribute('style');
-        ITEM.innerHTML = '';
         ITEM.className = 'vsckb-task';
 
-        const NEW_BOX = document.createElement('input');
+        BOX.remove();
 
-        NEW_BOX.type = 'checkbox';
+        const NEW_BOX = document.createElement('span');
+
         NEW_BOX.className = 'vsckb-task-check';
-        NEW_BOX.disabled = true;
-        NEW_BOX.checked = CHECKED;
+        NEW_BOX.setAttribute('role', 'checkbox');
+        NEW_BOX.setAttribute('aria-checked', CHECKED ? 'true' : 'false');
+        NEW_BOX.setAttribute(TASK_ATTRIBUTE, String(i));
 
-        const CAPTION = document.createElement('label');
+        const CAPTION = document.createElement('span');
 
         CAPTION.className = 'vsckb-task-label';
-        CAPTION.textContent = LABEL;
+
+        // the rest of the item moves across as MARKUP, not as text: an item
+        // saying '**Ship** the thing' kept its bold in the source and used to
+        // lose it here, because the old rewriting read 'textContent'
+        while (ITEM.firstChild) {
+            CAPTION.appendChild(ITEM.firstChild);
+        }
 
         ITEM.appendChild(NEW_BOX);
         ITEM.appendChild(CAPTION);

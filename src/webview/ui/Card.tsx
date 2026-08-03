@@ -19,6 +19,7 @@ import type { LabelColorOptions } from '@primer/react';
 
 import { BoardCard, BoardSettings, ColumnKey } from '../domain/types';
 import type { CardColorGroup } from '../domain/card-taxonomy';
+import type { CardTextField } from '../domain/board-operations';
 import { colorGroupOf } from '../domain/card-taxonomy';
 import { Icon, IconName } from './icons';
 import { IconButton } from './IconButton';
@@ -40,6 +41,19 @@ export interface CardActions {
     onMove(card: BoardCard, from: ColumnKey, to: ColumnKey): void;
     onExecute(card: BoardCard, column: ColumnKey): void;
     onTrackTime(card: BoardCard, column: ColumnKey): void;
+    /**
+     * Ticks or unticks one task of one of the two texts of a card.
+     *
+     * It saves the board like any other change, which is the point: a
+     * checklist nobody can tick is a checklist that has to be edited through a
+     * dialog to say that one thing got done.
+     */
+    onToggleTask(
+        card: BoardCard,
+        column: ColumnKey,
+        field: CardTextField,
+        index: number,
+    ): void;
 }
 
 /**
@@ -197,6 +211,9 @@ export function Card(props: {
                         source={ DESCRIPTION }
                         anchor="card-body"
                         className="vsckb-card-body"
+                        onToggleTask={ index => props.actions.onToggleTask(
+                            CARD, props.column, 'description', index
+                        ) }
                     />
                 ) }
             </div>

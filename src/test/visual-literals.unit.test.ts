@@ -37,9 +37,18 @@ import {
 } from './sources';
 
 /**
- * The stylesheet of the board, which is held to the stricter of the two rules.
+ * The stylesheets of geometry, held to the stricter of the two rules.
+ *
+ * They are two because one of them outgrew the four hundred lines this project
+ * treats as the sign that a file has more than one subject. Splitting geometry
+ * must not split the RULE, so the test names both: a sheet that declares
+ * placement is forbidden to paint, whatever its name, and a third one added
+ * tomorrow belongs on this list the day it is created.
  */
-const BOARD_STYLESHEET = 'src/webview/theme/board.css';
+const GEOMETRY_STYLESHEETS = [
+    'src/webview/theme/board.css',
+    'src/webview/theme/dialogs.css',
+];
 
 /**
  * The stylesheet that paints, and may paint only by naming a token.
@@ -186,30 +195,32 @@ suite('Where the appearance of the board comes from', function () {
         });
     });
 
-    suite('the stylesheet of the board', function () {
-        test('declares geometry, and nothing that paints', function () {
-            const SHEET = sourceOf(BOARD_STYLESHEET);
-
-            assert.ok(SHEET, `${ BOARD_STYLESHEET } is missing`);
-
+    suite('the stylesheets of geometry', function () {
+        test('declare geometry, and nothing that paints', function () {
             const OFFENCES: string[] = [];
 
-            for (const DECLARATION of declarationsOf(SHEET!.text)) {
-                const NAME = DECLARATION.property;
+            for (const PATH of GEOMETRY_STYLESHEETS) {
+                const SHEET = sourceOf(PATH);
 
-                const PAINTS =
-                    COLOUR_PROPERTIES.indexOf(NAME) > -1 ||
-                    RADIUS_PROPERTIES.indexOf(NAME) > -1 ||
-                    SHADOW_PROPERTIES.indexOf(NAME) > -1 ||
-                    FONT_SIZE_PROPERTIES.indexOf(NAME) > -1 ||
-                    (COLOUR_SHORTHANDS.indexOf(NAME) > -1 &&
-                     mentionsColour(DECLARATION.value));
+                assert.ok(SHEET, `${ PATH } is missing`);
 
-                if (PAINTS) {
-                    OFFENCES.push(
-                        `${ BOARD_STYLESHEET }:${ DECLARATION.line }:` +
-                        ` ${ NAME }: ${ DECLARATION.value }`
-                    );
+                for (const DECLARATION of declarationsOf(SHEET!.text)) {
+                    const NAME = DECLARATION.property;
+
+                    const PAINTS =
+                        COLOUR_PROPERTIES.indexOf(NAME) > -1 ||
+                        RADIUS_PROPERTIES.indexOf(NAME) > -1 ||
+                        SHADOW_PROPERTIES.indexOf(NAME) > -1 ||
+                        FONT_SIZE_PROPERTIES.indexOf(NAME) > -1 ||
+                        (COLOUR_SHORTHANDS.indexOf(NAME) > -1 &&
+                         mentionsColour(DECLARATION.value));
+
+                    if (PAINTS) {
+                        OFFENCES.push(
+                            `${ PATH }:${ DECLARATION.line }:` +
+                            ` ${ NAME }: ${ DECLARATION.value }`
+                        );
+                    }
                 }
             }
 
@@ -217,10 +228,34 @@ suite('Where the appearance of the board comes from', function () {
                 OFFENCES.length, 0,
                 offenceReport(
                     'With the design system switched off the board has to lose' +
-                    ' its colour, which it cannot do while this sheet still' +
-                    ' paints -- what paints belongs in ' + APPEARANCE_STYLESHEET,
+                    ' its colour, which it cannot do while these sheets still' +
+                    ' paint -- what paints belongs in ' + APPEARANCE_STYLESHEET,
                     OFFENCES
                 )
+            );
+        });
+
+        test('are all of them imported', function () {
+            //
+            // A sheet of geometry that nothing imports passes the rule above by
+            // declaring nothing that reaches the page. The board would then be
+            // laid out by whatever survived, and the failure would show as a
+            // collapsed layout rather than as an error -- which is exactly how
+            // the split that produced 'dialogs.css' could have gone wrong.
+            //
+            const APP = sourceOf('src/webview/ui/App.tsx');
+
+            assert.ok(APP, 'src/webview/ui/App.tsx is missing');
+
+            const MISSING = GEOMETRY_STYLESHEETS.filter(path => {
+                const NAME = path.replace('src/webview/', '');
+
+                return APP!.text.indexOf(NAME) < 0;
+            });
+
+            assert.strictEqual(
+                MISSING.length, 0,
+                offenceReport('Declared, and never served', MISSING)
             );
         });
     });

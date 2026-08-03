@@ -38,7 +38,7 @@ import {
 import { columnName, movesFrom, namedColumns } from '../webview/domain/columns';
 import { columnOfCard, otherCards, withUids } from '../webview/domain/identity';
 import { longCardId, nextCardId, nextSimpleCardId } from '../webview/domain/card-id';
-import { taskProgressOf } from '../webview/domain/task-progress';
+import { taskProgressOf, toggleTaskAt } from '../webview/domain/task-progress';
 import { toSavePayload } from '../webview/bridge/save-board';
 
 /**
@@ -294,6 +294,69 @@ suite('The progress of a task list', function () {
 
     test('ignores what is not a list', function () {
         assert.strictEqual(taskProgressOf(undefined, 42, null), undefined);
+    });
+});
+
+suite('Ticking a task of a list', function () {
+    test('ticks the item asked for, and only it', function () {
+        assert.strictEqual(
+            toggleTaskAt('- [ ] one\n- [ ] two\n- [ ] three', 1),
+            '- [ ] one\n- [x] two\n- [ ] three'
+        );
+    });
+
+    test('unticks one that was ticked', function () {
+        assert.strictEqual(
+            toggleTaskAt('- [x] one\n- [x] two', 0),
+            '- [ ] one\n- [x] two'
+        );
+    });
+
+    test('leaves everything else byte for byte', function () {
+        //
+        // The text is the card of the user, and this function is not entitled
+        // to reformat it. Indentation, the bullet chosen, the double space
+        // after the marker, the trailing blank line: all of it survives.
+        //
+        const BEFORE = '# Plan\n\n  *  [ ]  deep  item\n\ntail text\n';
+        const AFTER = toggleTaskAt(BEFORE, 0);
+
+        assert.strictEqual(AFTER, '# Plan\n\n  *  [x]  deep  item\n\ntail text\n');
+        assert.strictEqual(AFTER.length, BEFORE.length);
+    });
+
+    test('counts the same items the progress bar counts', function () {
+        //
+        // The bar and the box have to agree about which item is the third one.
+        // If they ever stop agreeing, the user ticks one line and sees another
+        // one move -- so the same list is measured both ways here.
+        //
+        const LIST = '- [x] a\n\nnot an item\n\n* [ ] b\n+ [ ] c';
+
+        assert.strictEqual(taskProgressOf(LIST)!.total, 3);
+        assert.strictEqual(toggleTaskAt(LIST, 2), '- [x] a\n\nnot an item\n\n* [ ] b\n+ [x] c');
+    });
+
+    test('accepts either case of the ticked marker', function () {
+        assert.strictEqual(toggleTaskAt('- [X] one', 0), '- [ ] one');
+    });
+
+    test('leaves the text alone when the index matches no task', function () {
+        //
+        // This is what makes a stale index harmless. The interface can be one
+        // render behind the board, and the worst it can do is nothing -- never
+        // write to a line the user did not point at.
+        //
+        const TEXT = '- [ ] one\n- [ ] two';
+
+        assert.strictEqual(toggleTaskAt(TEXT, 9), TEXT);
+        assert.strictEqual(toggleTaskAt(TEXT, -1), TEXT);
+        assert.strictEqual(toggleTaskAt('nothing here', 0), 'nothing here');
+    });
+
+    test('takes anything that is not a text as an empty one', function () {
+        assert.strictEqual(toggleTaskAt(undefined, 0), '');
+        assert.strictEqual(toggleTaskAt(42, 0), '');
     });
 });
 

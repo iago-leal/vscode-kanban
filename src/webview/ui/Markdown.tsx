@@ -15,7 +15,7 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { AnchorName, anchored } from './anchors';
 import { EffectiveTheme } from '../domain/types';
-import { HREF_ATTRIBUTE, TEXT_ATTRIBUTE } from '../adapters/markdown';
+import { HREF_ATTRIBUTE, TASK_ATTRIBUTE, TEXT_ATTRIBUTE } from '../adapters/markdown';
 import { useServices } from './services';
 import { useTheme } from '../theme/theme-provider';
 
@@ -85,6 +85,14 @@ export function Markdown(props: {
     source: unknown;
     anchor?: AnchorName;
     className?: string;
+    /**
+     * What to do when the user ticks or unticks a task of this text.
+     *
+     * Without it the boxes are still drawn and still say what they are, and
+     * are announced as disabled: a checklist has to be READABLE wherever it
+     * appears, and only writable where there is something to write to.
+     */
+    onToggleTask?: (index: number) => void;
 }) {
     const { bridge, diagrams, highlight, markdown } = useServices();
     const THEME = useTheme();
@@ -95,6 +103,12 @@ export function Markdown(props: {
         () => markdown.toHtml(props.source),
         [markdown, props.source]
     );
+
+    // the handler is reached through a box, because the effect below runs on a
+    // change of HTML and must not be re-run merely because the parent passed a
+    // new function on a render
+    const ON_TOGGLE = useRef(props.onToggleTask);
+    ON_TOGGLE.current = props.onToggleTask;
 
     useEffect(() => {
         const ELEMENT = HOLDER.current;
@@ -109,9 +123,74 @@ export function Markdown(props: {
         highlight.apply(ELEMENT);
     }, [HTML, THEME.effective, diagrams, highlight]);
 
+    //
+    // Whether a box can be operated is written onto it AFTER the HTML is in
+    // place, and not by the adapter that produced the HTML.
+    //
+    // The adapter converts text and knows nothing about who is rendering it or
+    // whether that caller can save. A box that announced itself as operable
+    // where nothing listens would be worse than one that says it is disabled:
+    // it would be a control that answers to the keyboard and then does nothing,
+    // which reads as a broken board rather than as a read-only one.
+    //
+    useEffect(() => {
+        const ELEMENT = HOLDER.current;
+
+        if (!ELEMENT) {
+            return;
+        }
+
+        const BOXES = ELEMENT.querySelectorAll(`[${ TASK_ATTRIBUTE }]`);
+        const WRITABLE = !!props.onToggleTask;
+
+        for (let i = 0; i < BOXES.length; i++) {
+            const BOX = BOXES[i];
+
+            if (WRITABLE) {
+                BOX.setAttribute('tabindex', '0');
+                BOX.removeAttribute('aria-disabled');
+            } else {
+                BOX.removeAttribute('tabindex');
+                BOX.setAttribute('aria-disabled', 'true');
+            }
+        }
+    }, [HTML, props.onToggleTask]);
+
+    /**
+     * Ticks the box the event came from, if it came from one.
+     *
+     * @return {boolean} Whether it did.
+     */
+    const TOGGLE_TASK = (target: HTMLElement): boolean => {
+        const BOX = target.closest(`[${ TASK_ATTRIBUTE }]`);
+
+        if (!BOX || !ON_TOGGLE.current) {
+            return false;
+        }
+
+        const INDEX = parseInt(BOX.getAttribute(TASK_ATTRIBUTE) || '', 10);
+
+        if (isNaN(INDEX)) {
+            return false;
+        }
+
+        ON_TOGGLE.current(INDEX);
+
+        return true;
+    };
+
     // a link never navigates the panel: the extension opens it, which is what
     // puts the confirmation of 'openExternalUrl' in front of the user
     const OPEN_LINK = (event: React.MouseEvent<HTMLDivElement>) => {
+        if (TOGGLE_TASK(event.target as HTMLElement)) {
+            event.preventDefault();
+            // a card opens its details on a click of the body; ticking a box is
+            // not that click
+            event.stopPropagation();
+
+            return;
+        }
+
         const TARGET = (event.target as HTMLElement).closest('a');
 
         if (!TARGET) {
@@ -132,6 +211,26 @@ export function Markdown(props: {
         );
     };
 
+    //
+    // A checkbox is operated by Space, and a role alone does not make that
+    // happen: the browser gives that behaviour to a real 'input', and to
+    // nothing else. Enter is accepted beside it, because a control that looks
+    // like a button to the person at the keyboard should not be silent about
+    // the key they will try first.
+    //
+    const OPERATE_TASK = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (' ' !== event.key && 'Enter' !== event.key) {
+            return;
+        }
+
+        if (TOGGLE_TASK(event.target as HTMLElement)) {
+            // Space scrolls the panel otherwise, which moves the board under
+            // the very list the user is working through
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    };
+
     return (
         <div
             { ...anchored({
@@ -140,6 +239,7 @@ export function Markdown(props: {
             }) }
             ref={ HOLDER }
             onClick={ OPEN_LINK }
+            onKeyDown={ OPERATE_TASK }
             dangerouslySetInnerHTML={ { __html: HTML } }
         />
     );
