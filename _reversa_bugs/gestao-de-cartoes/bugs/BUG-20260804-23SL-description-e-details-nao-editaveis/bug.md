@@ -3,7 +3,7 @@ schema_version: 1
 id: BUG-20260804-23SL
 display_number: 1
 title: Description e Details não aceitam digitação no diálogo de edição de cartão
-status: active
+status: resolved
 phase: delivering
 severity: high
 priority: P1
@@ -142,13 +142,13 @@ delivery:
     iago, em 2026-08-04, no editor com a 1.35.5 carregada: "funcionou, criei um cartão teste".
     Cartão criado pelo botão '+' e os dois campos de Markdown escritos pela interface, que é
     exatamente o gesto que o relato original dizia impossível.
-  merge: pendente
-  pending:
-    - "merge de 'feat/interface-react-tema-e-done' em 'master'"
+  commit: "4f3231d — Devolve largura ao editor de Markdown dos dialogos de cartao"
+  merge: "6456b88 — merge de 'feat/interface-react-tema-e-done' em 'master' (--no-ff), suíte 259 passando em master"
+  pending: []
 
 closure:
   policy: package
-  satisfied: false
+  satisfied: true
 resolution_kind: fixed
 ---
 
@@ -373,9 +373,18 @@ teste"*. Cartão criado pelo botão "+" e os dois campos escritos pela interface
 relato original dizia impossível. Esta é a evidência que este projeto trata como decisiva, acima
 de qualquer suíte verde: nenhum defeito de aparência daqui foi jamais achado por teste.
 
-Falta para satisfazer a closure policy `package`: o **merge** de
-`feat/interface-react-tema-e-done`. Enquanto ele não acontece, o bug segue `active`/`delivering` e
-a pasta **não** recebe `DONE.md`.
+### Closure policy satisfeita
+
+| Exigência da policy `package` | Estado |
+|---|---|
+| Correção com causa raiz confirmada | ✅ medida no navegador |
+| Testes de reprodução e regressão | ✅ `embedded-editor.unit.test.ts` + fixture |
+| Veredito de spec | ✅ `spec-correta`, com adendo aditivo aprovado |
+| Versão corrigida empacotada e instalada | ✅ `1.35.5`, regra conferida dentro do pacote |
+| Confirmação na tela pelo relator | ✅ 2026-08-04 |
+| Merge | ✅ `6456b88` em `master`, com a suíte em 259 passando |
+
+Fechado em 2026-08-04. A pasta recebe `DONE.md` e passa a ser somente leitura.
 
 ## Agent Notes
 

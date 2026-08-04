@@ -10,7 +10,7 @@ aqui **não** altera a spec: mudança de spec vira adendo em `_reversa_sdd/adden
 
 | Unidade | Bug | Título | Sev. | Estado | Veredito de spec |
 |---|---|---|---|---|---|
-| `gestao-de-cartoes` | `BUG-20260804-23SL` | Description e Details não aceitam digitação no diálogo de edição de cartão | high | active / delivering (corrigido em 1.35.5) | **spec-correta** + adendo aditivo |
+| `gestao-de-cartoes` | `BUG-20260804-23SL` | Description e Details não aceitam digitação no diálogo de edição de cartão | high | **resolvido** (`fixed`, 1.35.5, merge `6456b88`) | **spec-correta** + adendo aditivo |
 
 ## Detalhe das âncoras atingidas
 
@@ -44,4 +44,4 @@ aqui **não** altera a spec: mudança de spec vira adendo em `_reversa_sdd/adden
 
 | Contexto | Abertos | Ativos | Resolvidos | Views |
 |---|---|---|---|---|
-| `gestao-de-cartoes` | 0 | 1 (entregando) | 0 | `_reversa_bugs/gestao-de-cartoes/generated/graph.html` |
+| `gestao-de-cartoes` | 0 | 0 | 1 | `_reversa_bugs/gestao-de-cartoes/generated/graph.html` |

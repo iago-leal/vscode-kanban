@@ -81,7 +81,7 @@
 <main>
 
 <h1>Bugs — contexto <code>gestao-de-cartoes</code></h1>
-<p class="sub">View gerada em 2026-08-04 · 0 abertos · 1 ativo (entregando) · 0 resolvidos · 0 travados por <code>DONE.md</code><br>
+<p class="sub">View gerada em 2026-08-04 · 0 abertos · 0 ativos · <strong>1 resolvido</strong> · 1 travado por <code>DONE.md</code><br>
 Projeção de <code>../bugs/&lt;ID&gt;/bug.md</code>. Não editar à mão.</p>
 
 <h2>Grafo</h2>
@@ -159,7 +159,7 @@ Projeção de <code>../bugs/&lt;ID&gt;/bug.md</code>. Não editar à mão.</p>
                 <span class="note">Causa: o editor vira flex item sem largura declarada e colapsa a 38 px com o campo vazio. Corrigido em <code>dialogs.css</code>.</span></td>
             <td><span class="pill pill-high">high</span></td>
             <td>P1</td>
-            <td><span class="pill pill-open">delivering</span></td>
+            <td><span class="pill pill-ok">resolvido · travado</span></td>
             <td>1.35.5</td>
         </tr>
     </tbody>
@@ -170,7 +170,8 @@ Projeção de <code>../bugs/&lt;ID&gt;/bug.md</code>. Não editar à mão.</p>
     <li>Causa raiz: <strong>confirmada</strong> por medição no navegador (38 px → 446 px).</li>
     <li>Testes: <code>src/test/embedded-editor.unit.test.ts</code> (3 asserções) e o cartão <code>12</code> da fixture do sandbox.</li>
     <li>Veredito de spec: <strong>spec-correta</strong>, com adendo aditivo <code>bug-BUG-20260804-23SL-v001.md</code>.</li>
-    <li>Closure policy <code>package</code>: <strong>não satisfeita ainda</strong> — falta recarregar a janela do editor (Developer: Reload Window) e o merge da branch. Sem isso, sem <code>DONE.md</code>.</li>
+    <li>Closure policy <code>package</code>: <strong>satisfeita</strong> — versão <code>1.35.5</code> empacotada e instalada, confirmada na tela pelo relator, commit <code>4f3231d</code> e merge <code>6456b88</code> em <code>master</code> com a suíte em 259 passando.</li>
+    <li>A pasta do bug carrega <code>DONE.md</code> e é somente leitura.</li>
 </ul>
 
 <h2>Arquivos do contexto</h2>
