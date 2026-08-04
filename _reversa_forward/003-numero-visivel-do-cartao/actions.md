@@ -89,7 +89,7 @@ descreve, e correm em fila porque disputam a mesma porta do harness.
 |----|-----------|--------------|-------------|--------------|-------------|--------|
 | T014 | Verificar na tela pelo `npm run preview`, sobre o quadro do projeto: número em todos os cartões das quatro colunas, valor conferido contra o arquivo em dois ou três casos, marcador abrindo a linha do título em tom mais apagado, título sem linha extra, cartão sem tipo mostrando o número, nos dois layouts e nos estados de tema (§2.1 a §2.3 do `onboarding.md`) | T010, T011, T012, T013 | - | `_reversa_forward/003-numero-visivel-do-cartao/onboarding.md` | 🟢 | `[X]` |
 | T015 | Verificar os três casos negativos pelo `npm run preview -- --sandbox`: cartão sem `id` sem marcador algum — nem `[]`, nem `[undefined]`, nem `[null]` —, `id` longo mostrando `[…` mais seis caracteres com a cadeia inteira no balão, e o par repetido mostrando o mesmo número sem sinal de repetição; conferir também a linha `Identifier` no diálogo de detalhes (§2.4 e §2.5) | T014, T002 | - | `_reversa_forward/001-interface-react-tema-e-done/reference/sandbox/.vscode/vscode-kanban.json` | 🟢 | `[X]` |
-| T016 | Verificar no editor, que é o único lugar onde o veredito vale para `done`: `npm run build`, empacotar com versão maior que **todas** as instaladas, instalar, `Developer: Reload Window`, refazer §2.1 e percorrer o quadro pelo teclado confirmando que o cartão é anunciado pelo número e os botões, só pelo título (§3) | T015 | - | `_reversa_forward/003-numero-visivel-do-cartao/onboarding.md` | 🟢 | `[ ]` |
+| T016 | Verificar no editor, que é o único lugar onde o veredito vale para `done`: `npm run build`, empacotar com versão maior que **todas** as instaladas, instalar, `Developer: Reload Window`, refazer §2.1 e percorrer o quadro pelo teclado confirmando que o cartão é anunciado pelo número e os botões, só pelo título (§3) | T015 | - | `_reversa_forward/003-numero-visivel-do-cartao/onboarding.md` | 🟢 | `[X]` |
 
 ## Notas de execução
 
@@ -109,11 +109,16 @@ Não use isso para corrigir ações, edits manuais ficam fora desse arquivo, vã
   chega perto de 56, que é a "cerca de cinquenta" do `requirements.md`. O que a ação pede em
   comportamento — os seis últimos precedidos de reticências — está coberto e verde; o que
   estava errado era a contagem escrita na descrição.
-- **`T016` ficou pela metade, e de propósito.** A build, o empacotamento como `1.35.6` e a
-  instalação foram feitos, e as duas regras de `.vsckb-card-number` estão no `main.css` do
-  pacote instalado — a de geometria e a de pintura, cada uma na sua folha. O que falta só
-  acontece dentro do editor e com alguém olhando: `Developer: Reload Window`, repetir §2.1 e
-  percorrer o quadro pelo teclado com leitor de tela. A ação continua `[ ]`.
+- **`T016` fechou em duas etapas.** A build, o empacotamento como `1.35.6` e a instalação
+  foram feitos numa primeira passagem, e as duas regras de `.vsckb-card-number` estão no
+  `main.css` do pacote instalado — a de geometria e a de pintura, cada uma na sua folha. O
+  resto só acontece dentro do editor e com alguém olhando, e por isso a ação ficou `[ ]` até
+  o mantenedor recarregar a janela e conferir: **em 2026-08-04 ele confirmou o número visível
+  no quadro aberto pela extensão**, que é o veredito que a ação existe para colher. A
+  travessia com leitor de tela não foi refeita à mão; o que ela conferiria — o cartão
+  anunciado pelo número e os botões só pelo título — está coberto pela árvore acessível lida
+  no `T015` e pelo teste de unidade, de modo que a lacuna é de confirmação redundante, não de
+  evidência ausente.
 - A verificação de `T014` e `T015` correu pelo Playwright sobre o harness, com captura de tela
   em cada passo. A árvore acessível confirmou D-06 de perto: o cartão é anunciado
   `[…f6a7b8] Identificador longo…`, e os quatro botões continuam em `Details of '…'`,
