@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bugs — gestao-de-cartoes</title>
+<style>
+    :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1f2328;
+        --muted: #59636e;
+        --line: #d1d9e0;
+        --card: #f6f8fa;
+        --open: #fff8c5;
+        --open-line: #9a6700;
+        --spec: #ddf4ff;
+        --spec-line: #0969da;
+        --code: #eef1f4;
+        --code-line: #6e7781;
+        --danger: #cf222e;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg: #0d1117;
+            --fg: #e6edf3;
+            --muted: #9198a1;
+            --line: #30363d;
+            --card: #161b22;
+            --open: #3d2e00;
+            --open-line: #d29922;
+            --spec: #0c2d6b;
+            --spec-line: #4493f8;
+            --code: #21262d;
+            --code-line: #8b949e;
+            --danger: #f85149;
+        }
+    }
+
+    body {
+        margin: 0;
+        padding: 32px 24px 64px;
+        background: var(--bg);
+        color: var(--fg);
+        font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main { max-width: 980px; margin: 0 auto; }
+
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    h2 { font-size: 16px; margin: 36px 0 10px; }
+
+    .sub { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+
+    .figure { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--card); padding: 12px; }
+
+    svg { display: block; min-width: 700px; }
+
+    .n-label { font: 12px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: var(--fg); }
+    .n-meta { font-size: 11px; fill: var(--muted); }
+    .edge { stroke: var(--code-line); stroke-width: 1.4; fill: none; }
+    .edge-dashed { stroke-dasharray: 5 4; }
+    .edge-label { font-size: 11px; fill: var(--muted); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+
+    .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; border: 1px solid; }
+    .pill-high { background: var(--open); border-color: var(--open-line); color: var(--fg); }
+    .pill-open { background: transparent; border-color: var(--code-line); color: var(--muted); }
+
+    ul { padding-left: 20px; }
+    li { margin: 4px 0; }
+    .note { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Bugs — contexto <code>gestao-de-cartoes</code></h1>
+<p class="sub">View gerada em 2026-08-04 · 0 abertos · 1 ativo (entregando) · 0 resolvidos · 0 travados por <code>DONE.md</code><br>
+Projeção de <code>../bugs/&lt;ID&gt;/bug.md</code>. Não editar à mão.</p>
+
+<h2>Grafo</h2>
+<div class="figure">
+<svg viewBox="0 0 860 300" role="img" aria-label="Grafo do bug, das specs que o definem e do código onde aparece">
+    <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
+        </marker>
+    </defs>
+
+    <!-- specs -->
+    <g>
+        <rect x="12" y="60" width="200" height="52" rx="7" fill="var(--spec)" stroke="var(--spec-line)"/>
+        <text class="n-label" x="26" y="82">RF-03 · editar descrição</text>
+        <text class="n-label n-meta" x="26" y="98">gestao-de-cartoes/requirements.md</text>
+
+        <rect x="12" y="150" width="200" height="52" rx="7" fill="var(--spec)" stroke="var(--spec-line)"/>
+        <text class="n-label" x="26" y="172">W018 · acoplamento CodeMirror</text>
+        <text class="n-label n-meta" x="26" y="188">addenda/002-primer-design-system.md</text>
+    </g>
+
+    <!-- bug -->
+    <g>
+        <rect x="300" y="86" width="240" height="94" rx="8" fill="var(--open)" stroke="var(--open-line)" stroke-width="1.6"/>
+        <text class="n-label" x="316" y="110" style="font-weight:600">#1 BUG-20260804-23SL</text>
+        <text class="n-label" x="316" y="130">Description e Details não</text>
+        <text class="n-label" x="316" y="146">aceitam digitação</text>
+        <text class="n-label n-meta" x="316" y="166">high · P1 · open/triaging</text>
+    </g>
+
+    <!-- código -->
+    <g>
+        <rect x="628" y="30" width="220" height="40" rx="7" fill="var(--code)" stroke="var(--code-line)"/>
+        <text class="n-label" x="642" y="55">ui/dialogs/MarkdownField.tsx</text>
+
+        <rect x="628" y="86" width="220" height="40" rx="7" fill="var(--code)" stroke="var(--code-line)"/>
+        <text class="n-label" x="642" y="111">adapters/code-editor.ts</text>
+
+        <rect x="628" y="142" width="220" height="40" rx="7" fill="var(--code)" stroke="var(--code-line)"/>
+        <text class="n-label" x="642" y="167">ui/dialogs/CardForm.tsx</text>
+
+        <rect x="628" y="198" width="220" height="40" rx="7" fill="var(--code)" stroke="var(--code-line)"/>
+        <text class="n-label" x="642" y="223">theme/dialogs.css:87-89</text>
+    </g>
+
+    <!-- arestas -->
+    <g color="var(--code-line)">
+        <path class="edge" d="M 212 86 C 260 86, 262 120, 300 124" marker-end="url(#arrow)"/>
+        <text class="edge-label" x="228" y="100">define</text>
+
+        <path class="edge edge-dashed" d="M 212 176 C 260 176, 262 150, 300 146" marker-end="url(#arrow)"/>
+        <text class="edge-label" x="228" y="172">vigia</text>
+
+        <path class="edge" d="M 540 120 C 585 110, 590 55, 628 50" marker-end="url(#arrow)"/>
+        <path class="edge" d="M 540 128 C 585 122, 590 108, 628 106" marker-end="url(#arrow)"/>
+        <path class="edge" d="M 540 140 C 585 148, 590 158, 628 162" marker-end="url(#arrow)"/>
+        <path class="edge" d="M 540 152 C 585 178, 590 212, 628 218" marker-end="url(#arrow)"/>
+        <text class="edge-label" x="548" y="196">aparece em</text>
+    </g>
+</svg>
+</div>
+<p class="note">Nenhuma aresta bug↔bug: o contexto tem um único registro.</p>
+
+<h2>Bugs em curso</h2>
+<table>
+    <thead>
+        <tr><th>#</th><th>ID</th><th>Título</th><th>Sev.</th><th>Prio</th><th>Fase</th><th>Corrigido em</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td><code>BUG-20260804-23SL</code></td>
+            <td>Description e Details não aceitam digitação no diálogo de edição de cartão<br>
+                <span class="note">Causa: o editor vira flex item sem largura declarada e colapsa a 38 px com o campo vazio. Corrigido em <code>dialogs.css</code>.</span></td>
+            <td><span class="pill pill-high">high</span></td>
+            <td>P1</td>
+            <td><span class="pill pill-open">delivering</span></td>
+            <td>1.35.5</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Estado da rastreabilidade</h2>
+<ul>
+    <li>Causa raiz: <strong>confirmada</strong> por medição no navegador (38 px → 446 px).</li>
+    <li>Testes: <code>src/test/embedded-editor.unit.test.ts</code> (3 asserções) e o cartão <code>12</code> da fixture do sandbox.</li>
+    <li>Veredito de spec: <strong>spec-correta</strong>, com adendo aditivo <code>bug-BUG-20260804-23SL-v001.md</code>.</li>
+    <li>Closure policy <code>package</code>: <strong>não satisfeita ainda</strong> — falta recarregar a janela do editor (Developer: Reload Window) e o merge da branch. Sem isso, sem <code>DONE.md</code>.</li>
+</ul>
+
+<h2>Arquivos do contexto</h2>
+<ul>
+    <li><code>../bugs/BUG-20260804-23SL-description-e-details-nao-editaveis/bug.md</code> — registro canônico</li>
+    <li><code>../intake/relato-20260804-0748.md</code> — relato bruto do usuário</li>
+    <li><code>index.md</code>, <code>catalog.jsonl</code>, <code>matrix.md</code>, <code>spec-matrix.md</code>, <code>graph.md</code> — demais views</li>
+</ul>
+
+</main>
+</body>
+</html>

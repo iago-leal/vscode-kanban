@@ -24,3 +24,4 @@ git checkout -- _reversa_forward/001-interface-react-tema-e-done/reference/sandb
 | 8 | `is_assigned_to("iago")` |
 | 9 | `is_older(300)` |
 | 10, 11 | Descartáveis: use nos passos 10 e 11 do roteiro |
+| 12 | Cartão sem `description` e sem `details`: os dois editores de Markdown nascem vazios. Abra-o em **Edit** e escreva nos dois campos — foi o caso que faltava aqui quando o BUG-20260804-23SL colapsou o editor a 38 px de largura |

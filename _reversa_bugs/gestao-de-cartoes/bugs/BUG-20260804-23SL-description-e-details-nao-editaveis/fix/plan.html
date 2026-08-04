@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de correção — BUG-20260804-23SL</title>
+<style>
+    :root {
+        color-scheme: dark;
+        --bg: #0d1117;
+        --fg: #e6edf3;
+        --muted: #9198a1;
+        --line: #30363d;
+        --card: #161b22;
+        --open: #3d2e00;
+        --open-line: #d29922;
+        --ok: #1a7f37;
+        --ok-bg: #0d2b16;
+        --bad: #f85149;
+        --bad-bg: #2b1113;
+        --spec: #0c2d6b;
+        --spec-line: #4493f8;
+        --code: #21262d;
+        --code-line: #8b949e;
+    }
+
+    body {
+        margin: 0;
+        padding: 32px 24px 72px;
+        background: var(--bg);
+        color: var(--fg);
+        font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main { max-width: 1000px; margin: 0 auto; }
+
+    h1 { font-size: 23px; margin: 0 0 6px; }
+    h2 { font-size: 16px; margin: 38px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+    h3 { font-size: 14px; margin: 20px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+    .sub { color: var(--muted); font-size: 13px; margin: 0; }
+
+    .chips { margin: 14px 0 0; display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip { padding: 2px 10px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); background: var(--card); }
+    .chip-sev { background: var(--open); border-color: var(--open-line); }
+    .chip-ok { background: var(--ok-bg); border-color: var(--ok); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    code { font-size: 12.5px; background: var(--code); padding: 1px 5px; border-radius: 4px; }
+    pre { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 12.5px; margin: 8px 0 0; }
+    pre code { background: none; padding: 0; }
+
+    .box { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-top: 10px; }
+    .box-bad { border-left: 3px solid var(--bad); }
+    .box-ok { border-left: 3px solid var(--ok); }
+
+    .figure { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--card); padding: 12px; margin-top: 10px; }
+    svg { display: block; min-width: 680px; }
+    .n-label { font: 12px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: var(--fg); }
+    .n-meta { font-size: 11px; fill: var(--muted); }
+    .edge { stroke: var(--code-line); stroke-width: 1.4; fill: none; }
+    .edge-label { font-size: 11px; fill: var(--muted); }
+
+    a { color: var(--spec-line); }
+
+    ul { padding-left: 20px; margin: 6px 0; }
+    li { margin: 5px 0; }
+    .note { color: var(--muted); font-size: 13px; }
+    .del { color: var(--bad); }
+    .add { color: #3fb950; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Plano de correção — <code>#1 BUG-20260804-23SL</code></h1>
+<p class="sub">Contexto <code>gestao-de-cartoes</code> · 2026-08-04 · plano proposto, <strong>nada foi aplicado ainda</strong></p>
+<div class="chips">
+    <span class="chip chip-sev">severidade high</span>
+    <span class="chip">prioridade P1</span>
+    <span class="chip">status active / planning</span>
+    <span class="chip chip-ok">causa raiz confirmada</span>
+    <span class="chip">risco da mudança: baixa</span>
+    <span class="chip">closure policy: package</span>
+</div>
+
+<h2>1. O defeito</h2>
+<p>No diálogo <em>Edit a card</em>, os campos <strong>Description</strong> e <strong>Details</strong> não recebem cursor nem aceitam texto quando estão vazios. Com conteúdo, funcionam — foi o que o relator observou ao ver que, "depois que algo é escrito, aí fica editável".</p>
+
+<h2>2. Causa raiz <span class="note">(confirmada por medição)</span></h2>
+<div class="box box-bad">
+<p style="margin-top:0">O wrapper que o design system desenha em volta do <code>&lt;textarea&gt;</code> é <code>display: flex</code>. O editor aberto por <code>CodeMirror.fromTextArea</code> é inserido <strong>dentro</strong> desse wrapper e vira flex item com <code>flex: 0 1 auto</code>: a largura passa a vir do <strong>conteúdo</strong>, não do container. Conteúdo vazio significa largura zero — o editor encolhe até a calha dos números.</p>
+<p style="margin-bottom:0">A folha do projeto declara <strong>altura</strong> para esse editor (<code>dialogs.css:87-89</code>) e <strong>nunca declarou largura</strong>. O comentário que acompanha a regra discute apenas altura: a largura passou despercebida porque, com texto, o editor se estica sozinho.</p>
+</div>
+
+<h3>Medições</h3>
+<table>
+    <thead><tr><th>Elemento</th><th class="num">Campo vazio (defeito)</th><th class="num">Com a correção</th></tr></thead>
+    <tbody>
+        <tr><td>Wrapper do campo (<code>span.vsckb-markdown-editor</code>)</td><td class="num">448 px</td><td class="num">448 px</td></tr>
+        <tr><td><code>div.CodeMirror</code> (o editor)</td><td class="num"><span class="del">38 px</span></td><td class="num"><span class="add">446 px</span></td></tr>
+        <tr><td><code>.CodeMirror-lines</code> (onde se escreve)</td><td class="num"><span class="del">8 px</span></td><td class="num"><span class="add">416 px</span></td></tr>
+        <tr><td>Altura (Description / Details)</td><td class="num">114 / 153 px</td><td class="num">114 / 153 px</td></tr>
+        <tr><td>Clique no meio do campo cai em</td><td class="num"><span class="del">o wrapper</span></td><td class="num"><span class="add">.CodeMirror-lines</span></td></tr>
+        <tr><td>Editor recebe foco</td><td class="num"><span class="del">não</span></td><td class="num"><span class="add">sim</span></td></tr>
+    </tbody>
+</table>
+<p class="note">Cápsula completa em <a href="../evidence/reproduction.md">evidence/reproduction.md</a> · capturas <a href="../evidence/antes-defeituoso.png">antes</a> e <a href="../evidence/depois-corrigido.png">depois</a>.</p>
+
+<h2>3. Estratégia escolhida</h2>
+<p><strong>Correção direta.</strong> Não há hipóteses concorrentes a arbitrar: a causa foi medida no navegador e a correção candidata foi validada no mesmo lugar, com digitação real. Um debate multiagente aqui gastaria tokens para decidir o que a régua já decidiu.</p>
+
+<h2>4. Correction Change Set proposto</h2>
+<table>
+    <thead><tr><th>CHG</th><th>Tipo</th><th>Artefato</th><th>Propósito</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><code>CHG-001</code></td><td>test</td>
+            <td><code>src/test/embedded-editor.unit.test.ts</code> <em>(novo)</em></td>
+            <td>Prova que a folha de geometria dá <strong>largura</strong> ao editor embutido, e não só altura. Falha hoje.</td>
+        </tr>
+        <tr>
+            <td><code>CHG-002</code></td><td>test</td>
+            <td><code>_reversa_forward/001-.../reference/sandbox/.vscode/vscode-kanban.json</code></td>
+            <td>Acrescenta à fixture o espécime que faltava: um cartão <strong>sem</strong> <code>description</code> e <strong>sem</strong> <code>details</code>.</td>
+        </tr>
+        <tr>
+            <td><code>CHG-003</code></td><td>code</td>
+            <td><code>src/webview/theme/dialogs.css</code></td>
+            <td>Declara a largura do editor pelo container, com o comentário que explica o flex do wrapper.</td>
+        </tr>
+        <tr>
+            <td><code>CHG-004</code></td><td>documentation</td>
+            <td><code>_reversa_forward/001-.../reference/sandbox/README.md</code></td>
+            <td>Registra na tabela da fixture o que o cartão novo exercita.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>O diff de CHG-003, como será</h3>
+<pre><code> .vsckb-markdown-editor .CodeMirror {
+<span class="add">+    width: 100%;
++    min-width: 0;</span>
+     height: calc(var(--vsckb-editor-rows, 5) * 1.5em + 16px);
+ }</code></pre>
+<p class="note"><code>min-width: 0</code> não é decoração: um flex item tem <code>min-width: auto</code> por padrão, o que o impede de encolher abaixo do conteúdo. Sem ele, uma linha muito longa passaria a esticar o diálogo em vez de rolar dentro do editor — que é exatamente a regressão que o comentário de altura da folha diz ter combatido uma vez.</p>
+
+<h2>5. Testes planejados</h2>
+<table>
+    <thead><tr><th>Teste</th><th>Papel</th><th>O que prova</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><code>embedded-editor</code> — "o editor embutido recebe largura do container"</td>
+            <td>reprodução</td>
+            <td>Que a folha hoje <strong>não</strong> declara largura para o editor: é a ausência que produz os 38 px. Vermelho antes de CHG-003, verde depois.</td>
+        </tr>
+        <tr>
+            <td><code>embedded-editor</code> — "a altura pedida pelo formulário continua declarada"</td>
+            <td>regressão</td>
+            <td>Que a correção de largura não apaga a de altura, defeito que este projeto já teve.</td>
+        </tr>
+        <tr>
+            <td><code>embedded-editor</code> — "o editor pode encolher abaixo do conteúdo"</td>
+            <td>regressão</td>
+            <td>Que <code>min-width: 0</code> permanece: sem ele, texto longo volta a esticar o diálogo.</td>
+        </tr>
+        <tr>
+            <td>Cartão vazio na fixture do sandbox</td>
+            <td>regressão</td>
+            <td>Que o roteiro de verificação manual passa a exercitar o caso que deixou este defeito passar.</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="box">
+<p style="margin-top:0"><strong>Limite honesto destes testes.</strong> A suíte deste projeto não tem navegador — nem Playwright, nem jsdom — e um teste de folha prova que a <em>declaração existe</em>, não que o clique funciona. A prova comportamental é a medição no navegador já registrada na cápsula, e a verificação final é olhar a tela com a <code>.vsix</code> reinstalada. Adicionar um browser à suíte só por este bug seria desproporcional; se virar necessidade recorrente, é decisão própria, não carona nesta correção.</p>
+</div>
+
+<h2>6. Riscos e escopo negativo</h2>
+<h3>Risco: baixa</h3>
+<ul>
+    <li>Uma declaração de geometria numa folha de estilo; sem efeito em domínio, dados ou ponte.</li>
+    <li>Reversível por remoção. Nenhum byte do arquivo do quadro muda.</li>
+    <li>Nenhuma âncora de <code>style-anchors.md</code> é renomeada: contrato externo intacto.</li>
+    <li>Risco residual: a folha do usuário (<code>.vscode/vscode-kanban.css</code>) é carregada por último e pode sobrescrever a largura. É o mesmo risco que já vale para a altura.</li>
+</ul>
+<h3>Fica de fora desta correção</h3>
+<ul>
+    <li>O limite de 255 caracteres que só o diálogo de edição impõe à descrição — defeito conhecido e preservado de propósito (<code>EditCardDialog.tsx</code>, <code>legacy-impact.md</code>). Outra correção, outro bug.</li>
+    <li>Qualquer refatoração do <code>MarkdownField</code> ou do adaptador. A correção é cirúrgica.</li>
+    <li>O cartão do quadro de <code>~/dev/experimento</code>: nada será escrito nele.</li>
+</ul>
+
+<h2>7. O bug e suas relações</h2>
+<div class="figure">
+<svg viewBox="0 0 820 240" role="img" aria-label="O bug, as specs que o definem e o código que a correção toca">
+    <defs>
+        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+    </defs>
+    <g>
+        <rect x="8" y="42" width="196" height="46" rx="7" fill="var(--spec)" stroke="var(--spec-line)"/>
+        <text class="n-label" x="22" y="64">RF-03 · editar descrição</text>
+        <text class="n-label n-meta" x="22" y="80">gestao-de-cartoes/requirements.md</text>
+
+        <rect x="8" y="132" width="196" height="46" rx="7" fill="var(--spec)" stroke="var(--spec-line)"/>
+        <text class="n-label" x="22" y="154">W018 · acoplamento CodeMirror</text>
+        <text class="n-label n-meta" x="22" y="170">addenda/002</text>
+    </g>
+    <g>
+        <rect x="286" y="68" width="216" height="86" rx="8" fill="var(--open)" stroke="var(--open-line)" stroke-width="1.6"/>
+        <text class="n-label" x="300" y="92" style="font-weight:600">#1 BUG-20260804-23SL</text>
+        <text class="n-label" x="300" y="112">campo vazio colapsa</text>
+        <text class="n-label" x="300" y="128">o editor a 38 px</text>
+        <text class="n-label n-meta" x="300" y="146">high · P1 · causa confirmada</text>
+    </g>
+    <g>
+        <rect x="590" y="20" width="222" height="38" rx="7" fill="var(--code)" stroke="var(--code-line)"/>
+        <text class="n-label" x="604" y="44">theme/dialogs.css · CHG-003</text>
+
+        <rect x="590" y="72" width="222" height="38" rx="7" fill="var(--code)" stroke="var(--code-line)"/>
+        <text class="n-label" x="604" y="96">test/embedded-editor · CHG-001</text>
+
+        <rect x="590" y="124" width="222" height="38" rx="7" fill="var(--code)" stroke="var(--code-line)"/>
+        <text class="n-label" x="604" y="148">sandbox/vscode-kanban.json · CHG-002</text>
+
+        <rect x="590" y="176" width="222" height="38" rx="7" fill="var(--code)" stroke="var(--code-line)"/>
+        <text class="n-label" x="604" y="200">sandbox/README.md · CHG-004</text>
+    </g>
+    <g color="var(--code-line)">
+        <path class="edge" d="M 204 66 C 244 66, 250 96, 286 100" marker-end="url(#a)"/>
+        <text class="edge-label" x="216" y="80">define</text>
+        <path class="edge" d="M 204 156 C 244 156, 250 130, 286 126" marker-end="url(#a)"/>
+        <text class="edge-label" x="216" y="152">vigia</text>
+        <path class="edge" d="M 502 100 C 545 92, 552 44, 590 40" marker-end="url(#a)"/>
+        <path class="edge" d="M 502 108 C 545 102, 552 94, 590 92" marker-end="url(#a)"/>
+        <path class="edge" d="M 502 118 C 545 126, 552 140, 590 144" marker-end="url(#a)"/>
+        <path class="edge" d="M 502 130 C 545 156, 552 190, 590 196" marker-end="url(#a)"/>
+        <text class="edge-label" x="512" y="172">corrige em</text>
+    </g>
+</svg>
+</div>
+
+<h3>Matriz de relações</h3>
+<table>
+    <thead><tr><th>Origem</th><th>Tipo</th><th>Destino</th><th>Estado</th></tr></thead>
+    <tbody>
+        <tr><td colspan="4" class="note">Nenhuma relação bug↔bug: <a href="../bug.md"><code>BUG-20260804-23SL</code></a> é o único registro do contexto. Nada a encadear, nada a ordenar.</td></tr>
+    </tbody>
+</table>
+
+<h2>8. Ordem de execução</h2>
+<ol>
+    <li><strong>Gate 1</strong> — aplicar CHG-001 e CHG-002 (os testes e a fixture) e demonstrar que <strong>falham</strong>.</li>
+    <li><strong>Gate 2</strong> — aplicar CHG-003 e CHG-004 e demonstrar que passam.</li>
+    <li>Verificar na tela pelo <code>npm run preview</code>, com o cartão vazio.</li>
+    <li>Veredito de spec (decisão sua) e fechamento pela closure policy <code>package</code>: a <code>.vsix</code> reempacotada e reinstalada precisa exibir o comportamento correto antes de <code>resolved</code>.</li>
+</ol>
+
+<p class="note" style="margin-top:28px">Registro canônico: <a href="../bug.md"><code>bug.md</code></a> · este plano: <code>fix/plan.html</code></p>
+
+</main>
+</body>
+</html>

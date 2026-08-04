@@ -1,0 +1,125 @@
+/**
+ * The size of the Markdown editor embedded in the card dialogs (RF-03).
+ *
+ * The editor is a vendored library opened over the text area of the design
+ * system, and the wrapper the design system draws around that text area is a
+ * FLEX container. A CodeMirror inserted inside one becomes a flex item, and a
+ * flex item with no width of its own is sized by its content: with the field
+ * empty there is no content, so the editor shrinks to the gutter of line
+ * numbers -- thirty-eight pixels, of which eight are the area where one writes.
+ * The click of the user lands on the wrapper, next to the editor rather than
+ * inside it, and the two fields of the form cannot be typed into at all
+ * (BUG-20260804-23SL). Write one character through some other route and the
+ * editor stretches and starts working, which is why the defect looked like it
+ * belonged to a particular card.
+ *
+ * The size of an embedded editor therefore has to be DECLARED, both ways. The
+ * stylesheet already declared the height, for a reason of its own, and the
+ * comment there discusses nothing else; the width was never declared because
+ * text hid its absence. These tests hold both halves, and the third of them
+ * holds the floor that lets a long line scroll inside the editor instead of
+ * stretching the dialog -- the same regression the height was written against.
+ *
+ * They check the STYLESHEET, not the layout: this project has no browser in its
+ * suite, and a rule about geometry is the most a reading of the source can
+ * pin. That a click reaches the editor was measured in the browser instead, and
+ * the measurements are kept with the bug.
+ */
+
+import * as assert from 'assert';
+
+import { sourceOf, withoutComments } from './sources';
+
+/**
+ * The stylesheet of the dialogs, which is where the geometry of the editor is
+ * allowed to live.
+ */
+const STYLESHEET = 'src/webview/theme/dialogs.css';
+
+/**
+ * The rule that sizes the editor, as it appears in the sheet.
+ */
+const EDITOR_RULE = /\.vsckb-markdown-editor\s+\.CodeMirror\s*\{([^}]*)\}/;
+
+/**
+ * Reads what the sheet declares for the embedded editor.
+ *
+ * @return {string} The body of the rule, without comments.
+ */
+function editorRule(): string {
+    const SHEET = sourceOf(STYLESHEET);
+
+    assert.ok(
+        SHEET,
+        `The stylesheet of the dialogs is gone: '${ STYLESHEET }'. ` +
+        'The editor of Markdown takes its size from there.'
+    );
+
+    const MATCH = EDITOR_RULE.exec(withoutComments(SHEET!.text));
+
+    assert.ok(
+        MATCH,
+        `'${ STYLESHEET }' no longer sizes the embedded editor. ` +
+        'Without a rule of its own the editor is sized by its content, and an ' +
+        'empty field collapses it to the gutter of line numbers (BUG-20260804-23SL).'
+    );
+
+    return MATCH![1];
+}
+
+/**
+ * Whether the rule declares a property.
+ */
+function declares(rule: string, property: string): boolean {
+    return new RegExp(`(^|;|\\s)${ property }\\s*:`).test(rule);
+}
+
+suite('The size of the embedded Markdown editor', function () {
+    test('the editor takes its width from the field, not from its content', function () {
+        const RULE = editorRule();
+
+        assert.ok(
+            declares(RULE, 'width'),
+            `'${ STYLESHEET }' declares no width for the embedded editor.\n\n` +
+            'The wrapper of the design system is a flex container, so the editor ' +
+            'inside it is a flex item and is sized by its content unless told ' +
+            'otherwise. An empty description then leaves an editor 38 pixels ' +
+            'wide, with 8 pixels of writing area, and neither of the two fields ' +
+            'of the card form can be clicked into (BUG-20260804-23SL).'
+        );
+    });
+
+    test('the editor still takes its height from the form', function () {
+        const RULE = editorRule();
+
+        assert.ok(
+            declares(RULE, 'height'),
+            `'${ STYLESHEET }' declares no height for the embedded editor.\n\n` +
+            'The editor does not inherit the rows the form asked the text area ' +
+            'for, and a height it is never given is a height it reports as ' +
+            'zero. Fixing the width must not cost the height.'
+        );
+
+        assert.ok(
+            RULE.indexOf('--vsckb-editor-rows') > -1,
+            'The height of the editor no longer follows the number of rows the ' +
+            'form asked for. Both fields would then get whatever their content ' +
+            'happens to need, which is the defect the variable was written for.'
+        );
+    });
+
+    test('the editor may shrink below its content', function () {
+        const RULE = editorRule();
+
+        assert.ok(
+            /min-width\s*:\s*0/.test(RULE),
+            `'${ STYLESHEET }' does not let the embedded editor shrink below ` +
+            'its content.\n\n' +
+            'A flex item carries \'min-width: auto\', which is a floor at the ' +
+            'width of what is inside it. With the floor in place a long line ' +
+            'stretches the dialog instead of scrolling inside the editor, and ' +
+            'the two fields stop having the same size -- which is precisely ' +
+            'what the fixed height was written against.'
+        );
+    });
+});

@@ -62,6 +62,15 @@
       "description": "Divergencia preservada de proposito. `is_bug` responde verdadeiro; a cor e a generica.",
       "details": "",
       "references": []
+    },
+    {
+      "id": "12",
+      "title": "Cartao sem descricao e sem detalhes: os dois campos do editor nascem vazios",
+      "type": "",
+      "prio": 1,
+      "category": "edicao",
+      "creation_time": "2026-08-04T10:00:00.000Z",
+      "references": []
     }
   ],
   "in-progress": [

@@ -1,0 +1,42 @@
+# Vocabulário controlado do registro de bugs.
+# Semeado a partir de _reversa_sdd/architecture.md (secao 4) e das 14 units do writer.
+# Termo novo entra aqui por decisao explicita; ate la, use 'unclassified'.
+
+area:
+  - webview          # interface React que roda dentro do painel
+  - extension        # host da extensao no Node (ciclo de vida, comandos)
+  - persistencia     # leitura e escrita do .vscode/vscode-kanban.json
+  - integracao       # Toggl, git, sistema operacional, navegador
+  - build            # compilacao, empacotamento, distribuicao da .vsix
+  - unclassified
+
+module:
+  - extension            # src/extension.ts
+  - workspaces           # src/workspaces.ts
+  - boards               # src/boards.ts
+  - html                 # src/html.ts
+  - toggl                # src/toggl.ts
+  - announcements        # src/announcements.ts
+  - webview-ui           # src/webview/ui
+  - webview-dialogs      # src/webview/ui/dialogs
+  - webview-adapters     # src/webview/adapters
+  - webview-domain       # src/webview/domain
+  - webview-bridge       # src/webview/bridge
+  - unclassified
+
+feature:
+  - abertura-do-quadro
+  - persistencia-do-quadro
+  - gestao-de-cartoes
+  - colunas-e-movimentacao
+  - filtro-de-cartoes
+  - vinculo-entre-cartoes
+  - renderizacao-markdown-e-diagramas
+  - time-tracking
+  - integracao-toggl
+  - exportacao-markdown
+  - scripts-de-evento-do-usuario
+  - configuracao-do-workspace
+  - identificacao-de-usuario
+  - anuncios-e-changelog
+  - unclassified
