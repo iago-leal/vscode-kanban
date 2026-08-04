@@ -1,15 +1,14 @@
 {
   "schema-version": 1,
-  "feature-dir": "_reversa_forward/002-primer-design-system",
-  "feature-id": "002",
-  "short-name": "primer-design-system",
-  "started-at": "2026-08-03T00:00:00Z",
-  "current-stage": "coding",
+  "feature-dir": "_reversa_forward/003-numero-visivel-do-cartao",
+  "feature-id": "003",
+  "short-name": "numero-visivel-do-cartao",
+  "started-at": "2026-08-04T17:44:23Z",
+  "current-stage": "plan",
   "stages-completed": [
     "requirements",
     "clarify",
-    "plan",
-    "to-do"
+    "plan"
   ],
   "paused-features": [
     {
@@ -25,6 +24,21 @@
         "to-do"
       ],
       "paused-at": "2026-08-03T00:00:00Z",
+      "paused-from-stage": "coding-em-progresso"
+    },
+    {
+      "feature-dir": "_reversa_forward/002-primer-design-system",
+      "feature-id": "002",
+      "short-name": "primer-design-system",
+      "started-at": "2026-08-03T00:00:00Z",
+      "current-stage": "coding",
+      "stages-completed": [
+        "requirements",
+        "clarify",
+        "plan",
+        "to-do"
+      ],
+      "paused-at": "2026-08-04T17:44:23Z",
       "paused-from-stage": "coding-em-progresso"
     }
   ]
