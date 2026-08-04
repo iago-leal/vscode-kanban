@@ -1,0 +1,31 @@
+{
+  "schema-version": 1,
+  "feature-dir": "_reversa_forward/002-primer-design-system",
+  "feature-id": "002",
+  "short-name": "primer-design-system",
+  "started-at": "2026-08-03T00:00:00Z",
+  "current-stage": "coding",
+  "stages-completed": [
+    "requirements",
+    "clarify",
+    "plan",
+    "to-do"
+  ],
+  "paused-features": [
+    {
+      "feature-dir": "_reversa_forward/001-interface-react-tema-e-done",
+      "feature-id": "001",
+      "short-name": "interface-react-tema-e-done",
+      "started-at": "2026-08-02T19:33:31Z",
+      "current-stage": "coding",
+      "stages-completed": [
+        "requirements",
+        "clarify",
+        "plan",
+        "to-do"
+      ],
+      "paused-at": "2026-08-03T00:00:00Z",
+      "paused-from-stage": "coding-em-progresso"
+    }
+  ]
+}

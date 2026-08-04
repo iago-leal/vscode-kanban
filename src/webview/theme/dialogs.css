@@ -1,0 +1,103 @@
+/*
+ * The geometry of the dialogs.
+ *
+ * Same rule as 'board.css', which this file was split out of: placement only,
+ * and not one property that paints. The split is not tidiness -- the sheet had
+ * reached the four hundred lines this project treats as the sign that a file
+ * has taken on more than one subject, and it had: the board is one, the four
+ * dialogs and the editor of Markdown inside them are another. They are read at
+ * different times and changed for different reasons.
+ *
+ * What paints any of this is in 'appearance.css', as everywhere else.
+ */
+
+/* ---------------------------------------------------------------- dialogs */
+
+.vsckb-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.vsckb-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.vsckb-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vsckb-field-row {
+    display: flex;
+    gap: 10px;
+}
+
+.vsckb-field-row > .vsckb-field {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.vsckb-markdown-editor {
+    width: 100%;
+}
+
+.vsckb-details-facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    margin: 0;
+}
+
+.vsckb-details-facts dt {
+    margin: 0;
+}
+
+.vsckb-details-facts dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.vsckb-details-section h3 {
+    margin: 0 0 6px;
+}
+
+/* -------------------------------------------------------- embedded editor */
+
+/*
+ * The editor of Markdown is a vendored library that measures itself, and a
+ * height it is never given is a height it reports as zero. It is given a FIXED
+ * one, because 'height: auto' let the editor grow with its text: a long
+ * description pushed the details field off the bottom of the dialog and the
+ * two fields never had the same size twice. The field asks for as many lines
+ * as the form asked the text area for, and anything longer scrolls inside the
+ * editor instead of resizing the dialog.
+ *
+ * The editor is a DESCENDANT of the field and not its sibling: the class of the
+ * component lands on the wrapper the design system draws around a text area,
+ * and CodeMirror inserts itself inside it. A sibling selector matched nothing,
+ * and matching nothing is how the editor kept the three hundred pixels its own
+ * stylesheet gives it. The scroller is left alone: the library already gives it
+ * the full height, and the floor this sheet declared for it was what made a
+ * field ignore the size it was asked for.
+ *
+ * The width is here for the same reason as the height and was missing for a
+ * worse one. That wrapper is a FLEX container, so the editor inside it is a
+ * flex item, and a flex item with no width of its own is sized by its content.
+ * Text hid that: an editor with a line in it stretches and looks right. An
+ * EMPTY field has no content to stretch it, and the editor collapsed to the
+ * gutter of line numbers -- thirty-eight pixels, of which eight were the area
+ * where one writes -- so the click landed beside the editor rather than inside
+ * it and neither field of the card form could be typed into at all
+ * (BUG-20260804-23SL). The floor comes off for the same reason it came off the
+ * scroller: 'min-width: auto' is the width of the content, and with it a long
+ * line stretches the dialog instead of scrolling inside the editor.
+ */
+.vsckb-markdown-editor .CodeMirror {
+    width: 100%;
+    min-width: 0;
+    height: calc(var(--vsckb-editor-rows, 5) * 1.5em + 16px);
+}

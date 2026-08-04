@@ -1,0 +1,141 @@
+{
+  "todo": [
+    {
+      "id": "1",
+      "title": "Empate de prioridade: este deveria vir depois do bug",
+      "type": "",
+      "prio": 3,
+      "category": "ordenacao",
+      "creation_time": "2026-07-01T10:00:00.000Z",
+      "description": "Tres cartoes com prio 3. A ordem esperada e emergency, bug, depois este.",
+      "details": "",
+      "references": []
+    },
+    {
+      "id": "2",
+      "title": "Empate de prioridade: bug",
+      "type": "bug",
+      "prio": 3,
+      "category": "ordenacao",
+      "creation_time": "2026-07-02T10:00:00.000Z",
+      "description": "Peso de tipo -1.",
+      "details": "",
+      "references": []
+    },
+    {
+      "id": "3",
+      "title": "Empate de prioridade: emergency",
+      "type": "emergency",
+      "prio": 3,
+      "category": "ordenacao",
+      "creation_time": "2026-07-03T10:00:00.000Z",
+      "description": "Peso de tipo -2. Deve encabecar a coluna.",
+      "details": "",
+      "references": []
+    },
+    {
+      "id": "4",
+      "title": "Descricao em string crua, forma antiga do arquivo",
+      "type": "note",
+      "prio": 1,
+      "creation_time": "2026-06-01T10:00:00.000Z",
+      "description": "Este campo e uma **string**, nao um objeto. Ao salvar, vira { content, mime }.",
+      "references": []
+    },
+    {
+      "id": "5",
+      "title": "Prioridade suja: '5xyz' deve valer 5",
+      "type": "task",
+      "prio": "5xyz",
+      "creation_time": "2026-05-01T10:00:00.000Z",
+      "description": "Fica acima dos de prio 3.",
+      "details": "",
+      "references": []
+    },
+    {
+      "id": "6",
+      "title": "Tipo 'issue': filtra como bug, mas nao recebe a cor de bug",
+      "type": "issue",
+      "prio": 2,
+      "category": "vocabulario",
+      "creation_time": "2026-04-01T10:00:00.000Z",
+      "description": "Divergencia preservada de proposito. `is_bug` responde verdadeiro; a cor e a generica.",
+      "details": "",
+      "references": []
+    },
+    {
+      "id": "12",
+      "title": "Cartao sem descricao e sem detalhes: os dois campos do editor nascem vazios",
+      "type": "",
+      "prio": 1,
+      "category": "edicao",
+      "creation_time": "2026-08-04T10:00:00.000Z",
+      "references": []
+    }
+  ],
+  "in-progress": [
+    {
+      "id": "7",
+      "title": "Markdown completo: diagrama, codigo, tabela e lista de tarefas",
+      "type": "bug",
+      "prio": 9,
+      "category": "renderizacao",
+      "creation_time": "2026-08-01T10:00:00.000Z",
+      "description": {
+        "content": "Barra de progresso deve aparecer em 2 de 3.\n\n- [x] item feito\n- [x] outro feito\n- [ ] item pendente\n",
+        "mime": "text/markdown"
+      },
+      "details": {
+        "content": "## Diagrama\n\n```mermaid\ngraph LR\n  A[Todo] --> B[In Progress]\n  B --> C[Testing]\n  C --> D[Done]\n```\n\n## Bloco de codigo\n\n```typescript\nexport function compareCards(x: BoardCard, y: BoardCard): number {\n    return prioritySortValue(y) - prioritySortValue(x);\n}\n```\n\n## Tabela\n\n| Coluna | Peso |\n|---|---|\n| emergency | -2 |\n| bug | -1 |\n\n## Link externo\n\n[Deve pedir confirmacao](https://example.com)\n",
+        "mime": "text/markdown"
+      },
+      "references": []
+    },
+    {
+      "id": "8",
+      "title": "Cartao com responsavel, para o filtro is_assigned_to",
+      "type": "",
+      "prio": 4,
+      "assignedTo": { "name": "iago" },
+      "category": "filtro",
+      "creation_time": "2026-07-20T10:00:00.000Z",
+      "description": "Use `is_assigned_to(\"iago\")` no filtro.",
+      "details": "",
+      "references": []
+    }
+  ],
+  "testing": [
+    {
+      "id": "9",
+      "title": "Cartao antigo, para is_older",
+      "type": "",
+      "prio": 5,
+      "creation_time": "2025-01-15T10:00:00.000Z",
+      "description": "Use `is_older(300)` no filtro.",
+      "details": "",
+      "references": []
+    }
+  ],
+  "done": [
+    {
+      "id": "10",
+      "title": "Concluido A: deve sumir ao ocultar concluidos",
+      "type": "",
+      "prio": 7,
+      "creation_time": "2026-07-10T10:00:00.000Z",
+      "description": "A faixa da coluna colapsada deve contar 2.",
+      "details": "",
+      "references": []
+    },
+    {
+      "id": "11",
+      "title": "Concluido B: descartavel, use no passo 10 e 11",
+      "type": "",
+      "prio": 6,
+      "creation_time": "2026-07-11T10:00:00.000Z",
+      "description": "Excluir este e limpar a coluna nao custa nada.",
+      "details": "",
+      "references": []
+    }
+  ]
+}

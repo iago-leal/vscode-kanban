@@ -1,0 +1,378 @@
+/*
+ * The appearance of the board: everything 'board.css' is forbidden to say.
+ *
+ * The two sheets divide the work along a line that is not decoration. The
+ * other one places -- how wide a lane is, how cards stack, what happens when
+ * the panel narrows -- and may declare no colour, radius, shadow or type size
+ * at all. This one does nothing BUT those, and may declare them only by naming
+ * a token of the design system.
+ *
+ * That restriction is what keeps the promise of RN-07 intact rather than
+ * merely reworded. The promise is that with the stylesheet of the design
+ * system switched off the board comes out unpainted; a sheet that paints
+ * exclusively through 'var(--token)' cannot break it, because with the tokens
+ * gone every declaration here resolves to nothing and the paint goes with
+ * them. A sheet that wrote '#f6f8fa' would break it on the first line. The
+ * test 'visual-literals.unit.test.ts' reads this file and fails on any painting
+ * declaration that does not name a token -- the same argument 'App.tsx' already
+ * makes for the two tokens it writes on the shell.
+ *
+ * Why a sheet at all, and not the 'sx' of each component: because the question
+ * "what colour is a bug" has one answer, and a component that answered it
+ * would be the second place to ask. Everything colour means on this board is
+ * decided in this file and nowhere else.
+ *
+ * Selectors are the style anchors of 'interfaces/style-anchors.md' wherever
+ * the element is one a user stylesheet may reach.
+ */
+
+/* ---------------------------------------------------------------- surfaces */
+
+/*
+ * A column is a recess, a card is a thing lying in it. Before this the two
+ * shared one plane and one colour, so a stack of cards read as a single column
+ * of text with gaps in it: nothing said where one card ended and the next
+ * began except eight pixels of nothing.
+ */
+[data-vsckb="column"]:not([data-vsckb-collapsed]),
+.vsckb-column-strip {
+    background-color: var(--bgColor-inset);
+    border: var(--borderWidth-thin) solid var(--borderColor-muted);
+    border-radius: var(--borderRadius-medium);
+}
+
+/*
+ * The strip is a real button, and a button takes the foreground of the
+ * operating system unless it is told otherwise -- which is how the card count
+ * of a collapsed column came out black on a dark board and could not be read
+ * at all. RN-13 is the requirement that the count stay visible: a column
+ * missing from the screen must never be mistaken for cards missing from the
+ * file, and an unreadable count is the same failure as no count.
+ */
+.vsckb-column-strip {
+    color: var(--fgColor-muted);
+}
+
+[data-vsckb="card"] {
+    background-color: var(--bgColor-default);
+    border: var(--borderWidth-thin) solid var(--borderColor-default);
+    border-radius: var(--borderRadius-medium);
+    box-shadow: var(--shadow-resting-xsmall);
+}
+
+/*
+ * The board itself carries no surface of its own: 'App.tsx' paints the shell,
+ * and a second background here would be a second answer to the same question.
+ */
+
+/* -------------------------------------------------------- the type of card */
+
+/*
+ * The stripe is the whole point of card [41]. A label states the type in
+ * words, and words have to be read one at a time; the stripe is what makes a
+ * column of thirty cards answer "where are the emergencies" without reading
+ * anything. It is a border rather than a background so that it cannot reduce
+ * the contrast of the text lying over it, at any theme.
+ *
+ * The three groups are the ones the domain already knows ('card-taxonomy.ts'),
+ * and this file adds none: a type outside them takes the neutral stripe, which
+ * is exactly what 'colorGroupOf' says it should.
+ */
+[data-vsckb="card"] {
+    border-left-width: var(--borderWidth-thicker);
+    border-left-color: var(--borderColor-neutral-emphasis);
+}
+
+[data-vsckb="card"][data-vsckb-group="emergency"] {
+    border-left-color: var(--borderColor-danger-emphasis);
+}
+
+[data-vsckb="card"][data-vsckb-group="bug"] {
+    border-left-color: var(--borderColor-attention-emphasis);
+}
+
+/* ------------------------------------------------------------ the columns */
+
+/*
+ * Each column is accented at its heading, and the accent says which stage of
+ * the work it is: waiting, being worked on, being checked, finished. It is a
+ * rule of two pixels above the heading rather than a tinted column, because a
+ * tinted column would compete with the stripe of the card for the same glance
+ * and neither would win.
+ *
+ * The names are the four keys of the board. A column whose key is none of them
+ * keeps the neutral rule, which is what the fall-through below gives it.
+ */
+[data-vsckb="column-header"] {
+    border-top: var(--borderWidth-thick) solid var(--borderColor-neutral-muted);
+    border-top-left-radius: var(--borderRadius-medium);
+    border-top-right-radius: var(--borderRadius-medium);
+}
+
+[data-vsckb-column="todo"] > [data-vsckb="column-header"] {
+    border-top-color: var(--borderColor-neutral-emphasis);
+}
+
+[data-vsckb-column="in-progress"] > [data-vsckb="column-header"] {
+    border-top-color: var(--borderColor-accent-emphasis);
+}
+
+[data-vsckb-column="testing"] > [data-vsckb="column-header"] {
+    border-top-color: var(--borderColor-severe-emphasis);
+}
+
+[data-vsckb-column="done"] > [data-vsckb="column-header"] {
+    border-top-color: var(--borderColor-success-emphasis);
+}
+
+/* --------------------------------------------------------------- headings */
+
+/*
+ * What the sizes are FOR (card [42]).
+ *
+ * A board is read by its cards, so the card title is the largest thing on the
+ * board that is not the board title, and it is still only body size. The name
+ * of a column is a signpost: it has to be found, never read, and it was
+ * costing three lines of the lane at the display size the design system gives
+ * an 'h2' by default. Small capitals let it stay findable while giving the
+ * height back to the cards, which is what the column is for.
+ */
+/*
+ * Every rule below is qualified by the element it sits in, and not out of a
+ * taste for long selectors. The heading of a column is a component of the
+ * design system, and a component brings its own class with its own size; a
+ * bare '.vsckb-column-name' would be the same specificity as that class and
+ * would win or lose depending on which import the bundler happened to emit
+ * first. Qualifying by the anchor settles it, and the anchor is a promise this
+ * project already keeps.
+ */
+[data-vsckb="board-header"] .vsckb-topbar-title {
+    font-size: var(--text-title-size-small);
+    font-weight: var(--text-title-weight-small);
+}
+
+[data-vsckb="column-header"] .vsckb-column-name,
+[data-vsckb="column"] .vsckb-column-strip-name {
+    font-size: var(--text-caption-size);
+    font-weight: var(--base-text-weight-semibold);
+    /*
+     * Tracking is the one measure here the design system has no token for, and
+     * it is written as a ratio of the size rather than as pixels so that it
+     * follows whatever that size turns out to be.
+     */
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fgColor-muted);
+}
+
+[data-vsckb="card"] [data-vsckb="card-title"] {
+    font-size: var(--text-body-size-medium);
+    font-weight: var(--base-text-weight-semibold);
+    line-height: var(--text-body-lineHeight-medium);
+    color: var(--fgColor-default);
+}
+
+/*
+ * The three lines under the title are context, not content: which column the
+ * card is in, what it is filed under, and when it was made. They are attenuated
+ * so that the eye reaches the title first and the rest only when asked.
+ */
+[data-vsckb="card"] .vsckb-card-column,
+[data-vsckb="card"] [data-vsckb="card-category"],
+[data-vsckb="card"] .vsckb-card-time {
+    font-size: var(--text-caption-size);
+    color: var(--fgColor-muted);
+}
+
+[data-vsckb="card"] [data-vsckb="card-body"] {
+    font-size: var(--text-body-size-small);
+    color: var(--fgColor-muted);
+}
+
+/* ------------------------------------------------------------ the markdown */
+
+.vsckb-markdown-body pre {
+    background-color: var(--bgColor-muted);
+    border-radius: var(--borderRadius-medium);
+}
+
+.vsckb-table th,
+.vsckb-table td {
+    border: var(--borderWidth-thin) solid var(--borderColor-muted);
+}
+
+.vsckb-table th {
+    background-color: var(--bgColor-muted);
+}
+
+/*
+ * The box of a task, drawn rather than borrowed.
+ *
+ * It has to be drawn because it is not an 'input': the sanitising barrier
+ * removes every input that comes out of Markdown, and this project chose to
+ * keep that rule intact rather than carve an exception for its own checkbox
+ * (RF-17). What is left is a span with the role of a checkbox -- announced,
+ * focused and operated as one -- and an appearance this file supplies.
+ *
+ * The tick is a border on two sides of an empty box, rotated. It is drawn with
+ * geometry the design system has no token for, which is why the numbers are
+ * written out: a glyph would depend on a font the extension does not ship
+ * (RF-26), and an image would be a resource the policy has to admit.
+ */
+.vsckb-markdown-body .vsckb-task-check {
+    border: var(--borderWidth-thin) solid var(--borderColor-emphasis);
+    border-radius: var(--borderRadius-small);
+    background-color: var(--bgColor-default);
+}
+
+.vsckb-markdown-body .vsckb-task-check[aria-checked="true"] {
+    border-color: var(--borderColor-success-emphasis);
+    background-color: var(--bgColor-success-emphasis);
+}
+
+.vsckb-markdown-body .vsckb-task-check[aria-checked="true"]::after {
+    content: "";
+    position: absolute;
+    left: 0.3em;
+    top: 0.1em;
+    width: 0.25em;
+    height: 0.5em;
+    border: solid var(--fgColor-onEmphasis);
+    border-width: 0 0.15em 0.15em 0;
+    transform: rotate(45deg);
+}
+
+/*
+ * A box that can be ticked says so by answering to the pointer and to the
+ * focus ring; one that cannot is dimmed and keeps the cursor of text. The
+ * difference is stated rather than left to be discovered by clicking.
+ */
+.vsckb-markdown-body .vsckb-task-check[tabindex] {
+    cursor: pointer;
+}
+
+.vsckb-markdown-body .vsckb-task-check[tabindex]:hover {
+    border-color: var(--borderColor-accent-emphasis);
+}
+
+.vsckb-markdown-body .vsckb-task-check:focus-visible {
+    outline: var(--focus-outline-width) solid var(--focus-outlineColor);
+    outline-offset: var(--focus-outline-offset);
+}
+
+.vsckb-markdown-body .vsckb-task-check[aria-disabled="true"] {
+    border-color: var(--borderColor-muted);
+}
+
+/*
+ * A finished task is struck through and attenuated. It is the second channel
+ * the state travels on, beside the colour of the box, and it is the one that
+ * survives a screen in greyscale -- the same requirement RN-03 puts on the type
+ * of a card.
+ */
+.vsckb-markdown-body .vsckb-task-check[aria-checked="true"] ~ .vsckb-task-label {
+    color: var(--fgColor-muted);
+    text-decoration: line-through;
+}
+
+/* -------------------------------------------------------- embedded editor */
+
+/*
+ * The editor of Markdown arrives with a theme of its own: 'codemirror.css'
+ * declares a white page and black text outright, and it did so whatever the
+ * board was showing. On the dark set that produced a white rectangle in the
+ * middle of a dark dialog -- not a subtle mismatch but the single most visible
+ * thing on the screen.
+ *
+ * There is no CodeMirror theme for the design system to install, so the
+ * reconciliation is here: the same tokens the rest of the board is painted
+ * with, mapped onto the class names the library emits. That keeps the editor
+ * following the theme of the board -- including a change of theme while a
+ * dialog is open -- for the price of knowing those class names.
+ */
+/*
+ * No box of its own: the editor sits INSIDE the wrapper the design system draws
+ * around a text area, and that wrapper already has the border, the radius and
+ * the focus ring of every other field in the form. An editor that drew its own
+ * would be a second rectangle a pixel inside the first.
+ */
+.CodeMirror {
+    background-color: var(--bgColor-transparent);
+    color: var(--fgColor-default);
+    font-size: var(--text-codeBlock-size);
+}
+
+.CodeMirror-gutters {
+    background-color: var(--bgColor-muted);
+    border-right: var(--borderWidth-thin) solid var(--borderColor-muted);
+}
+
+.CodeMirror-linenumber {
+    color: var(--fgColor-muted);
+}
+
+.CodeMirror-cursor {
+    border-left: var(--borderWidth-thick) solid var(--fgColor-default);
+}
+
+.CodeMirror-selected,
+.CodeMirror-focused .CodeMirror-selected,
+.CodeMirror-line::selection,
+.CodeMirror-line > span::selection {
+    background-color: var(--bgColor-accent-muted);
+}
+
+.CodeMirror-activeline-background {
+    background-color: var(--bgColor-muted);
+}
+
+.CodeMirror-matchingbracket {
+    color: var(--fgColor-success);
+}
+
+/*
+ * The Markdown mode of CodeMirror names its tokens after what they are in the
+ * grammar, not after what they look like: a heading is 'cm-header', a list
+ * bullet is 'cm-variable-2'. They are mapped onto the meanings the design
+ * system already has a colour for, so that the editor and the rendered card
+ * agree about what a link is.
+ */
+.cm-s-default .cm-header,
+.CodeMirror .cm-header {
+    color: var(--fgColor-accent);
+}
+
+.cm-s-default .cm-quote,
+.CodeMirror .cm-quote {
+    color: var(--fgColor-success);
+}
+
+.cm-s-default .cm-link,
+.CodeMirror .cm-link {
+    color: var(--fgColor-link);
+}
+
+.cm-s-default .cm-url,
+.CodeMirror .cm-url {
+    color: var(--fgColor-muted);
+}
+
+.cm-s-default .cm-string,
+.CodeMirror .cm-string {
+    color: var(--fgColor-attention);
+}
+
+.cm-s-default .cm-comment,
+.CodeMirror .cm-comment {
+    color: var(--fgColor-done);
+}
+
+.cm-s-default .cm-variable-2,
+.CodeMirror .cm-variable-2 {
+    color: var(--fgColor-severe);
+}
+
+.cm-s-default .cm-keyword,
+.CodeMirror .cm-keyword {
+    color: var(--fgColor-danger);
+}

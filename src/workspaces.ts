@@ -25,6 +25,7 @@ const SanitizeFilename = require('sanitize-filename');
 import * as vsckb from './extension';
 import * as vsckb_boards from './boards';
 import * as vsckb_toggl from './toggl';
+import * as vsckb_view_preferences from './view-preferences';
 import * as vscode from 'vscode';
 import * as vscode_helpers from 'vscode-helpers';
 
@@ -303,6 +304,20 @@ export interface TimeTrackingSettings {
 export type TimeTrackingSettingValue = boolean | TimeTrackingSettings;
 
 /**
+ * The time, that has been tracked for a card.
+ */
+export interface TrackedTime {
+    /**
+     * The start of a period, that has not been finished yet, if any.
+     */
+    readonly lastStartTime: false | Moment.Moment;
+    /**
+     * The sum of the finished periods, in seconds.
+     */
+    readonly seconds: number;
+}
+
+/**
  * Event argument for a 'track time' event.
  */
 export type TrackTimeEventArguments = EventScriptFunctionArguments & CanSetCardTag & HasTag & CanMove;
@@ -429,6 +444,15 @@ export class Workspace extends vscode_helpers.WorkspaceBase {
             this.boardFile.fsPath
         );
 
+        // the display state is kept in the mementos of the extension, keyed by
+        // this folder: never in a file of the workspace, which would travel in
+        // the repository
+        const VIEW_PREFERENCES = new vsckb_view_preferences.ViewPreferenceStore(
+            this.extension,
+            Path.resolve(this.folder.uri.fsPath),
+            (message) => vsckb.getLogger().warn(message, 'viewPreferences')
+        );
+
         const FILTER_FILE = Path.resolve(
             Path.join(
                 Path.dirname(KANBAN_FILE),
@@ -510,6 +534,7 @@ export class Workspace extends vscode_helpers.WorkspaceBase {
 
                 return '';
             },
+            loadViewPreferences: () => VIEW_PREFERENCES.load(),
             noScmUser: CFG.noScmUser,
             noSystemUser: CFG.noSystemUser,
             raiseEvent: async (ctx) => {
@@ -559,6 +584,13 @@ export class Workspace extends vscode_helpers.WorkspaceBase {
                     } catch (e) {
                         vsckb.showError(e);
                     }
+                }
+            },
+            saveViewPreferences: async (preferences) => {
+                try {
+                    await VIEW_PREFERENCES.save(preferences);
+                } catch (e) {
+                    vsckb.showError(e);
                 }
             },
             saveFilter: async (filter) => {
@@ -912,26 +944,12 @@ export class Workspace extends vscode_helpers.WorkspaceBase {
                   .toISOString()
         );
 
-        let seconds = 0.0;
-        let lastStartTime: false | Moment.Moment = false;
-        for (let i = 0; i < tag['time-tracking']['entries'].length; i++) {
-            const TIME = Moment.utc(
-                tag['time-tracking']['entries'][i]
-            );
+        const TRACKED = calculateTrackedTime(
+            tag['time-tracking']['entries']
+        );
 
-            if (false === lastStartTime) {
-                // start time
-                lastStartTime = TIME;
-            } else {
-                // end time
-                // calculate difference
-                // and add value
-                seconds += Moment.duration( TIME.diff(lastStartTime) )
-                                 .asSeconds();
-
-                lastStartTime = false;
-            }
-        }
+        const seconds = TRACKED.seconds;
+        const lastStartTime = TRACKED.lastStartTime;
 
         // store sum
         tag['time-tracking']['seconds'] = seconds;
@@ -954,6 +972,46 @@ export class Workspace extends vscode_helpers.WorkspaceBase {
             this.folder.uri.fsPath
         );
     }
+}
+
+/**
+ * Sums up the time, that has been tracked for a card.
+ *
+ * The entries are read in pairs: the first one starts a period, the second
+ * one ends it. An entry left over at the end means, that the tracking is
+ * still running.
+ *
+ * @param {any[]} entries The list of times, as UTC.
+ *
+ * @return {TrackedTime} The sum, in seconds, and the time an unfinished
+ *                       period started at.
+ */
+export function calculateTrackedTime(entries: any[]): TrackedTime {
+    let seconds = 0.0;
+    let lastStartTime: false | Moment.Moment = false;
+    for (let i = 0; i < entries.length; i++) {
+        const TIME = Moment.utc(
+            entries[i]
+        );
+
+        if (false === lastStartTime) {
+            // start time
+            lastStartTime = TIME;
+        } else {
+            // end time
+            // calculate difference
+            // and add value
+            seconds += Moment.duration( TIME.diff(lastStartTime) )
+                             .asSeconds();
+
+            lastStartTime = false;
+        }
+    }
+
+    return {
+        lastStartTime: lastStartTime,
+        seconds: seconds,
+    };
 }
 
 async function exportBoardCardsTo(opts: ExportBoardCardsToOptions) {

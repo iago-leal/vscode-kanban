@@ -361,6 +361,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // announcements
     WF.next(async () => {
+        // the announcements wait for a button to be clicked, which would keep
+        // 'activate()' pending forever inside an automated test run
+        if ('1' === process.env.VSCKB_TEST) {
+            return;
+        }
+
         try {
             await vsckb_announcements.showAnnouncements(context);
         } catch { }

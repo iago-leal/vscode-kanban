@@ -1,0 +1,400 @@
+/**
+ * The board, assembled.
+ *
+ * This is where the pieces meet and nothing else happens: the display state,
+ * the board, the filter and the theme are each held by something of their own,
+ * and this component only decides what is rendered from them.
+ *
+ * The single set of visible cards comes from 'computeVisibleBoard' and is
+ * handed to whichever layout is in force. Neither layout filters anything of
+ * its own, which is what makes "columns and list show the same cards" a
+ * property of the structure rather than a coincidence to be tested for (D-14).
+ */
+
+import { ReactNode, useCallback, useMemo, useState } from 'react';
+
+import { BaseStyles } from '@primer/react';
+
+import { AddCardDialog } from './dialogs/AddCardDialog';
+import { Board, BoardCard, ColumnKey } from '../domain/types';
+import { CardActions } from './Card';
+import { CardDetailsDialog } from './dialogs/CardDetailsDialog';
+import { ColumnsView } from './ColumnsView';
+import { ConfirmDialog } from './dialogs/ConfirmDialog';
+import { EditCardDialog } from './dialogs/EditCardDialog';
+import { ListView } from './ListView';
+import { Services, ServicesProvider } from './services';
+import { ThemeProvider } from '../theme/theme-provider';
+import { TopBar } from './TopBar';
+import { addCard, findCard, removeCard, toggleCardTask, updateCard } from '../domain/board-operations';
+import { anchored } from './anchors';
+import { columnName } from '../domain/columns';
+import { computeVisibleBoard } from '../domain/visibility';
+import { createBaseFilterFunctions } from '../domain/filter-functions';
+import { createCardPredicate } from '../domain/filtering';
+import { createFiltrexEvaluator } from '../adapters/filter-language';
+import { moveCard } from '../domain/board-operations';
+import { otherCards } from '../domain/identity';
+import { toStringSafe } from '../domain/text';
+import { useBoard } from './use-board';
+import { useViewState } from './use-view-state';
+
+import '../theme/board.css';
+import '../theme/dialogs.css';
+import '../theme/appearance.css';
+
+/**
+ * The dialog that is open, if any.
+ */
+type OpenDialog =
+    | { kind: 'add'; column: ColumnKey }
+    | { kind: 'edit'; card: BoardCard; column: ColumnKey }
+    | { kind: 'details'; card: BoardCard; column: ColumnKey }
+    | { kind: 'delete'; card: BoardCard; column: ColumnKey };
+
+/**
+ * Renders the whole board.
+ */
+export function App(props: { services: Services }) {
+    const SERVICES = props.services;
+    const BRIDGE = SERVICES.bridge;
+
+    const VIEW = useViewState(BRIDGE);
+    const BOARD = useBoard(BRIDGE, VIEW.accept);
+
+    const [dialog, setDialog] = useState<OpenDialog | undefined>(undefined);
+
+    const CLOSE = useCallback(() => setDialog(undefined), []);
+
+    // the language is built once; the predicate is rebuilt whenever the
+    // expression changes, exactly as the board has always recompiled it
+    const EVALUATOR = useMemo(() => createFiltrexEvaluator(), []);
+    const BASE_FUNCS = useMemo(
+        () => createBaseFilterFunctions(SERVICES.time, BRIDGE.log),
+        [SERVICES.time, BRIDGE.log]
+    );
+
+    const VISIBLE = useMemo(() => {
+        return computeVisibleBoard(
+            BOARD.board,
+            VIEW.viewState,
+            createCardPredicate(
+                BOARD.filter, EVALUATOR, BASE_FUNCS, SERVICES.time, BRIDGE.log
+            )
+        );
+    }, [
+        BOARD.board, BOARD.filter, VIEW.viewState,
+        EVALUATOR, BASE_FUNCS, SERVICES.time, BRIDGE.log,
+    ]);
+
+    const RAISE_ON_CARD = useCallback((name: string, card: BoardCard, column: ColumnKey) => {
+        BRIDGE.raiseEvent(name, {
+            card: card,
+            column: column,
+            others: BOARD.others(card.__uid),
+        });
+    }, [BRIDGE, BOARD]);
+
+    const ACTIONS = useMemo<CardActions>(() => ({
+        onEdit: (card, column) => setDialog({ kind: 'edit', card: card, column: column }),
+
+        onDetails: (card, column) => setDialog({ kind: 'details', card: card, column: column }),
+
+        onDelete: (card, column) => setDialog({ kind: 'delete', card: card, column: column }),
+
+        onMove: (card, from, to) => BOARD.mutate(
+            current => moveCard(current, toStringSafe(card.__uid), to),
+            next => ({
+                name: 'card_moved',
+                data: {
+                    card: card,
+                    from: from,
+                    others: otherCards(next, card),
+                    to: to,
+                },
+            })
+        ),
+
+        // Ticking a box IS an edit, and is announced as one: the script of the
+        // user gets 'card_updated' with the payload the edit dialog produces.
+        // Writing the file without raising the event would be a change the
+        // automation of the user cannot see, and those events are a contract.
+        onToggleTask: (card, column, field, index) => {
+            const NEXT = toggleCardTask(card, field, index);
+
+            // an index matching no task leaves the card as it was, and a board
+            // that did not change must not be written: saving would touch the
+            // file and raise an event for nothing
+            if (NEXT === card) {
+                return;
+            }
+
+            BOARD.mutate(
+                current => updateCard(current, toStringSafe(card.__uid), () => NEXT),
+                next => ({
+                    name: 'card_updated',
+                    data: {
+                        card: NEXT,
+                        column: column,
+                        oldCard: card,
+                        others: otherCards(next, NEXT),
+                    },
+                })
+            );
+        },
+
+        // neither of these changes the board, so neither saves it
+        onExecute: (card, column) => RAISE_ON_CARD('execute_card', card, column),
+        onTrackTime: (card, column) => RAISE_ON_CARD('track_time', card, column),
+    }), [BOARD, RAISE_ON_CARD]);
+
+    const ADD_CARD = useCallback((column: ColumnKey, card: BoardCard) => {
+        BOARD.mutate(
+            current => addCard(current, column, card),
+            next => ({
+                name: 'card_created',
+                data: {
+                    card: card,
+                    column: column,
+                    others: otherCards(next, card),
+                },
+            })
+        );
+
+        CLOSE();
+    }, [BOARD, CLOSE]);
+
+    const SAVE_CARD = useCallback((
+        column: ColumnKey,
+        previous: BoardCard,
+        card: BoardCard,
+    ) => {
+        BOARD.mutate(
+            current => updateCard(current, toStringSafe(previous.__uid), () => card),
+            next => ({
+                name: 'card_updated',
+                data: {
+                    card: card,
+                    column: column,
+                    oldCard: previous,
+                    others: otherCards(next, card),
+                },
+            })
+        );
+
+        CLOSE();
+    }, [BOARD, CLOSE]);
+
+    const DELETE_CARD = useCallback((column: ColumnKey, card: BoardCard) => {
+        BOARD.mutate(
+            current => removeCard(current, toStringSafe(card.__uid)),
+            next => ({
+                name: 'card_deleted',
+                data: {
+                    card: card,
+                    column: column,
+                    others: otherCards(next, card),
+                },
+            })
+        );
+
+        CLOSE();
+    }, [BOARD, CLOSE]);
+
+    return (
+        <ServicesProvider services={ SERVICES }>
+            <ThemeProvider preference={ VIEW.viewState.theme }>
+                <BoardShell
+                    board={ BOARD }
+                    view={ VIEW }
+                    visible={ VISIBLE }
+                    actions={ ACTIONS }
+                    onAddCard={ column => setDialog({ kind: 'add', column: column }) }
+                    onReload={ BRIDGE.reloadBoard }
+                />
+
+                { dialog ? (
+                <DialogLayer>
+
+                { 'add' === dialog?.kind ? (
+                    <AddCardDialog
+                        column={ dialog.column }
+                        columnLabel={ columnName(dialog.column, BOARD.settings) }
+                        board={ BOARD.board }
+                        settings={ BOARD.settings }
+                        currentUser={ BOARD.currentUser }
+                        onSave={ card => ADD_CARD(dialog.column, card) }
+                        onClose={ CLOSE }
+                    />
+                ) : null }
+
+                { 'edit' === dialog?.kind ? (
+                    <EditCardDialog
+                        card={ dialog.card }
+                        columnLabel={ columnName(dialog.column, BOARD.settings) }
+                        onSave={ card => SAVE_CARD(dialog.column, dialog.card, card) }
+                        onClose={ CLOSE }
+                    />
+                ) : null }
+
+                { 'details' === dialog?.kind ? (
+                    <CardDetailsDialog
+                        card={ currentCard(BOARD.board, dialog.card) }
+                        columnLabel={ columnName(dialog.column, BOARD.settings) }
+                        onClose={ CLOSE }
+                        onToggleTask={ (field, index) => ACTIONS.onToggleTask(
+                            currentCard(BOARD.board, dialog.card),
+                            dialog.column, field, index
+                        ) }
+                    />
+                ) : null }
+
+                { 'delete' === dialog?.kind ? (
+                    <ConfirmDialog
+                        kind="delete-card"
+                        title="Delete this card?"
+                        message={ `'${ toStringSafe(dialog.card.title) }' is removed from the board. This cannot be undone.` }
+                        confirmLabel="Delete"
+                        onConfirm={ () => DELETE_CARD(dialog.column, dialog.card) }
+                        onClose={ CLOSE }
+                    />
+                ) : null }
+
+                </DialogLayer>
+                ) : null }
+            </ThemeProvider>
+        </ServicesProvider>
+    );
+}
+
+/**
+ * The board itself: the bar, and whichever layout is in force.
+ *
+ * It is split out so that it sits INSIDE the theme provider and can therefore
+ * carry the attribute that selects the colour set.
+ */
+function BoardShell(props: {
+    board: ReturnType<typeof useBoard>;
+    view: ReturnType<typeof useViewState>;
+    visible: ReturnType<typeof computeVisibleBoard>;
+    actions: CardActions;
+    onAddCard(column: ColumnKey): void;
+    onReload(): void;
+}) {
+    const { board, view, visible } = props;
+
+    return (
+        <ThemedShell viewMode={ view.viewState.viewMode }>
+            <TopBar
+                title={ board.title }
+                filter={ board.filter }
+                theme={ view.viewState.theme }
+                hideDone={ view.viewState.hideDone }
+                viewMode={ view.viewState.viewMode }
+                hiddenCount={ visible.hiddenCount }
+                onFilterChange={ board.setFilter }
+                onCycleTheme={ view.cycleTheme }
+                onToggleHideDone={ view.toggleHideDone }
+                onToggleViewMode={ view.toggleViewMode }
+                onReload={ props.onReload }
+            />
+
+            { 'list' === view.viewState.viewMode ? (
+                <ListView
+                    board={ visible }
+                    settings={ board.settings }
+                    actions={ props.actions }
+                    onAddCard={ props.onAddCard }
+                />
+            ) : (
+                <ColumnsView
+                    board={ visible }
+                    settings={ board.settings }
+                    actions={ props.actions }
+                    onToggleCollapsed={ view.setCollapsed }
+                    onAddCard={ props.onAddCard }
+                />
+            ) }
+        </ThemedShell>
+    );
+}
+
+/**
+ * The scope the dialogs are painted in.
+ *
+ * A dialog is a SIBLING of the board, not a descendant, so it inherits nothing
+ * the board declares. It no longer needs to carry the theme itself: the
+ * attributes the design system reads are written on the root of the DOCUMENT,
+ * above both, which is what stops a dialog from ever opening unpainted.
+ */
+function DialogLayer(props: { children: ReactNode }) {
+    return <div className="vsckb-dialog-layer">{ props.children }</div>;
+}
+
+/**
+ * The root of the board, and the anchors a user stylesheet reaches it by.
+ *
+ * '[data-vsckb="board"]' and '[data-vsckb-view]' are promises of
+ * 'interfaces/style-anchors.md' §3 and §4: what they reach does not change
+ * meaning while they exist. The colour set is NOT written here any more, and
+ * on purpose -- §6 of that contract says the attributes of the design system
+ * are not anchors, and keeping them off the board is what keeps the two kinds
+ * of attribute from being confused for one another.
+ *
+ * The surface itself is painted HERE rather than in 'theme/board.css', and the
+ * two tokens below are the only paint the interface writes by hand. The reason
+ * is RN-07: the stylesheet of the board is the proof that switching the design
+ * system off leaves the board unpainted, so it may declare no colour at all,
+ * variable or not. A component naming a token of the design system is the
+ * opposite case -- it introduces no second source of colour, because with the
+ * sheet gone the token resolves to nothing and the surface goes with it.
+ *
+ * Without this the board was legible only by accident: the panel kept the pale
+ * background of the editor while the text and the controls took their colours
+ * from whichever set was in force, so choosing the dark one wrote pale text
+ * onto a pale panel.
+ *
+ * 'BaseStyles' is what brings the rest of the ground floor -- 'box-sizing',
+ * the margin of the body, the foreground colour and, less obviously but just
+ * as visibly, 'color-scheme', which is what makes the scrollbars and the
+ * native parts of a form follow the board instead of the operating system.
+ */
+function ThemedShell(props: {
+    viewMode: string;
+    children: ReactNode;
+}) {
+    return (
+        <BaseStyles
+            style={ {
+                backgroundColor: 'var(--bgColor-default)',
+                height: '100%',
+            } }
+        >
+            <div
+                { ...anchored({
+                    anchor: 'board',
+                    view: props.viewMode,
+                    className: 'vsckb-board',
+                }) }
+            >
+                { props.children }
+            </div>
+        </BaseStyles>
+    );
+}
+
+
+/**
+ * The card as the board has it NOW, rather than as a dialog remembers it.
+ *
+ * Ticking a task changes the card while the dialog showing it is open. Reading
+ * the card the dialog was opened with would leave the box the user just ticked
+ * drawn in its old state, and the click after that would count tasks in the old
+ * text -- writing to a line nobody pointed at.
+ *
+ * The remembered card is the fallback for the one case where the board no
+ * longer has it: a card removed underneath by a change of the file on disk.
+ */
+function currentCard(board: Board, remembered: BoardCard): BoardCard {
+    return findCard(board, toStringSafe(remembered.__uid)) || remembered;
+}

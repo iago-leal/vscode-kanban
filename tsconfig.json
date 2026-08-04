@@ -6,8 +6,18 @@
         "lib": [
             "es2019"
         ],
+        /* Only these ambient type packages are loaded, so that stray
+           'node_modules/@types' folders above the project cannot leak in. */
+        "types": [
+            "mocha",
+            "node"
+        ],
         "sourceMap": true,
         "rootDir": "src",
+        /* Declaration files of dependencies are not type checked: some of them
+           require newer '@types/node' than the one this project is pinned to.
+           Code under 'src' is still checked normally. */
+        "skipLibCheck": true,
         /* Strict Type-Checking Option */
         "strict": false,   /* enable all strict type-checking options */
         /* Additional Checks */
@@ -18,6 +28,10 @@
     },
     "exclude": [
         "node_modules",
-        ".vscode-test"
+        ".vscode-test",
+        /* The Webview has its own compilation unit: 'tsconfig.webview.json'.
+           It targets a browser and is type checked strictly, which this
+           project cannot be yet. */
+        "src/webview"
     ]
 }

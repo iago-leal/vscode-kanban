@@ -1,0 +1,325 @@
+/*
+ * The geometry of the board.
+ *
+ * What is left here after the design system was adopted is placement and
+ * nothing else: how wide a lane is, how cards stack, how a collapsed column
+ * becomes a strip, how it all rearranges when the panel is narrow. Colour,
+ * radius, shadow and type size are declared nowhere in it (D-21, RF-24, RN-07).
+ *
+ * That is the proof of a promise, not a taste: with the stylesheet of the
+ * design system switched off the board has to come out unpainted, and it cannot
+ * if a second sheet quietly redeclares the colours. A test reads this file and
+ * fails on any property that paints. What paints lives in 'appearance.css',
+ * which may paint only by naming a token; the same test forbids literals there.
+ *
+ * The spacing below is written as lengths because it is length: a gap is not a
+ * colour, and naming a token for it would move the number without making it
+ * anyone else's decision. Two widths matter: below 800 px four columns stop
+ * being readable and the columns layout falls back to one scrolling row, while
+ * the list layout stays usable down to 320 px, which is why it exists.
+ *
+ * Selectors use the style anchors of 'interfaces/style-anchors.md' wherever
+ * the element is one a user stylesheet may reach. The class names left over
+ * are internal and promise nothing.
+ */
+
+/* ------------------------------------------------------------------ shell */
+
+.vsckb-base {
+    height: 100%;
+}
+
+[data-vsckb="board"] {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* -------------------------------------------------------------------- bar */
+
+[data-vsckb="board-header"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    flex: 0 0 auto;
+}
+
+.vsckb-topbar-title {
+    flex: 1 1 auto;
+    min-width: 120px;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vsckb-topbar-filter {
+    flex: 2 1 220px;
+    min-width: 160px;
+}
+
+.vsckb-topbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+@media (max-width: 720px) {
+    .vsckb-topbar-title {
+        flex-basis: 100%;
+    }
+
+    .vsckb-topbar-filter {
+        flex-basis: 100%;
+    }
+}
+
+/* ---------------------------------------------------------------- columns */
+
+[data-vsckb="columns"] {
+    display: flex;
+    flex: 1 1 auto;
+    gap: 8px;
+    padding: 0 12px 12px;
+    overflow: hidden;
+}
+
+[data-vsckb="column"] {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* the room a collapsed column gives up goes to the ones still open: with a
+   fixed quarter each, collapsing would hide cards and help nobody read */
+[data-vsckb="column"][data-vsckb-collapsed] {
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+[data-vsckb="column-header"] {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 8px 6px;
+    flex: 0 0 auto;
+}
+
+.vsckb-column-name {
+    flex: 1 1 auto;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vsckb-column-count {
+    flex: 0 0 auto;
+}
+
+[data-vsckb="column-body"] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    padding: 2px 8px 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.vsckb-column-strip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 40px;
+    height: 100%;
+    padding: 10px 0;
+    border: 0;
+    cursor: pointer;
+}
+
+.vsckb-column-strip-name {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vsckb-column-strip-count {
+    flex: 0 0 auto;
+}
+
+/* ------------------------------------------------------------------- list */
+
+[data-vsckb="list"] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 12px 12px;
+    overflow-y: auto;
+}
+
+.vsckb-list-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.vsckb-list-hidden,
+.vsckb-list-empty {
+    margin: 0;
+    padding: 6px 2px;
+}
+
+/* ------------------------------------------------------------------- card */
+
+[data-vsckb="card"] {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    overflow: hidden;
+}
+
+.vsckb-card-stripe {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px 0;
+}
+
+.vsckb-card-type {
+    margin-right: auto;
+}
+
+/* the top padding is the card's own: a card without a type renders no row
+   above at all, and used to start flush against its own edge when it did */
+.vsckb-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px 0;
+    min-width: 0;
+}
+
+.vsckb-card-stripe + .vsckb-card-info {
+    padding-top: 6px;
+}
+
+[data-vsckb="card-title"] {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.vsckb-card-column,
+[data-vsckb="card-category"] {
+    margin: 0;
+}
+
+[data-vsckb="card-progress"] {
+    width: 100%;
+}
+
+[data-vsckb="card-body"] {
+    overflow-wrap: anywhere;
+}
+
+.vsckb-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 2px 6px 2px 10px;
+}
+
+.vsckb-card-time {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+[data-vsckb="card-actions"] {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 0 0 auto;
+}
+
+/* --------------------------------------------------------------- markdown */
+
+.vsckb-markdown-body > :first-child {
+    margin-top: 0;
+}
+
+.vsckb-markdown-body > :last-child {
+    margin-bottom: 0;
+}
+
+.vsckb-markdown-body pre {
+    overflow-x: auto;
+    padding: 8px;
+}
+
+.vsckb-img-fluid {
+    max-width: 100%;
+    height: auto;
+}
+
+.vsckb-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.vsckb-table th,
+.vsckb-table td {
+    padding: 4px 8px;
+    text-align: left;
+}
+
+.vsckb-task-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.vsckb-task {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+/* the box is a span, so its size is ours; in 'em' because the card body and
+   the details dialog set different text sizes and it has to follow both */
+.vsckb-task-check {
+    flex: 0 0 auto;
+    position: relative;
+    width: 1em;
+    height: 1em;
+    align-self: center;
+}
+
+.vsckb-task-label {
+    min-width: 0;
+}
+
+/* ----------------------------------------------------------------- narrow */
+
+@media (max-width: 800px) {
+    [data-vsckb="columns"] {
+        overflow-x: auto;
+    }
+
+    [data-vsckb="column"]:not([data-vsckb-collapsed]) {
+        flex: 0 0 260px;
+    }
+}
