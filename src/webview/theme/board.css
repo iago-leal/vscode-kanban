@@ -221,6 +221,15 @@
     overflow-wrap: anywhere;
 }
 
+/* The number sits inside the title and has to survive a narrow column: the
+   title wraps anywhere, and a marker allowed to break would leave a bracket
+   alone on a line. The gap is its own, so the title does not start flush
+   against it (RF-05). */
+.vsckb-card-number {
+    margin-right: 4px;
+    white-space: nowrap;
+}
+
 .vsckb-card-column,
 [data-vsckb="card-category"] {
     margin: 0;

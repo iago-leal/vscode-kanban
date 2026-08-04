@@ -173,6 +173,24 @@
 }
 
 /*
+ * The number of the card, which opens the line of the title.
+ *
+ * It is attenuated for the same reason the three lines below are: the eye
+ * looks for the title first, and finds the number only when it is the number
+ * it came for -- which is what happens when the agent has just written
+ * "card [35]". Same pair the time of the card already uses, so the contrast
+ * 'theme-contrast.unit.test.ts' guards is the one already measured.
+ *
+ * The weight is stated rather than inherited: the title is semibold, and a
+ * marker in the same weight would read as part of it.
+ */
+[data-vsckb="card"] .vsckb-card-number {
+    font-size: var(--text-caption-size);
+    font-weight: var(--base-text-weight-normal);
+    color: var(--fgColor-muted);
+}
+
+/*
  * The three lines under the title are context, not content: which column the
  * card is in, what it is filed under, and when it was made. They are attenuated
  * so that the eye reaches the title first and the rest only when asked.

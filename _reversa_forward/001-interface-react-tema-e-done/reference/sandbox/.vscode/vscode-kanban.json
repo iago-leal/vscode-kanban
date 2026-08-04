@@ -71,6 +71,38 @@
       "category": "edicao",
       "creation_time": "2026-08-04T10:00:00.000Z",
       "references": []
+    },
+    {
+      "title": "Cartao sem id: nenhum marcador de numero deve ser desenhado",
+      "type": "",
+      "prio": 0,
+      "category": "numero",
+      "creation_time": "2026-08-04T11:00:00.000Z",
+      "description": "O campo `id` esta ausente do arquivo. Nao pode aparecer `[]`, `[undefined]` nem `[null]`.",
+      "details": "",
+      "references": []
+    },
+    {
+      "id": "20260804123456_412345678_a1b2c3d4e5f6a7b8",
+      "title": "Identificador longo: o cartao mostra so os seis ultimos caracteres",
+      "type": "",
+      "prio": 0,
+      "category": "numero",
+      "creation_time": "2026-08-04T11:01:00.000Z",
+      "description": "Esperado `[...f6a7b8]` no cartao. O ponteiro revela a cadeia inteira, e o dialogo de detalhes a mostra por extenso.",
+      "details": "",
+      "references": []
+    },
+    {
+      "id": "7",
+      "title": "Identificador repetido: o mesmo numero do cartao 7 de In Progress",
+      "type": "",
+      "prio": 0,
+      "category": "numero",
+      "creation_time": "2026-08-04T11:02:00.000Z",
+      "description": "Dois cartoes com `[7]` no quadro, sem sinal algum de repeticao. E o comportamento decidido em RN-04.",
+      "details": "",
+      "references": []
     }
   ],
   "in-progress": [

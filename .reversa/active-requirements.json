@@ -4,11 +4,13 @@
   "feature-id": "003",
   "short-name": "numero-visivel-do-cartao",
   "started-at": "2026-08-04T17:44:23Z",
-  "current-stage": "plan",
+  "current-stage": "coding",
   "stages-completed": [
     "requirements",
     "clarify",
-    "plan"
+    "plan",
+    "to-do",
+    "coding"
   ],
   "paused-features": [
     {

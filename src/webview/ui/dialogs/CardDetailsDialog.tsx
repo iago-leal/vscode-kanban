@@ -69,6 +69,15 @@ export function CardDetailsDialog(props: {
             }
         >
             <dl className="vsckb-details-facts">
+                { /*
+                   * The identifier, whole and never shortened. The card shows
+                   * a long one cut down to the tail that tells two cards
+                   * apart, so this is the one place the rest of it can be read
+                   * at all (RF-07).
+                   */ }
+                <dt>Identifier</dt>
+                <dd>{ toStringSafe(CARD.id).trim() || '—' }</dd>
+
                 <dt>Column</dt>
                 <dd>{ props.columnLabel }</dd>
 

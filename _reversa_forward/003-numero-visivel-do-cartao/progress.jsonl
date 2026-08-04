@@ -1,0 +1,17 @@
+{"ts":"2026-08-04T18:41:25Z","action":"T001","status":"done","files":["_reversa_forward/001-interface-react-tema-e-done/reference/sandbox/.vscode/vscode-kanban.json"]}
+{"ts":"2026-08-04T18:41:25Z","action":"T002","status":"done","files":["_reversa_forward/001-interface-react-tema-e-done/reference/sandbox/README.md"]}
+{"ts":"2026-08-04T18:43:28Z","action":"T003","status":"done","files":["src/test/card-number.unit.test.ts"]}
+{"ts":"2026-08-04T18:43:28Z","action":"T004","status":"done","files":["src/test/card-number.unit.test.ts"]}
+{"ts":"2026-08-04T18:43:28Z","action":"T005","status":"done","files":["src/test/card-number.unit.test.ts"]}
+{"ts":"2026-08-04T18:43:28Z","action":"T006","status":"done","files":["src/test/card-number.unit.test.ts"]}
+{"ts":"2026-08-04T18:44:41Z","action":"T007","status":"done","files":["src/webview/domain/card-number.ts"]}
+{"ts":"2026-08-04T18:44:41Z","action":"T008","status":"done","files":["src/webview/domain/card-number.ts"]}
+{"ts":"2026-08-04T18:44:41Z","action":"T003","status":"corrected","files":["src/test/card-number.unit.test.ts"],"note":"limite de largura do marcador corrigido: o teto e a forma integra de oito caracteres, dez com colchetes, e nao a forma cortada de nove"}
+{"ts":"2026-08-04T18:46:30Z","action":"T009","status":"done","files":["src/webview/ui/Card.tsx"]}
+{"ts":"2026-08-04T18:46:30Z","action":"T010","status":"done","files":["src/webview/ui/Card.tsx"]}
+{"ts":"2026-08-04T18:46:30Z","action":"T011","status":"done","files":["src/webview/ui/dialogs/CardDetailsDialog.tsx"]}
+{"ts":"2026-08-04T18:46:30Z","action":"T012","status":"done","files":["src/webview/theme/appearance.css"]}
+{"ts":"2026-08-04T18:46:30Z","action":"T013","status":"done","files":["src/webview/theme/board.css"]}
+{"ts":"2026-08-04T18:52:49Z","action":"T014","status":"done","files":["_reversa_forward/003-numero-visivel-do-cartao/onboarding.md"],"note":"npm run preview: numero em todos os cartoes das quatro colunas; [5], [7], [2], [51] e [43] conferidos contra .vscode/vscode-kanban.json; marcador abrindo a linha do titulo em tom apagado; cartoes [2], [1] e [43], sem tipo e sem faixa superior, mostram o numero; temas escuro e claro; layout de lista a 420 px"}
+{"ts":"2026-08-04T18:52:49Z","action":"T015","status":"done","files":["_reversa_forward/001-interface-react-tema-e-done/reference/sandbox/.vscode/vscode-kanban.json"],"note":"npm run preview -- --sandbox: cartao sem id nao desenha elemento algum de marcador; id longo mostra [...f6a7b8] com a cadeia inteira no atributo title; par [7] sem sinal de repeticao; linha Identifier no dialogo com o valor integral"}
+{"ts":"2026-08-04T18:52:49Z","action":"T016","status":"partial","files":["_reversa_forward/003-numero-visivel-do-cartao/onboarding.md"],"note":"build, empacotamento 1.35.6 e instalacao feitos; as duas regras de .vsckb-card-number conferidas no main.css do pacote instalado. Falta o que so roda dentro do editor: Developer: Reload Window, repetir 2.1 e percorrer o quadro pelo teclado com leitor de tela. Acao segue [ ]"}

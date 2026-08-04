@@ -25,3 +25,6 @@ git checkout -- _reversa_forward/001-interface-react-tema-e-done/reference/sandb
 | 9 | `is_older(300)` |
 | 10, 11 | Descartáveis: use nos passos 10 e 11 do roteiro |
 | 12 | Cartão sem `description` e sem `details`: os dois editores de Markdown nascem vazios. Abra-o em **Edit** e escreva nos dois campos — foi o caso que faltava aqui quando o BUG-20260804-23SL colapsou o editor a 38 px de largura |
+| sem `id` | RF-10 da feature `003`: cartão cujo campo `id` está **ausente do arquivo**. Não pode desenhar marcador algum — nem `[]`, nem `[undefined]`, nem `[null]` —, e o resto do cartão é pintado normalmente. Só se vê aqui: no editor, a normalização da carga preencheria o campo (RD-07) |
+| `id` longo | RF-09 com RN-05: identificador de cinquenta e sete caracteres, na forma que `simpleIDs: false` produz. O cartão mostra `[…f6a7b8]`, com reticências e os seis últimos caracteres; o ponteiro sobre o marcador revela a cadeia inteira, e o diálogo de detalhes a escreve por extenso na linha `Identifier` |
+| `id` repetido | RN-04: carrega o `id` `7`, o mesmo do cartão de **In Progress**. Os dois mostram `[7]` e **nenhum** sinal de repetição é desenhado. É a decisão registrada, não um defeito: a interface exibe o que está gravado |

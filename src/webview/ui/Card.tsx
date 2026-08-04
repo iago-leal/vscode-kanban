@@ -25,6 +25,7 @@ import { Icon, IconName } from './icons';
 import { IconButton } from './IconButton';
 import { Markdown } from './Markdown';
 import { anchored } from './anchors';
+import { cardNumberLabel, cardNumberTitle } from '../domain/card-number';
 import { columnName, movesFrom } from '../domain/columns';
 import { contentOf } from '../domain/types';
 import { taskProgressOf } from '../domain/task-progress';
@@ -124,6 +125,16 @@ export function Card(props: {
     const TITLE = toStringSafe(CARD.title).trim();
     const NAME = '' === TITLE ? 'card without a title' : TITLE;
 
+    // the marker the card shows, and the whole identifier for the balloon,
+    // which the domain hands over only when the marker hides part of it
+    const NUMBER = cardNumberLabel(CARD.id);
+    const NUMBER_TITLE = cardNumberTitle(CARD.id);
+
+    // the card is announced by its number, the buttons inside it are not: four
+    // labels per card repeating it would lengthen every announcement without
+    // adding anything to any of them (RF-06, D-06)
+    const CARD_NAME = NUMBER ? `${ NUMBER } ${ NAME }` : NAME;
+
     return (
         <article
             { ...anchored({
@@ -132,7 +143,7 @@ export function Card(props: {
                 className: 'vsckb-card',
             }) }
             data-vsckb-group={ GROUP }
-            aria-label={ NAME }
+            aria-label={ CARD_NAME }
         >
             { /*
                * The row of the type and the two optional buttons. A card that
@@ -171,6 +182,25 @@ export function Card(props: {
 
             <div { ...anchored({ anchor: 'card-footer', className: 'vsckb-card-info' }) }>
                 <h3 { ...anchored({ anchor: 'card-title', className: 'vsckb-card-title' }) }>
+                    { /*
+                       * The number opens the line of the title, inside it
+                       * rather than beside it: the title is a block, and a
+                       * sibling would take a line of its own and turn the
+                       * column of information into something that has to be
+                       * laid out again (RF-04, D-02).
+                       *
+                       * The row of the type would have been the other place,
+                       * and it is omitted entirely on a card with no type and
+                       * no buttons -- the number would vanish on the simplest
+                       * cards of the board, which are not the ones that need
+                       * it least.
+                       */ }
+                    { NUMBER ? (
+                        <span className="vsckb-card-number" title={ NUMBER_TITLE }>
+                            { NUMBER }
+                        </span>
+                    ) : null }
+
                     { TITLE }
                 </h3>
 
